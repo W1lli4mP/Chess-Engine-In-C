@@ -10,7 +10,7 @@ struct board {
 };
 
 int main(void) {
-    struct board chessBoard = { // creates a structure variable (board) called chessBoard
+    struct board chess_board = { // creates a structure variable (board) called chessBoard
         .grid = {
                 {"br", "bn", "bb", "bq", "bk", "bb", "bn", "br"},
                 {"bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"},
@@ -26,8 +26,7 @@ int main(void) {
     int count = 1;
     for (int i = 0; i < ROWS; i++) {
         for (int j = 0; j < COLS; j++) {
-            printf("%d\n", count++); // verifying if all 64 squares are printed out
-            // printf("%s\n", chessBoard.grid[i][j]); // actually outputs the contents of each square
+            printf("%s\n", chess_board.grid[i][j]); // actually outputs the contents of each square
         }
     }
 
