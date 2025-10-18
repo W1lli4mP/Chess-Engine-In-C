@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 // config
 #define COLS 8
@@ -20,11 +21,15 @@ typedef struct {
 // declare functions
 void display_grid(Piece grid[ROWS][COLS]); // expects a grid array of size ROWSxCOLS that stores piece structs
 Board init_pieces(Board);
-
+void process_input(Piece grid[ROWS][COLS]);
 
 int main(void) {
     Board chess_board = init_pieces(chess_board);
-    display_grid(chess_board.grid);
+
+    display_grid(chess_board.grid); // display chess board at the start before taking inputs
+    while (true) {
+        process_input(chess_board.grid);
+    }
 
     return 0;
 }
@@ -43,9 +48,6 @@ void display_grid(Piece grid[ROWS][COLS]) {
 Board init_pieces(Board chess_board) { // returns an updated chess board full of initialised pieces
     for (int i = 0; i < ROWS; i++) {
         for (int j = 0; j < COLS; j++) {
-            // create/declare piece struct
-            Piece current_piece = {0};
-
             // calculate piece's colour (using a ternary operator)
             char colour = (i == 0 || i == 1) ? 'w' : 'b';
 
@@ -100,12 +102,14 @@ Board init_pieces(Board chess_board) { // returns an updated chess board full of
                     sprite = (colour == 'w') ? "♔" : "♚";
                     break;
             }
-            
-            current_piece.colour = colour;
-            current_piece.type = type;
-            current_piece.position[0] = i; // cannot assign arrays directly, thus assign each element individually
-            current_piece.position[1] = j;
-            current_piece.sprite = sprite;
+
+            // declare and define piece struct
+            Piece current_piece = {
+                .colour = colour,
+                .type = type,
+                .position = {i, j},
+                .sprite = sprite
+            };
 
             // insert current piece struct into board struct to store it
             chess_board.grid[i][j] = current_piece;
@@ -113,4 +117,12 @@ Board init_pieces(Board chess_board) { // returns an updated chess board full of
     }
     return chess_board;
 
+}
+
+void process_input(Piece grid[ROWS][COLS]) {
+    char move[6]; // longest input could be a 6-char pawn capture promotion (e.g. fxg8=Q)
+    // need to add a function that reads the move (an algebraic move parser)
+    printf("Enter a move: ");
+    scanf("%s", move);
+    display_grid(grid);
 }
