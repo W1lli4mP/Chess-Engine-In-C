@@ -6,47 +6,45 @@
 #define ROWS 8
 
 // define structs
-struct piece {
+typedef struct {
     char colour;
     char type;
     int position[2];
     const char *sprite;
-};
+} Piece;
 
-struct board {
-    struct piece grid[ROWS][COLS]; // declares a grid of piece structs
-};
+typedef struct {
+    Piece grid[ROWS][COLS]; // declares a grid of piece structs
+} Board;
 
 // declare functions
-void display_grid(struct piece grid[ROWS][COLS]); // expects a grid array of size ROWSxCOLS that stores piece structs
-struct board init_pieces(struct board);
+void display_grid(Piece grid[ROWS][COLS]); // expects a grid array of size ROWSxCOLS that stores piece structs
+Board init_pieces(Board);
 
 
 int main(void) {
-    struct board chess_board = {0}; // creates an empty structure (board) called chess_board, {0} forces zero-initialisation to its variables
-
-    chess_board = init_pieces(chess_board);
+    Board chess_board = init_pieces(chess_board);
     display_grid(chess_board.grid);
 
     return 0;
 }
 
 // define functions
-void display_grid(struct piece grid[ROWS][COLS]) {
+void display_grid(Piece grid[ROWS][COLS]) {
     for (int i = 0; i < ROWS; i++) {
         for (int j = 0; j < COLS; j++) {
-            struct piece p = grid[i][j];
+            Piece p = grid[i][j];
             printf("%s ", p.sprite); // actually outputs the contents of each square
         }
         printf("\n");
     }
 }
 
-struct board init_pieces(struct board chess_board) { // returns an updated chess board full of initialised pieces
+Board init_pieces(Board chess_board) { // returns an updated chess board full of initialised pieces
     for (int i = 0; i < ROWS; i++) {
         for (int j = 0; j < COLS; j++) {
             // create/declare piece struct
-            struct piece current_piece = {0};
+            Piece current_piece = {0};
 
             // calculate piece's colour (using a ternary operator)
             char colour = (i == 0 || i == 1) ? 'w' : 'b';
