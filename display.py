@@ -1,6 +1,6 @@
 import pygame
 import subprocess
-from config import WIDTH, HEIGHT
+from config import WIDTH, HEIGHT, screen_board
 from board import Board
 from piece import Piece
 
@@ -21,6 +21,12 @@ class Game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1: # if LMB pressed
+                self.handle_clicks(event.pos)
+
+    def handle_clicks(self, position): # receives mouse click at screen position
+        screen_board(position)
+        
 
     def render(self):
         self.board.render((0, 0))
