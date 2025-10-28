@@ -87,31 +87,31 @@ void display_grid(Board *board) { // now takes in a pointer
     }
 }
 
-Piece *get_piece_at(Board *chess_board, int position[2]) { // TODO: add input validation
-    return &chess_board->grid[position[0]][position[1]];
+Piece *get_piece_at(Board *board, int position[2]) { // TODO: add input validation
+    return &board->grid[position[0]][position[1]];
 }
 
-void move_piece(Board *board_pointer, Piece *piece_pointer, int move[2]) { // pointer to chess_board
+void move_piece(Board *board, Piece *piece, int move[2]) { // pointer to chess_board
     int destination_square[2] = {move[0], move[1]};
-    int original_square[2] = {piece_pointer->position[0], piece_pointer->position[1]};
+    int original_square[2] = {piece->position[0], piece->position[1]};
 
     // make a local copy before deletion
-    Piece selected_piece = *piece_pointer; 
+    Piece selected_piece = *piece; 
 
     // update piece position
     selected_piece.position[0] = destination_square[0];
     selected_piece.position[1] = destination_square[1];
 
     // remove piece from original square
-    remove_piece_at(board_pointer, original_square);
+    remove_piece_at(board, original_square);
 
     // place copy onto the destination square
-    board_pointer->grid[destination_square[0]][destination_square[1]] = selected_piece;
+    board->grid[destination_square[0]][destination_square[1]] = selected_piece;
 
 }
 
-void remove_piece_at(Board *board_pointer, int position[2]) {
-    board_pointer->grid[position[0]][position[1]].colour = '\0'; // reset the colour
-    board_pointer->grid[position[0]][position[1]].type = '\0'; // reset the type
-    board_pointer->grid[position[0]][position[1]].sprite = "-"; // reset the sprite
+void remove_piece_at(Board *board, int position[2]) {
+    board->grid[position[0]][position[1]].colour = '\0'; // reset the colour
+    board->grid[position[0]][position[1]].type = '\0'; // reset the type
+    board->grid[position[0]][position[1]].sprite = "-"; // reset the sprite
 }
