@@ -24,6 +24,7 @@ Board init_pieces(Board);
 void process_input(Piece grid[ROWS][COLS]);
 Piece get_piece_at(Board, int[2]);
 void move_piece(Board*, Piece*, int[2]);
+void remove_piece(Board*, Piece *);
 
 int main(void) {
     Board chess_board = init_pieces(chess_board);
@@ -31,6 +32,7 @@ int main(void) {
     display_grid(chess_board.grid); // display chess board at the start before taking inputs
     
     // testing new functions
+    // initialise square coords - could alternatively use int[2]{1, 1}
     int test_move_init[2] = {1, 1};
     int test_move[2] = {3, 1};
     Piece selected_piece = get_piece_at(chess_board, test_move_init);
@@ -60,7 +62,8 @@ Board init_pieces(Board chess_board) { // returns an updated chess board full of
     for (int i = 0; i < ROWS; i++) {
         for (int j = 0; j < COLS; j++) {
             // calculate piece's colour (using a ternary operator)
-            char colour = (i == 0 || i == 1) ? 'w' : 'b';
+            char colour = '\0'; // default if not assigned a value later on
+            colour = (i == 0 || i == 1) ? 'w' : 'b';
 
             // calculate piece types
             char type = '\0'; // if there is no piece, leave it's type as '\0'
@@ -143,15 +146,20 @@ Piece get_piece_at(Board chess_board, int position[2]) {
 }
 
 void move_piece(Board *board_pointer, Piece *piece_pointer, int move[2]) { // pointer to chess_board
-    int original_square[2] = {piece_pointer->position[0], piece_pointer->position[1]};
     int destination_square[2] = {move[0], move[1]};
     
+    remove_piece(board_pointer, piece_pointer);
     // use -> to modify real board rather than creating a local copy
-    board_pointer->grid[original_square[0]][original_square[1]].type = '\0'; // reset the type
-    board_pointer->grid[original_square[0]][original_square[1]].sprite = "-"; // reset the sprite
     board_pointer->grid[destination_square[0]][destination_square[1]] = *piece_pointer;
 
     // future update: update piece position too
     piece_pointer->position[0] = destination_square[0];
     piece_pointer->position[1] = destination_square[1];
+}
+
+void remove_piece(Board *board_pointer, Piece *piece_pointer) {
+    int original_square[2] = {piece_pointer->position[0], piece_pointer->position[1]};
+    board_pointer->grid[original_square[0]][original_square[1]].colour = '\0'; // reset the colour
+    board_pointer->grid[original_square[0]][original_square[1]].type = '\0'; // reset the type
+    board_pointer->grid[original_square[0]][original_square[1]].sprite = "-"; // reset the sprite
 }
