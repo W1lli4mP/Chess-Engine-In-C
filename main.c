@@ -22,14 +22,25 @@ typedef struct {
 void display_grid(Piece grid[ROWS][COLS]); // expects a grid array of size ROWSxCOLS that stores piece structs
 Board init_pieces(Board);
 void process_input(Piece grid[ROWS][COLS]);
+Piece get_piece_at(Board, int[2]);
+void move_piece(Board*, Piece, int[2]);
 
 int main(void) {
     Board chess_board = init_pieces(chess_board);
 
     display_grid(chess_board.grid); // display chess board at the start before taking inputs
-    while (true) {
-        process_input(chess_board.grid);
-    }
+    
+    // testing new functions
+    int test_move_init[2] = {1, 1};
+    int test_move[2] = {3, 1};
+    Piece selected_piece = get_piece_at(chess_board, test_move_init);
+    move_piece(&chess_board, selected_piece, test_move);
+
+    display_grid(chess_board.grid);
+
+    // while (true) {
+    //     process_input(chess_board.grid);
+    // }
 
     return 0;
 }
@@ -125,4 +136,19 @@ void process_input(Piece grid[ROWS][COLS]) {
     printf("Enter a move: ");
     scanf("%s", move);
     display_grid(grid);
+}
+
+Piece get_piece_at(Board chess_board, int position[2]) {
+    return chess_board.grid[position[0]][position[1]];
+}
+
+void move_piece(Board *board_pointer, Piece piece, int move[2]) { // pointer to chess_board
+    int original_square[2] = {piece.position[0], piece.position[1]};
+    int destination_square[2] = {move[0], move[1]};
+    
+    // use -> to modify real board rather than creating a local copy
+    board_pointer->grid[original_square[0]][original_square[1]].type = '\0'; // reset the type (TEMPORARY - add proper resetting)
+    board_pointer->grid[destination_square[0]][destination_square[1]] = piece;
+
+    // future update: update piece position too
 }
