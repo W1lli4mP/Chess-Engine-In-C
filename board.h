@@ -1,0 +1,19 @@
+#ifndef BOARD_H
+#define BOARD_H
+
+#include "piece.h"
+
+#define ROWS 8
+#define COLS 8
+
+typedef struct {
+    Piece grid[ROWS][COLS]; // declares a grid of piece structs
+} Board;
+
+Board init_pieces();
+void display_grid(Board*); // expects a grid array of size ROWSxCOLS that stores piece structs
+Piece *get_piece_at(Board*, int[2]);
+void move_piece(Board*, Piece*, int[2]);
+void remove_piece_at(Board*, int[2]);
+
+#endif
