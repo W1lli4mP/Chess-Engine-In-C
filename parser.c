@@ -35,6 +35,21 @@ Token **tokenise(char *input_string, int *token_count) { // returns a list of st
 
         // CASTLE_O and CASTLE_OO tokens
         if (current_char == 'O' || current_char == '0') {
+            // check for O-O-O/0-0-0
+            if (i + 5 <= len) {
+                char str_copy[6];
+                strncpy(str_copy, input_string + i, 5); // previous O-O + next char
+                str_copy[5] = '\0';
+
+                if (strcmp(str_copy, "O-O-O") == 0 || strcmp(str_copy, "0-0-0") == 0) {
+                    Token token = init_token(CASTLE_OO, str_copy);
+                    add_token(tokens, &t, token);
+                    i += 5;
+                    continue;
+                }
+            }
+        }
+
             // check for O-O/0-0
             if (i + 3 <= len) {
                 char str_copy[6];
@@ -46,23 +61,9 @@ Token **tokenise(char *input_string, int *token_count) { // returns a list of st
                     Token token = init_token(CASTLE_O, str_copy);
                     add_token(tokens, &t, token);
                     i += 3;
-
-                    // check for O-O-O/0-0-0
-                    if (i + 2 <= len) {
-                        if (i - 1 >= 0 && i + 4 <= len) { // boundary check for string
-                            strncpy(str_copy, input_string + i - 1, 5); // previous O-O + next char
-                            str_copy[5] = '\0';
-                            if (strcmp(str_copy, "O-O-O") == 0 || strcmp(str_copy, "0-0-0") == 0) {
-                                Token token = init_token(CASTLE_OO, str_copy);
-                                add_token(tokens, &t, token);
-                                i += 2;
-                            }
-                        }
-                    }
-                    continue; // skip further processing
+                    continue;
                 }
             }
-        }
 
         // PIECE token
         if (is_in(current_char, "KQRBN")) {
