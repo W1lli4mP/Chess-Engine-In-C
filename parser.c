@@ -1,11 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-char **tokenise(char*, int*);
-int is_in(char, char*);
-void add_token_char(char**, int*, char);
-void add_token_str(char**, int*, char*);
+#include "parser.h"
 
 int main(void) {
     // get input
