@@ -11,20 +11,20 @@ int main(void) {
 
     // tokenise
     int t = 0;
-    char **tokens = tokenise(user_input, &t);
+    Token **tokens = tokenise(user_input, &t);
 
     printf("Tokens:\n");
     for (int i = 0; i < t; i++) {
-        printf("%s\n", tokens[i]);
-        free(tokens[i]); // free each token
+        printf("%s\n", tokens[i]->value);
+        free(tokens[i]->value); // free each token
     }
     free(tokens); // free array of pointers
 
     return 0;
 }
 
-char **tokenise(char *input_string, int *token_count) { // returns a list of strings
-    char **tokens = malloc(10 * sizeof(char*)); // 7 is the max token limit but make it 10 to be sure
+Token **tokenise(char *input_string, int *token_count) { // returns a list of strings
+    Token **tokens = malloc(10 * sizeof(Token*)); // 7 is the max token limit but make it 10 to be sure
     int t = 0; // current no. of tokens
 
     int len = strlen(input_string);
@@ -36,23 +36,27 @@ char **tokenise(char *input_string, int *token_count) { // returns a list of str
         // CASTLE_O and CASTLE_OO tokens
         if (current_char == 'O' || current_char == '0') {
             // check for O-O/0-0
-            if (i + 2 <= len) {
+            if (i + 3 <= len) {
                 char str_copy[6];
-                strncpy(str_copy, input_string, 3); // syntax: destination, source, size_t
+                strncpy(str_copy, input_string + i, 3); // syntax: destination, source, size_t
                 str_copy[3] = '\0'; // manually add null terminator
 
                 // strcmp() returns 0 if true
                 if (strcmp(str_copy, "O-O") == 0 || strcmp(str_copy, "0-0") == 0) {
-                    add_token_str(tokens, &t, str_copy);
+                    Token token = init_token(CASTLE_O, str_copy);
+                    add_token(tokens, &t, token);
                     i += 3;
 
                     // check for O-O-O/0-0-0
                     if (i + 2 <= len) {
-                        strncpy(str_copy, input_string + i - 1, 5); // previous O-O + next char
-                        str_copy[5] = '\0';
-                        if (strcmp(str_copy, "O-O-O") == 0 || strcmp(str_copy, "0-0-0") == 0) {
-                            add_token_str(tokens, &t, str_copy);
-                            i += 2;
+                        if (i - 1 >= 0 && i + 4 <= len) { // boundary check for string
+                            strncpy(str_copy, input_string + i - 1, 5); // previous O-O + next char
+                            str_copy[5] = '\0';
+                            if (strcmp(str_copy, "O-O-O") == 0 || strcmp(str_copy, "0-0-0") == 0) {
+                                Token token = init_token(CASTLE_OO, str_copy);
+                                add_token(tokens, &t, token);
+                                i += 2;
+                            }
                         }
                     }
                     continue; // skip further processing
@@ -62,35 +66,45 @@ char **tokenise(char *input_string, int *token_count) { // returns a list of str
 
         // PIECE token
         if (is_in(current_char, "KQRBN")) {
-            add_token_char(tokens, &t, current_char);
+            char v[2] = {current_char, '\0'};
+            Token token = init_token(PIECE, v);
+            add_token(tokens, &t, token);
             i++;
             continue;
         }
 
         // FILE token
         if (is_in(current_char, "abcdefgh")) {
-            add_token_char(tokens, &t, current_char);
+            char v[2] = {current_char, '\0'};
+            Token token = init_token(C_FILE, v);
+            add_token(tokens, &t, token);
             i++;
             continue;
         }
 
-        // ROW token
+        // RANK token
         if (is_in(current_char, "12345678")) {
-            add_token_char(tokens, &t, current_char);
+            char v[2] = {current_char, '\0'};
+            Token token = init_token(C_RANK, v);
+            add_token(tokens, &t, token);
             i++;
             continue;
         }
 
         // CAPTURE token
         if (current_char == 'x') {
-            add_token_char(tokens, &t, current_char);
+            char v[2] = {current_char, '\0'};
+            Token token = init_token(CAPTURE, v);
+            add_token(tokens, &t, token);
             i++;
             continue;
         }
 
         // EQUALS token
         if (current_char == '=') {
-            add_token_char(tokens, &t, current_char);
+            char v[2] = {current_char, '\0'};
+            Token token = init_token(EQUALS, v);
+            add_token(tokens, &t, token);
             i++;
             continue;
         }
@@ -120,4 +134,24 @@ void add_token_str(char **tokens, int *t, char *current_string) {
     tokens[*t] = malloc(strlen(current_string) + 1);
     strcpy(tokens[*t], current_string);
     (*t)++;
+}
+
+void add_token(Token **tokens, int *t, Token token) {
+    tokens[*t] = malloc(sizeof(Token));
+    tokens[*t]->type = token.type;
+    tokens[*t]->value = token.value;
+    (*t)++;
+}
+
+Token init_token(TokenType type, char *value) {
+    Token t;
+    t.type = type;
+    if (value) {
+        t.value = malloc(strlen(value) + 1);
+        if (!t.value) {perror("malloc"); exit(1);} // prints error msg if value not defined
+        strcpy(t.value, value);
+    } else {
+        t.value = NULL;
+    }
+    return t;
 }
