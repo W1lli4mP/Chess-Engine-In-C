@@ -7,11 +7,11 @@ move : square
      | promotion
      | castle
 
-square : FILE ROW
+square : FILE RANK
 
 disamb : FILE
-       | ROW
-       | FILE ROW
+       | RANK
+       | FILE RANK
 
 piece_move : PIECE square
            | PIECE disamb square
@@ -35,7 +35,7 @@ PIECE : [KQRBN]
 
 FILE : [a-h]
 
-ROW : [1-8]
+RANK : [1-8]
 
 CAPTURE : "x"
 
