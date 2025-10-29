@@ -1,0 +1,50 @@
+// parser rules (nonterminals)
+program : move
+
+move : square
+     | piece_move
+     | capture
+     | promotion
+     | castle
+
+square : FILE ROW
+
+disamb : FILE
+       | ROW
+       | FILE ROW
+
+piece_move : PIECE square
+           | PIECE disamb square
+
+capture : PIECE CAPTURE square
+        | PIECE disamb CAPTURE square
+        | FILE CAPTURE square
+
+promotion : square EQUALS PIECE
+          | capture EQUALS PIECE
+          | PIECE square EQUALS PIECE
+          | PIECE disamb square EQUALS PIECE
+          | PIECE disamb CAPTURE square EQUALS PIECE
+
+castle : CASTLE_O
+       | CASTLE_OO
+
+
+// tokens (lexer level)
+PIECE : [KQRBN]
+
+FILE : [a-h]
+
+ROW : [1-8]
+
+CAPTURE : "x"
+
+EQUALS : "="
+
+CASTLE_O : "O-O"
+         | "0-0"
+
+CASTLE_OO : "O-O-O"
+          | "0-0-0"
+
+WS : [ \t\r\n]+
