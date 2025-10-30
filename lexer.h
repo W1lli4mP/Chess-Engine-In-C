@@ -5,7 +5,7 @@ typedef enum {
     PIECE,
     C_FILE, // file is already a reserved keyword in stdlib
     C_RANK,
-    CAPTURE,
+    CAPTURES,
     EQUALS,
     CASTLE_O,
     CASTLE_OO,

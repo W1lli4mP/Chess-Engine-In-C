@@ -37,7 +37,7 @@ FILE : [a-h]
 
 RANK : [1-8]
 
-CAPTURE : "x"
+CAPTURES : "x"
 
 EQUALS : "="
 

@@ -93,10 +93,10 @@ Token **tokenise(char *input_string, int *token_count) { // returns a list of st
             continue;
         }
 
-        // CAPTURE token
+        // CAPTURES token
         if (current_char == 'x') {
             char v[2] = {current_char, '\0'};
-            Token token = init_token(CAPTURE, v);
+            Token token = init_token(CAPTURES, v);
             add_token(tokens, &t, token);
             i++;
             continue;
