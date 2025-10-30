@@ -3,25 +3,26 @@
 #include <string.h>
 #include "lexer.h"
 
-int main(void) {
-    // get input
-    char user_input[20]; // safe input
-    printf("Enter move: ");
-    scanf("%19s", user_input);
+// MOVED TO PARSER.C
+// int main(void) {
+//     // get input
+//     char user_input[20]; // safe input
+//     printf("Enter move: ");
+//     scanf("%19s", user_input);
 
-    // tokenise
-    int t = 0;
-    Token **tokens = tokenise(user_input, &t);
+//     // tokenise
+//     int t = 0;
+//     Token **tokens = tokenise(user_input, &t);
 
-    printf("Tokens:\n");
-    for (int i = 0; i < t; i++) {
-        printf("%s\n", tokens[i]->value);
-        free(tokens[i]->value); // free each token
-    }
-    free(tokens); // free array of pointers
+//     printf("Tokens:\n");
+//     for (int i = 0; i < t; i++) {
+//         printf("%s\n", tokens[i]->value);
+//         free(tokens[i]->value); // free each token
+//     }
+//     free(tokens); // free array of pointers
 
-    return 0;
-}
+//     return 0;
+// }
 
 Token **tokenise(char *input_string, int *token_count) { // returns a list of strings
     Token **tokens = malloc(10 * sizeof(Token*)); // 7 is the max token limit but make it 10 to be sure
