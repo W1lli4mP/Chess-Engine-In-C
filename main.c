@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "board.h"
 #include "piece.h"
+#include "move.h"
 
 // declare functions
 void process_input(Board*);
@@ -11,17 +12,18 @@ int main(void) {
     display_grid(&chess_board); // display chess board at the start before taking inputs
     
     // testing new functions
-    // initialise square coords - could alternatively use int[2]{1, 1}
-    int test_move_init[2] = {1, 1};
-    int test_move[2] = {3, 1};
-    Piece *selected_piece = get_piece_at(&chess_board, test_move_init);
-    move_piece(&chess_board, selected_piece, test_move);
+    Position from_coords = square_to_coord("e2");
+    int from_square[] = {from_coords.row, from_coords.col};
+    Position to_coords = square_to_coord("e4");
+    int to_square[] = {to_coords.row, to_coords.col};
+
+    Piece *selected_piece = get_piece_at(&chess_board, from_square); // piece pointer
+
+    Move move = {selected_piece, from_square[0], from_square[1], to_square[0], to_square[1]};
+
+    move_piece(&chess_board, move);
 
     display_grid(&chess_board);
-
-    // while (true) {
-    //     process_input(chess_board.grid);
-    // }
 
     return 0;
 }

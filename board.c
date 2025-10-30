@@ -30,10 +30,10 @@ Board init_pieces(void) { // returns a newly initialised chess board with pieces
                         type = 'b';
                         break;
                     case 3:
-                        type = 'q';
+                        type = 'k';
                         break;
                     case 4:
-                        type = 'k';
+                        type = 'q';
                         break;
                 }
             }
@@ -42,22 +42,22 @@ Board init_pieces(void) { // returns a newly initialised chess board with pieces
             const char *sprite = "-"; // if there is no piece, leave it's sprite as "--"
             switch (type) {
                 case 'p':
-                    sprite = (colour == 'w') ? "♙" : "♟";
+                    sprite = (colour == 'w') ? "♟" : "♙";
                     break;
                 case 'r':
-                    sprite = (colour == 'w') ? "♖" : "♜";
+                    sprite = (colour == 'w') ? "♜" : "♖";
                     break;
                 case 'b':
-                    sprite = (colour == 'w') ? "♗" : "♝";
+                    sprite = (colour == 'w') ? "♝" : "♗";
                     break;
                 case 'n':
-                    sprite = (colour == 'w') ? "♘" : "♞";
+                    sprite = (colour == 'w') ? "♞" : "♘";
                     break;
                 case 'q':
-                    sprite = (colour == 'w') ? "♕" : "♛";
+                    sprite = (colour == 'w') ? "♛" : "♕";
                     break;
                 case 'k':
-                    sprite = (colour == 'w') ? "♔" : "♚";
+                    sprite = (colour == 'w') ? "♚" : "♔";
                     break;
             }
 
@@ -91,23 +91,13 @@ Piece *get_piece_at(Board *board, int position[2]) { // TODO: add input validati
     return &board->grid[position[0]][position[1]];
 }
 
-void move_piece(Board *board, Piece *piece, int move[2]) { // pointer to chess_board
-    int destination_square[2] = {move[0], move[1]};
-    int original_square[2] = {piece->position[0], piece->position[1]};
+void move_piece(Board *board, Move move) {
+    // move selected piece to the destination square
+    board->grid[move.to_row][move.to_col] = *move.piece;
 
-    // make a local copy before deletion
-    Piece selected_piece = *piece; 
-
-    // update piece position
-    selected_piece.position[0] = destination_square[0];
-    selected_piece.position[1] = destination_square[1];
-
-    // remove piece from original square
-    remove_piece_at(board, original_square);
-
-    // place copy onto the destination square
-    board->grid[destination_square[0]][destination_square[1]] = selected_piece;
-
+    // remove old piece at the old square
+    int old_position[2] = {move.from_row, move.from_col};
+    remove_piece_at(board, old_position);
 }
 
 void remove_piece_at(Board *board, int position[2]) {
