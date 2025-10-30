@@ -11,17 +11,7 @@ int main(void) {
 
     display_grid(&chess_board); // display chess board at the start before taking inputs
     
-    // testing new functions
-    Position from_coords = square_to_coord("e2");
-    int from_square[] = {from_coords.row, from_coords.col};
-    Position to_coords = square_to_coord("e4");
-    int to_square[] = {to_coords.row, to_coords.col};
-
-    Piece *selected_piece = get_piece_at(&chess_board, from_square); // piece pointer
-
-    Move move = {selected_piece, from_square[0], from_square[1], to_square[0], to_square[1]};
-
-    move_piece(&chess_board, move);
+    make_move(&chess_board, "e2", "e4");
 
     display_grid(&chess_board);
 

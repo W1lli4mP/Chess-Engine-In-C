@@ -1,4 +1,5 @@
 #include "board.h"
+#include "move.h"
 #include <stdio.h>
 
 Board init_pieces(void) { // returns a newly initialised chess board with pieces
@@ -104,4 +105,21 @@ void remove_piece_at(Board *board, int position[2]) {
     board->grid[position[0]][position[1]].colour = '\0'; // reset the colour
     board->grid[position[0]][position[1]].type = '\0'; // reset the type
     board->grid[position[0]][position[1]].sprite = "-"; // reset the sprite
+}
+
+void make_move(Board *board, char *from_str, char *to_str) {
+    // get coords from source square
+    Position from_coords = square_to_coord(from_str);
+    int from_square[] = {from_coords.row, from_coords.col};
+    
+    // get coords from destination square
+    Position to_coords = square_to_coord(to_str);
+    int to_square[] = {to_coords.row, to_coords.col};
+
+    // create piece pointer for referencing in move struct
+    Piece *selected_piece = get_piece_at(board, from_square);
+    Move move = {selected_piece, from_square[0], from_square[1], to_square[0], to_square[1]};
+
+    // execute the move
+    move_piece(board, move);
 }

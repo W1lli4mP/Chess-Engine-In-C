@@ -16,5 +16,6 @@ void display_grid(Board*); // expects a grid array of size ROWSxCOLS that stores
 Piece *get_piece_at(Board*, int[2]);
 void move_piece(Board*, Move);
 void remove_piece_at(Board*, int[2]);
+void make_move(Board*, char*, char*);
 
 #endif
