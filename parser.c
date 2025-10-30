@@ -38,9 +38,14 @@ int main(void) {
         printf("%s ", tokens[i]->value);
         // free(tokens[i]->value); // free each token
     }
+    printf("\n");
+
     // free(tokens); // free array of pointers
     
-    parse_move();
+    // parse_move();
+    // cur++;
+    parse_program();
+
     free(tokens);
 
     return 0;
@@ -68,4 +73,11 @@ bool at_end(void) {
 
 void parse_move(void) {
     (accept(PIECE) != NULL) ? printf("passed\n") : printf("failed\n");
+}
+
+void parse_program(void) {
+    while (cur < t) {
+        parse_move();
+        cur++;
+    }
 }
