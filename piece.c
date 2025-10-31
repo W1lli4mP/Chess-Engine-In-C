@@ -44,13 +44,15 @@ int generate_pawn_moves(Board *b, Piece *p, Position *moves, int capacity) {
         if (count < capacity) moves[count] = init_position(forward.row, forward.col);
         count++;
         
-        // TODO: add initial square conditions in the future
-        Position double_forward = {forward.row + d, forward.col};
-        int for_arr2[2] = {double_forward.row, double_forward.col};
-        Piece *check_piece2 = get_piece_at(b, for_arr2);
-        if (in_bounds(double_forward.row, double_forward.col) && check_piece2->type == '\0') { // checking if the square after initial square is empty
-            if (count < capacity) moves[count] = init_position(double_forward.row, double_forward.col);
-            count++;
+        // checking double forward
+        if ((p->position[0] == 1 && d == 1) || (p->position[0] == 6 && d == -1)) {
+            Position double_forward = {forward.row + d, forward.col};
+            int for_arr2[2] = {double_forward.row, double_forward.col};
+            Piece *check_piece2 = get_piece_at(b, for_arr2);
+            if (in_bounds(double_forward.row, double_forward.col) && check_piece2->type == '\0') { // checking if the square after initial square is empty
+                if (count < capacity) moves[count] = init_position(double_forward.row, double_forward.col);
+                count++;
+            }
         }
     }
     return count;
