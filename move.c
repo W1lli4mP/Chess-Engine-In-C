@@ -12,6 +12,9 @@ Position square_to_coord(char *square) {
 
     int x = row - 49; // added -1 since the board is 0-indexed
     int y = col - 97;
-    Position coordinate = {x, y};
-    return coordinate;
+    return (Position) {x, y};
+}
+
+Position init_position(int row, int col) {
+    return (Position) {row, col}; // returns a compound literal
 }

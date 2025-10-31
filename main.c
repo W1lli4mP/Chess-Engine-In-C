@@ -6,7 +6,8 @@
 #include "move.h"
 
 // declare functions
-void process_input(Board *board, char[], char[]);
+void process_input(Board*, char[], char[]);
+int validate_move(Board*, char[], char[]);
 
 int main(void) {
     Board chess_board = init_pieces();
@@ -26,10 +27,37 @@ int main(void) {
 
 // define functions
 void process_input(Board *board, char m1[], char m2[]) {
+    int valid = 0;
     // temporarily reads squares only - no SAN logic involved
-    printf("Enter a move: ");
-    if (scanf("%2s %2s", m1, m2) != 2) {
-        fprintf(stderr, "invalid input");
-        exit(1);
+    while (!valid) {
+        printf("Enter a move: ");
+        if (scanf("%2s %2s", m1, m2) != 2) {
+            fprintf(stderr, "invalid input");
+            exit(1);
+        }
+        valid = validate_move(board, m1 ,m2);
+        if (!valid)
+            printf("Invalid, try again\n");
+}
+}
+
+int validate_move(Board *b, char m1[], char m2[]) {
+    Position from_coords = square_to_coord(m1);
+    int from_square[2] = {from_coords.row, from_coords.col};
+    Position to_coords = square_to_coord(m2);
+    int to_square[2] = {to_coords.row, to_coords.col};
+
+    Piece *p = get_piece_at(b, from_square);
+    Position moves[20];
+    
+    int num_moves = generate_pseudo_legal_moves(b, p, moves);
+
+    int valid = 0;
+
+    for (int i = 0; i < num_moves; i++) {
+        if (to_coords.row == moves[i].row && to_coords.col == moves[i].col) {
+            return 1; // valid
+        }
     }
+    return 0; // invalid
 }

@@ -1,41 +1,30 @@
 #include "board.h"
-#include "move.h"
 #include <stdio.h>
 
 Board init_pieces(void) { // returns a newly initialised chess board with pieces
     Board chess_board;
-    for (int i = 0; i < ROWS; i++) {
-        for (int j = 0; j < COLS; j++) {
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
             // calculate piece's colour (using a ternary operator)
             char colour = '\0'; // default if not assigned a value later on
-            colour = (i == 0 || i == 1) ? 'w' : 'b';
+            if (i == 0 || i == 1)
+                colour = 'w';
+            else if (i == 6 || i == 7)
+                colour = 'b';
 
             // calculate piece types
             char type = '\0'; // if there is no piece, leave it's type as '\0'
             // pawn row
-            if (i == 1 || i == ROWS - 2) {
+            if (i == 1 || i == 6) {
                 type = 'p';
             // back row
-            } else  if (i == 0 || i == ROWS - 1) {
+            } else  if (i == 0 || i == 7) {
                 switch (j) {
-                    case 0:
-                    case COLS - 1:
-                        type = 'r';
-                        break;
-                    case 1:
-                    case COLS - 2:
-                        type = 'n';
-                        break;
-                    case 2:
-                    case COLS - 3:
-                        type = 'b';
-                        break;
-                    case 3:
-                        type = 'q';
-                        break;
-                    case 4:
-                        type = 'k';
-                        break;
+                    case 0: case 7: type = 'r'; break;
+                    case 1: case 6: type = 'n'; break;
+                    case 2: case 5: type = 'b'; break;
+                    case 3: type = 'q'; break;
+                    case 4: type = 'k'; break;
                 }
             }
 
@@ -80,8 +69,8 @@ Board init_pieces(void) { // returns a newly initialised chess board with pieces
 
 void display_grid(Board *board, int white) { // white = render for white's side or not
     if (!(white)) {
-        for (int i = 0; i < ROWS; i++) {
-            for (int j = COLS - 1; j >= 0; j--) {
+        for (int i = 0; i < 8; i++) {
+            for (int j = 7; j >= 0; j--) {
                 Piece *p = &board->grid[i][j];
                 printf("%s ", p->sprite); // actually outputs the contents of each square
             }
@@ -89,8 +78,8 @@ void display_grid(Board *board, int white) { // white = render for white's side 
         }
         printf("\n");
     } else {
-        for (int i = ROWS - 1; i >= 0; i--) { // invert logic for rendering white
-            for (int j = 0; j < COLS; j++) {
+        for (int i = 7; i >= 0; i--) { // invert logic for rendering white
+            for (int j = 0; j < 8; j++) {
                 Piece *p = &board->grid[i][j];
                 printf("%s ", p->sprite); // actually outputs the contents of each square
             }
@@ -105,8 +94,12 @@ Piece *get_piece_at(Board *board, int position[2]) { // TODO: add input validati
 }
 
 void move_piece(Board *board, Move move) {
+    // update piece
+    Piece moved_piece = *move.piece;
+    moved_piece.position[0] = move.to_row;
+    moved_piece.position[1] = move.to_col;
     // move selected piece to the destination square
-    board->grid[move.to_row][move.to_col] = *move.piece;
+    board->grid[move.to_row][move.to_col] = moved_piece;
 
     // remove old piece at the old square
     int old_position[2] = {move.from_row, move.from_col};
