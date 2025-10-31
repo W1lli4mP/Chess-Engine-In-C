@@ -4,6 +4,7 @@
 #include "board.h"
 #include "piece.h"
 #include "move.h"
+#include "rules.h"
 
 // declare functions
 void process_input(Board*, char[], char[]);
@@ -51,6 +52,10 @@ int validate_move(Board *b, char m1[], char m2[]) {
     Position moves[20];
     
     int num_moves = generate_pseudo_legal_moves(b, p, moves);
+    
+    Position out = {0, 0};
+    if (get_king_position(b, 'w', &out))
+        printf("WHITE KING FOUND AT: %d, %d\n", out.row, out.col);
 
     int valid = 0;
 
