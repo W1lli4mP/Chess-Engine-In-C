@@ -5,6 +5,8 @@ int generate_pseudo_legal_moves(Board *b, Piece *p, Position *moves) { // p is t
     int capacity = 20;
     if (p->type == 'p')
         return generate_pawn_moves(b, p, moves, capacity);
+    if (p->type == 'n')
+        return generate_knight_moves(b, p, moves, capacity);
     // if (p->type == 'r' || p->type == 'b' || p->type == 'q')
     //     return generate_sliding_moves();
     // if (p->type == 'n')
@@ -51,6 +53,28 @@ int generate_pawn_moves(Board *b, Piece *p, Position *moves, int capacity) {
     }
     return count;
     // TODO: add en passant and promotion logic in the future
+}
+
+int generate_knight_moves(Board *b, Piece *p, Position *moves, int capacity) {
+    int count = 0;
+    // create all knight move variations
+    int var[8][2] = {
+        {2, -1}, {2, 1}, {1, 2}, {-1, 2},
+        {-2, 1}, {-2, 1}, {-1, -2}, {1, -2}
+    };
+
+    for (int i = 0; i < 8; i++) {
+        int row = p->position[0] + var[i][0];
+        int col = p->position[1] + var[i][1];
+        Position pos = {row, col};
+        Piece *target = get_piece_at(b, (int[2]){row, col});
+        if (in_bounds(row, col) && (is_enemy(b, p, pos) || target->type == '\0')) {
+            moves[count] = pos;
+            count++;
+        }
+    }
+    return count;
+
 }
 
 int is_enemy(Board *board, Piece *piece, Position destination) {
