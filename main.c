@@ -12,12 +12,13 @@ int main(void) {
     Board chess_board = init_pieces();
 
     bool running = true;
-    char m1[] = "e2", m2[] = "e4";
+    char m1[] = "e2", m2[] = "e4"; // initial values
 
+    display_grid(&chess_board, 0);
     while (running) {
-        process_input(&chess_board, m1, m2);
+        process_input(&chess_board, m1, m2); // modifies m1 and m2
         make_move(&chess_board, m1, m2);
-        display_grid(&chess_board);
+        display_grid(&chess_board, 0);
     }
 
     return 0;
@@ -25,8 +26,7 @@ int main(void) {
 
 // define functions
 void process_input(Board *board, char m1[], char m2[]) {
-    // char move[6]; // longest input could be a 6-char pawn capture promotion (e.g. fxg8=Q)
-    // need to add a function that reads the move (an algebraic move parser)
+    // temporarily reads squares only - no SAN logic involved
     printf("Enter a move: ");
     if (scanf("%2s %2s", m1, m2) != 2) {
         fprintf(stderr, "invalid input");

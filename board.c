@@ -31,10 +31,10 @@ Board init_pieces(void) { // returns a newly initialised chess board with pieces
                         type = 'b';
                         break;
                     case 3:
-                        type = 'k';
+                        type = 'q';
                         break;
                     case 4:
-                        type = 'q';
+                        type = 'k';
                         break;
                 }
             }
@@ -78,15 +78,26 @@ Board init_pieces(void) { // returns a newly initialised chess board with pieces
 
 }
 
-void display_grid(Board *board) { // now takes in a pointer
-    for (int i = 0; i < ROWS; i++) {
-        for (int j = 0; j < COLS; j++) {
-            Piece *p = &board->grid[i][j];
-            printf("%s ", p->sprite); // actually outputs the contents of each square
+void display_grid(Board *board, int white) { // white = render for white's side or not
+    if (!(white)) {
+        for (int i = 0; i < ROWS; i++) {
+            for (int j = COLS - 1; j >= 0; j--) {
+                Piece *p = &board->grid[i][j];
+                printf("%s ", p->sprite); // actually outputs the contents of each square
+            }
+            printf("\n");
+        }
+        printf("\n");
+    } else {
+        for (int i = ROWS - 1; i >= 0; i--) { // invert logic for rendering white
+            for (int j = 0; j < COLS; j++) {
+                Piece *p = &board->grid[i][j];
+                printf("%s ", p->sprite); // actually outputs the contents of each square
+            }
+            printf("\n");
         }
         printf("\n");
     }
-    printf("\n");
 }
 
 Piece *get_piece_at(Board *board, int position[2]) { // TODO: add input validation

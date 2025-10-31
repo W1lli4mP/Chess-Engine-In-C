@@ -12,7 +12,7 @@ typedef struct {
 } Board;
 
 Board init_pieces();
-void display_grid(Board*); // expects a grid array of size ROWSxCOLS that stores piece structs
+void display_grid(Board*, int);
 Piece *get_piece_at(Board*, int[2]);
 void move_piece(Board*, Move);
 void remove_piece_at(Board*, int[2]);
