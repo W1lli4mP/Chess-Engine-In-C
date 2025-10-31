@@ -117,6 +117,8 @@ void make_move(Board *board, char *from_str, char *to_str) {
     Position to_coords = square_to_coord(to_str);
     int to_square[] = {to_coords.row, to_coords.col};
 
+    printf("Attempting %d,%d to %d,%d\n", from_square[0], from_square[1], to_square[0], to_square[1]);
+
     // create piece pointer for referencing in move struct
     Piece *selected_piece = get_piece_at(board, from_square);
     Move move = {selected_piece, from_square[0], from_square[1], to_square[0], to_square[1]};

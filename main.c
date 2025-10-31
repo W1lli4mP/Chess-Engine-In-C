@@ -15,9 +15,9 @@ int main(void) {
     char m1[] = "e2", m2[] = "e4";
 
     while (running) {
-        display_grid(&chess_board);
-        make_move(&chess_board, m1, m2);
         process_input(&chess_board, m1, m2);
+        make_move(&chess_board, m1, m2);
+        display_grid(&chess_board);
     }
 
     return 0;
