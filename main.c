@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdbool.h>
 #include "board.h"
 #include "piece.h"
 #include "move.h"
@@ -10,8 +11,12 @@ int main(void) {
     Board chess_board = init_pieces();
 
     display_grid(&chess_board); // display chess board at the start before taking inputs
-    
+
     make_move(&chess_board, "e2", "e4");
+
+    display_grid(&chess_board);
+
+    make_move(&chess_board, "e7", "e5");
 
     display_grid(&chess_board);
 

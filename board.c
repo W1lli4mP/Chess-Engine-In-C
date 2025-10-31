@@ -86,6 +86,7 @@ void display_grid(Board *board) { // now takes in a pointer
         }
         printf("\n");
     }
+    printf("\n");
 }
 
 Piece *get_piece_at(Board *board, int position[2]) { // TODO: add input validation
