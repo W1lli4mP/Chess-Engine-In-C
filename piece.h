@@ -1,23 +1,62 @@
-#ifndef PIECE_H // define if not defined yet - include guard
+#ifndef PIECE_H
 #define PIECE_H
 
-#include "structs.h"
-#include "board.h"
+// sprite types
+#define SPRITE_NONE " "
 
-// main move generator
-int generate_pseudo_legal_moves(Board *b, Piece *p, Position *moves);
+#define SPRITE_WHITE_PAWN "♙"
+#define SPRITE_BLACK_PAWN "♟"
 
-// sub generators
-int generate_pawn_moves(Board *b, Piece *p, Position *moves, int capacity);
-int generate_knight_moves(Board *b, Piece *p, Position *moves, int capacity);
-int generate_king_moves(Board *b, Piece *p, Position *moves, int capacity);
-int generate_sliding_moves(Board *b, Piece *p, Position *moves, int capacity, int directions[][2], int num_d); // helper to simpify logic
-int generate_bishop_moves(Board *b, Piece *p, Position *moves, int capacity);
-int generate_rook_moves(Board *b, Piece *p, Position *moves, int capacity);
-int generate_queen_moves(Board *b, Piece *p, Position *moves, int capacity);
+#define SPRITE_WHITE_ROOK  "♖"
+#define SPRITE_BLACK_ROOK  "♜"
 
-// helper functions
-int is_enemy(Board *board, Piece *piece, Position destination);
-int in_bounds(int row, int col);
+#define SPRITE_WHITE_KNIGHT "♘"
+#define SPRITE_BLACK_KNIGHT "♞"
+
+#define SPRITE_WHITE_BISHOP "♗"
+#define SPRITE_BLACK_BISHOP "♝"
+
+#define SPRITE_WHITE_QUEEN  "♕"
+#define SPRITE_BLACK_QUEEN  "♛"
+
+#define SPRITE_WHITE_KING   "♔"
+#define SPRITE_BLACK_KING   "♚"
+
+// piece type types
+typedef enum
+{
+    TYPE_NONE,
+    TYPE_PAWN,
+    TYPE_ROOK,
+    TYPE_KNIGHT,
+    TYPE_BISHOP,
+    TYPE_QUEEN,
+    TYPE_KING
+} PieceType;
+
+// colour types
+typedef enum
+{
+    COLOUR_NONE,
+    COLOUR_WHITE,
+    COLOUR_BLACK
+} Colour;
+
+typedef struct
+{
+    PieceType type;
+    Colour colour;
+    const char *sprite;
+} Piece;
+
+Piece *initialise_piece(); // initialises a default piece and allocates it to memory
+void print_piece(Piece *p); // prints a singular piece (no newline)
+Piece *create_piece(PieceType type, Colour colour); // initialises a piece and assigns given attributes if valid
+void destroy_piece(Piece *piece); // frees the piece
+
+// helpers for validating attribute inputs
+static int valid_type(PieceType type);
+static int valid_colour(Colour colour);
+static const char *find_sprite(PieceType type, Colour colour);
 
 #endif

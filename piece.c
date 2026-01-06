@@ -1,158 +1,70 @@
-#include <stdio.h>
 #include "piece.h"
+#include <stdio.h>
+#include <stdlib.h>
 
-int generate_pseudo_legal_moves(Board *b, Piece *p, Position *moves) { // p is the selected piece
-    int capacity = 20;
-    if (p->type == 'p')
-        return generate_pawn_moves(b, p, moves, capacity);
-    if (p->type == 'n')
-        return generate_knight_moves(b, p, moves, capacity);
-    if (p->type == 'k')
-        return generate_king_moves(b, p, moves, capacity);
-    if (p->type == 'r')
-        return generate_rook_moves(b, p, moves, capacity);
-    if (p->type == 'b')
-        return generate_bishop_moves(b, p, moves, capacity);
-    if (p->type == 'q')
-        return generate_queen_moves(b, p, moves, capacity);
+Piece *initialise_piece()
+{
+    Piece *new_piece = malloc(sizeof *new_piece);
+    if (!new_piece) return NULL;
 
+    new_piece->type = TYPE_NONE;
+    new_piece->colour = COLOUR_NONE;
+    new_piece->sprite = SPRITE_NONE;
+    return new_piece;
 }
 
-int generate_pawn_moves(Board *b, Piece *p, Position *moves, int capacity) {
-    int count = 0;
-    int d = (p->colour == 'w') ? 1 : -1; // inverse direction for black
+Piece *create_piece(PieceType type, Colour colour)
+{
+    const char *sprite = find_sprite(type, colour);
 
-    // checking for captures
-    Position forward = {p->position[0] + d, p->position[1]};
-    Position c_left = {forward.row, p->position[1] - 1};
-    Position c_right = {forward.row, p->position[1] + 1};
+    if (!valid_type(type) || !valid_colour(colour) || sprite == SPRITE_NONE) return NULL;
 
-    // checking diagonal captures
-    if (in_bounds(c_left.row, c_left.col) && is_enemy(b, p, c_left)) {
-        if (count < capacity) moves[count] = init_position(c_left.row, c_left.col);
-        count++;
+    Piece *new_piece = initialise_piece();
+    if (!new_piece)
+    {
+        destroy_piece(new_piece);
+        return NULL;
     }
-    if (in_bounds(c_right.row, c_right.col) && is_enemy(b, p, c_right)) {
-        if (count < capacity) moves[count] = init_position(c_right.row, c_right.col);
-        count++;
-    }
+    new_piece->type = type;
+    new_piece->colour = colour;
+    new_piece->sprite = sprite;
+    return new_piece;
+}
 
-    // checking forward
-    int for_arr[2] = {forward.row, forward.col};
-    Piece *check_piece = get_piece_at(b, for_arr);
-    if (in_bounds(forward.row, forward.col) && check_piece->type == '\0') { // checking if the square is empty
-        if (count < capacity) moves[count] = init_position(forward.row, forward.col);
-        count++;
-        
-        // checking double forward
-        if ((p->position[0] == 1 && d == 1) || (p->position[0] == 6 && d == -1)) {
-            Position double_forward = {forward.row + d, forward.col};
-            int for_arr2[2] = {double_forward.row, double_forward.col};
-            Piece *check_piece2 = get_piece_at(b, for_arr2);
-            if (in_bounds(double_forward.row, double_forward.col) && check_piece2->type == '\0') { // checking if the square after initial square is empty
-                if (count < capacity) moves[count] = init_position(double_forward.row, double_forward.col);
-                count++;
-            }
+void destroy_piece(Piece *piece)
+{
+    free(piece);
+}
+
+static int valid_type(PieceType type)
+{
+    return type >= TYPE_NONE && type <= TYPE_KING;
+}
+
+static int valid_colour(Colour colour)
+{
+    return colour >= COLOUR_NONE && colour <= COLOUR_BLACK;
+}
+
+static const char *find_sprite(PieceType type, Colour colour)
+{
+    if (colour == COLOUR_WHITE || colour == COLOUR_BLACK)
+    {
+        switch (type)
+        {
+            case TYPE_PAWN: return (colour == COLOUR_WHITE) ? SPRITE_WHITE_PAWN : SPRITE_BLACK_PAWN;
+            case TYPE_ROOK: return (colour == COLOUR_WHITE) ? SPRITE_WHITE_ROOK : SPRITE_BLACK_ROOK;
+            case TYPE_KNIGHT: return (colour == COLOUR_WHITE) ? SPRITE_WHITE_KNIGHT : SPRITE_BLACK_KNIGHT;
+            case TYPE_BISHOP: return (colour == COLOUR_WHITE) ? SPRITE_WHITE_BISHOP : SPRITE_BLACK_BISHOP;
+            case TYPE_QUEEN: return (colour == COLOUR_WHITE) ? SPRITE_WHITE_QUEEN : SPRITE_BLACK_QUEEN;
+            case TYPE_KING: return (colour == COLOUR_WHITE) ? SPRITE_WHITE_KING : SPRITE_BLACK_KING;
+            default: return SPRITE_NONE;
         }
     }
-    return count;
-    // TODO: add en passant and promotion logic in the future
+    else return SPRITE_NONE;
 }
 
-int generate_knight_moves(Board *b, Piece *p, Position *moves, int capacity) {
-    int count = 0;
-    // create all knight move variations
-    int var[8][2] = {
-        {2, -1}, {2, 1}, {1, 2}, {-1, 2},
-        {-2, 1}, {-2, 1}, {-1, -2}, {1, -2}
-    };
-
-    for (int i = 0; i < 8; i++) {
-        int row = p->position[0] + var[i][0];
-        int col = p->position[1] + var[i][1];
-        Position pos = {row, col};
-        Piece *target = get_piece_at(b, (int[2]){row, col});
-        if (in_bounds(row, col) && (is_enemy(b, p, pos) || target->type == '\0')) {
-            if (count >= capacity) break;
-            moves[count] = pos;
-            count++;
-        }
-    }
-    return count;
-
-}
-
-int generate_king_moves(Board *b, Piece *p, Position *moves, int capacity) {
-    int count = 0;
-    // create all knight move variations
-    int var[8][2] = {
-        {1, 0}, {1, 1}, {0, 1}, {-1, 1},
-        {-1, 0}, {-1, -1}, {0, -1}, {1, -1}
-    };
-
-    for (int i = 0; i < 8; i++) {
-        int row = p->position[0] + var[i][0];
-        int col = p->position[1] + var[i][1];
-        Position pos = {row, col};
-        Piece *target = get_piece_at(b, (int[2]){row, col});
-        if (in_bounds(row, col) && (is_enemy(b, p, pos) || target->type == '\0')) {
-            if (count >= capacity) break;
-            moves[count] = pos;
-            count++;
-        }
-    }
-    return count;
-}
-
-int generate_sliding_moves(Board *b, Piece *p, Position *moves, int capacity, int directions[][2], int num_d) {
-    int count = 0;
-    for (int i = 0; i < num_d; i++) {
-        Position t = {p->position[0] + directions[i][0], p->position[1] + directions[i][1]}; // target square
-        Piece *target = get_piece_at(b, (int[2]){t.row, t.col}); 
-        while (in_bounds(t.row, t.col) && target->type == '\0') {
-            if (count >= capacity) break;
-            moves[count] = t;
-            count++;
-
-            t.row += directions[i][0];
-            t.col += directions[i][1];
-            target = get_piece_at(b, (int[2]){t.row, t.col}); // switch to next potential target
-        }
-    }
-    return count;
-}
-
-int generate_bishop_moves(Board *b, Piece *p, Position *moves, int capacity) {
-    int dir[4][2] = {
-        {1, 1}, {-1, 1},
-        {-1, -1}, {1, -1}
-    };
-    return generate_sliding_moves(b, p, moves, capacity, dir, 4);
-}
-
-int generate_rook_moves(Board *b, Piece *p, Position *moves, int capacity) {
-    int dir[4][2] = {
-        {1, 0}, {0, 1},
-        {-1, 0}, {0, -1}
-    };
-    return generate_sliding_moves(b, p, moves, capacity, dir, 4);
-}
-int generate_queen_moves(Board *b, Piece *p, Position *moves, int capacity) {
-    int dir[8][2] = {
-            {1, 1}, {-1, 1}, {-1, -1}, {1, -1},
-            {1, 0}, {0, 1}, {-1, 0}, {0, -1}
-    };
-    return generate_sliding_moves(b, p, moves, capacity, dir, 8);
-}
-
-
-int is_enemy(Board *board, Piece *piece, Position destination) {
-    int raw_destination[2] = {destination.row, destination.col};
-    Piece *enemy_piece = get_piece_at(board, raw_destination);
-    if (enemy_piece->type == '\0') return 0;
-    return (piece->colour != enemy_piece->colour);
-}
-
-int in_bounds(int row, int col) {
-    return row >= 0 && row < 8 && col >= 0 && col < 8;
+void print_piece(Piece *p)
+{
+    printf("%s", p->sprite);
 }

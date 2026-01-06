@@ -1,13 +1,21 @@
 #ifndef BOARD_H
 #define BOARD_H
+#include "piece.h"
+#include "position.h"
+#include <stdbool.h>
 
-#include "structs.h"
+typedef struct
+{
+    Piece *grid[8][8];
+    int height;
+    int width;
+} Board;
 
-Board init_pieces();
-void display_grid(Board*, int);
-Piece *get_piece_at(Board*, int[2]);
-void move_piece(Board*, Move);
-void remove_piece_at(Board*, int[2]);
-void make_move(Board*, char*, char*);
+Board *initialise_board();
+Piece *get_piece_at(Board *board, Position piece_pos);
+bool set_piece_at(Board *board, Position piece_pos, Piece *piece);
+bool remove_piece_at(Board *board, Position piece_pos); // handles logic for removing a piece safely and destroys/frees the piece
+bool destroy_board(Board *board);
+void print_board(Board *board, int white_pov);
 
 #endif
