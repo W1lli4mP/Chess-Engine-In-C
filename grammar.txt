@@ -1,0 +1,30 @@
+<move> ::= <castle> | <piece-move> | <pawn-move>
+<move> ::= <move> | <move> <check>
+
+<piece-move> ::= <piece> <square>
+               | <piece> <capture> <square>
+               | <piece> <disambiguation> <square>
+               | <piece> <disambiguation> <capture> <square>
+
+<pawn-move> ::= <square>
+              | <square> <promotion>
+              | <col> <capture> <square>
+              | <col> <capture> <square> <promotion>
+
+<disambiguation> ::= <col> | <row>
+
+<castle> ::= <castle-kingside> | <castle-queenside>
+<castle-kingside> ::= <circle> <line> <circle>
+<castle-queenside> ::= <circle> <line> <circle> <line> <circle>
+
+<promotion> ::= <equal> <piece>
+<square> ::= <col> <row>
+
+<check> ::= "+" | "#"
+<equal> ::= "="
+<capture> ::= "x"
+<line> ::= "-"
+<circle> ::= "O" | "o" | "0"
+<col> ::= "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h"
+<row> ::= "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8"
+<piece> ::= "R" | "N" | "B" | "Q" | "K"

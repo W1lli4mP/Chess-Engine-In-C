@@ -28,6 +28,8 @@ int main()
             - stalemate
             - en passant
             - castling
+        - add user inputs
+            - algebraic chess parser
     */
 
     return 0;
