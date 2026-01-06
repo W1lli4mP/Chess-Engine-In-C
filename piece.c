@@ -2,6 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// helpers for validating attribute inputs
+static int valid_type(PieceType type);
+static int valid_colour(Colour colour);
+static const char *find_sprite(PieceType type, Colour colour);
+
 Piece *initialise_piece()
 {
     Piece *new_piece = malloc(sizeof *new_piece);
@@ -17,7 +22,7 @@ Piece *create_piece(PieceType type, Colour colour)
 {
     const char *sprite = find_sprite(type, colour);
 
-    if (!valid_type(type) || !valid_colour(colour) || sprite == SPRITE_NONE) return NULL;
+    if (!valid_type(type) || !valid_colour(colour) || strcmp(sprite, SPRITE_NONE) == 0) return NULL;
 
     Piece *new_piece = initialise_piece();
     if (!new_piece)
@@ -36,6 +41,7 @@ void destroy_piece(Piece *piece)
     free(piece);
 }
 
+// helpers for validating piece attributes
 static int valid_type(PieceType type)
 {
     return type >= TYPE_NONE && type <= TYPE_KING;

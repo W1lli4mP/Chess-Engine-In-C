@@ -94,6 +94,42 @@ bool destroy_board(Board *board)
     return true;
 }
 
+bool apply_move(Board *board, Move move)
+{
+    if (!valid_move(board, move)) return false; // should handle legal moves in the future
+
+    Piece *piece = board->grid[move.from.row][move.from.col];
+    Piece *target = board->grid[move.to.row][move.to.row];
+
+    // move piece from original position to destination
+    board->grid[move.to.row][move.to.col] = piece;
+
+    // if there was a piece on the destination (aka a capture), destroy/free it
+    if (target) destroy_piece(target);
+
+    // clear original position
+    board->grid[move.from.row][move.from.col] = NULL;
+
+    return true;
+}
+
+// extendable helper for future changes
+bool valid_move(Board *board, Move move)
+{
+    // board boundaries
+    if (!(move.from.col >= 0 && move.from.col < board->width &&
+            move.from.row >= 0 && move.from.row < board->height &&
+            move.to.col >= 0 && move.to.col < board->width &&
+            move.to.row >= 0 && move.to.row < board->height)) return false;
+
+    // find piece
+    Piece *piece = board->grid[move.from.row][move.from.col];
+    if (!piece) return false;
+
+    // TODO: check for legal moves in another function
+    return true;
+}
+
 void print_board(Board *board, int white_pov)
 {
     int row_start, row_end, row_step;
