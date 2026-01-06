@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "piece.h"
 
+// returns number of moves
 int generate_pseudo_legal_moves(Board *b, Piece *p, Position *moves) { // p is the selected piece
     int capacity = 20;
     if (p->type == 'p')
@@ -38,20 +39,22 @@ int generate_pawn_moves(Board *b, Piece *p, Position *moves, int capacity) {
     }
 
     // checking forward
-    int for_arr[2] = {forward.row, forward.col};
-    Piece *check_piece = get_piece_at(b, for_arr);
-    if (in_bounds(forward.row, forward.col) && check_piece->type == '\0') { // checking if the square is empty
-        if (count < capacity) moves[count] = init_position(forward.row, forward.col);
-        count++;
-        
-        // checking double forward
-        if ((p->position[0] == 1 && d == 1) || (p->position[0] == 6 && d == -1)) {
-            Position double_forward = {forward.row + d, forward.col};
-            int for_arr2[2] = {double_forward.row, double_forward.col};
-            Piece *check_piece2 = get_piece_at(b, for_arr2);
-            if (in_bounds(double_forward.row, double_forward.col) && check_piece2->type == '\0') { // checking if the square after initial square is empty
-                if (count < capacity) moves[count] = init_position(double_forward.row, double_forward.col);
-                count++;
+    if (in_bounds(forward.row, forward.col)) {
+        Piece *check_piece = get_piece_at(b, forward);
+        if (in_bounds(forward.row, forward.col) && check_piece->type == '\0') { // checking if the square is empty
+            if (count < capacity) moves[count] = init_position(forward.row, forward.col);
+            count++;
+            
+            // checking double forward
+            if ((p->position[0] == 1 && d == 1) || (p->position[0] == 6 && d == -1)) {
+                Position double_forward = {forward.row + d, forward.col};
+                if (in_bounds(double_forward.row, double_forward.col)) {
+                    Piece *check_piece2 = get_piece_at(b, double_forward);
+                    if (check_piece2->type == '\0') { // checking if the square after initial square is empty
+                        if (count < capacity) moves[count] = init_position(double_forward.row, double_forward.col);
+                        count++;
+                    }
+                }
             }
         }
     }
@@ -64,15 +67,16 @@ int generate_knight_moves(Board *b, Piece *p, Position *moves, int capacity) {
     // create all knight move variations
     int var[8][2] = {
         {2, -1}, {2, 1}, {1, 2}, {-1, 2},
-        {-2, 1}, {-2, 1}, {-1, -2}, {1, -2}
+        {-2, 1}, {-2, -1}, {-1, -2}, {1, -2}
     };
 
     for (int i = 0; i < 8; i++) {
         int row = p->position[0] + var[i][0];
         int col = p->position[1] + var[i][1];
         Position pos = {row, col};
-        Piece *target = get_piece_at(b, (int[2]){row, col});
-        if (in_bounds(row, col) && (is_enemy(b, p, pos) || target->type == '\0')) {
+        if (!in_bounds(row, col)) continue;
+        Piece *target = get_piece_at(b, pos);
+        if (is_enemy(b, p, pos) || target->type == '\0') {
             if (count >= capacity) break;
             moves[count] = pos;
             count++;
@@ -94,8 +98,9 @@ int generate_king_moves(Board *b, Piece *p, Position *moves, int capacity) {
         int row = p->position[0] + var[i][0];
         int col = p->position[1] + var[i][1];
         Position pos = {row, col};
-        Piece *target = get_piece_at(b, (int[2]){row, col});
-        if (in_bounds(row, col) && (is_enemy(b, p, pos) || target->type == '\0')) {
+        if (!in_bounds(row, col)) continue;
+        Piece *target = get_piece_at(b, pos);
+        if (is_enemy(b, p, pos) || target->type == '\0') {
             if (count >= capacity) break;
             moves[count] = pos;
             count++;
@@ -107,16 +112,27 @@ int generate_king_moves(Board *b, Piece *p, Position *moves, int capacity) {
 int generate_sliding_moves(Board *b, Piece *p, Position *moves, int capacity, int directions[][2], int num_d) {
     int count = 0;
     for (int i = 0; i < num_d; i++) {
-        Position t = {p->position[0] + directions[i][0], p->position[1] + directions[i][1]}; // target square
-        Piece *target = get_piece_at(b, (int[2]){t.row, t.col}); 
-        while (in_bounds(t.row, t.col) && target->type == '\0') {
-            if (count >= capacity) break;
-            moves[count] = t;
-            count++;
+        int dr = directions[i][0];
+        int dc = directions[i][1];
+        int r = p->position[0] + dr;
+        int c = p->position[1] + dc;
 
-            t.row += directions[i][0];
-            t.col += directions[i][1];
-            target = get_piece_at(b, (int[2]){t.row, t.col}); // switch to next potential target
+        while (in_bounds(r, c)) {
+            Position t = {r, c}; // target square
+            Piece *target = get_piece_at(b, t);
+            if (target->type == '\0') {
+                if (count >= capacity) break;
+                moves[count++] = t;
+            } else {
+                if (is_enemy(b, p, t)) {
+                    if (count < capacity) moves[count] = t;
+                    count++;
+                }
+                break; // stop sliding when blocked by any piece
+            }
+            
+            r += dr;
+            c += dc;
         }
     }
     return count;
@@ -147,8 +163,7 @@ int generate_queen_moves(Board *b, Piece *p, Position *moves, int capacity) {
 
 
 int is_enemy(Board *board, Piece *piece, Position destination) {
-    int raw_destination[2] = {destination.row, destination.col};
-    Piece *enemy_piece = get_piece_at(board, raw_destination);
+    Piece *enemy_piece = get_piece_at(board, destination);
     if (enemy_piece->type == '\0') return 0;
     return (piece->colour != enemy_piece->colour);
 }

@@ -10,7 +10,7 @@ Token expect(TokenType);
 bool at_end(void);
 
 // parse functions
-void parse_program(void);
+void parse_program(Token**);
 void parse_move(void);
 
 // global pointers
@@ -27,24 +27,16 @@ int main(void) {
     // get input
     char user_input[20]; // safe input
 
+    // lexer
     printf("Enter move: ");
     scanf("%19s", user_input);
-
-    // tokenise input
-    t = 0;
     tokens = tokenise(user_input, tp);
-    printf("Tokens: ");
-    for (int i = 0; i < t; i++) {
-        printf("%s ", tokens[i]->value);
-        // free(tokens[i]->value); // free each token
-    }
-    printf("\n");
 
-    // free(tokens); // free array of pointers
+    int t = 0;
+    print_tokens(tokens, t);
     
-    // parse_move();
-    // cur++;
-    parse_program();
+    // parser
+    parse_program(tokens);
 
     free(tokens);
 
@@ -75,7 +67,7 @@ void parse_move(void) {
     (accept(PIECE) != NULL) ? printf("passed\n") : printf("failed\n");
 }
 
-void parse_program(void) {
+void parse_program(Token** tokens) {
     while (cur < t) {
         parse_move();
         cur++;

@@ -89,8 +89,8 @@ void display_grid(Board *board, int white) { // white = render for white's side 
     }
 }
 
-Piece *get_piece_at(Board *board, int position[2]) { // TODO: add input validation
-    return &board->grid[position[0]][position[1]];
+Piece *get_piece_at(Board *board, Position pos) { // TODO: add input validation
+    return &board->grid[pos.row][pos.col];
 }
 
 void move_piece(Board *board, Move move) {
@@ -115,17 +115,14 @@ void remove_piece_at(Board *board, int position[2]) {
 void make_move(Board *board, char *from_str, char *to_str) {
     // get coords from source square
     Position from_coords = square_to_coord(from_str);
-    int from_square[] = {from_coords.row, from_coords.col};
     
     // get coords from destination square
     Position to_coords = square_to_coord(to_str);
     int to_square[] = {to_coords.row, to_coords.col};
 
-    printf("Attempting %d,%d to %d,%d\n", from_square[0], from_square[1], to_square[0], to_square[1]);
-
     // create piece pointer for referencing in move struct
-    Piece *selected_piece = get_piece_at(board, from_square);
-    Move move = {selected_piece, from_square[0], from_square[1], to_square[0], to_square[1]};
+    Piece *selected_piece = get_piece_at(board, from_coords);
+    Move move = {selected_piece, from_coords.row, from_coords.col, to_square[0], to_square[1]};
 
     // execute the move
     move_piece(board, move);

@@ -4,13 +4,15 @@
 #include "structs.h"
 #include "move.h"
 #include "board.h"
+#include "piece.h"
 
-int get_king_position(Board *b, char colour, Position *out); 
+#include <stdlib.h>
 
+Position get_king_position(Board *b, char colour);
 
-// int is_in_check(Board *b, char colour);
+int is_in_check(Board *b, char colour);
 
-// int is_checkmate(Board *b, char colour);
+int is_checkmate(Board *b, char colour);
 
 // int has_any_legal_move(Board *b, char colour);
 //     /* true if side has at least one legal move */

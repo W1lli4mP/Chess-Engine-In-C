@@ -17,7 +17,7 @@ piece_move : PIECE square
            | PIECE disamb square
 
 capture : PIECE CAPTURE square
-        | PIECE disamb CAPTURE square
+        | PIECE disamb CAPTURES square
         | FILE CAPTURE square
 
 promotion : square EQUALS PIECE

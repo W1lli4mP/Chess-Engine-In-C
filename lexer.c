@@ -118,24 +118,16 @@ Token **tokenise(char *input_string, int *token_count) { // returns a list of st
 
 }
 
+Token **print_tokens(Token **tokens, int t) { // t = amount of tokens
+    printf("Tokens: ");
+    for (int i = 0; i < t; i++) {
+        printf("%s ", tokens[i]->value);
+    }
+    printf("\n");
+}
+
 int is_in(char x, char *string) {
     return strchr(string, x) ? 1 : 0;
-}
-
-// add a single char token
-void add_token_char(char **tokens, int *t, char current_char) { // tokens pointer, t_index pointer, char to add
-    // tokens is an array of strings, thus cannot add a single char
-    tokens[*t] = malloc(2); // allocates 2 bits of memory, 1 char + 1 null terminator
-    tokens[*t][0] = current_char;
-    tokens[*t][1] = '\0';
-    (*t)++;
-}
-
-// add a str token
-void add_token_str(char **tokens, int *t, char *current_string) {
-    tokens[*t] = malloc(strlen(current_string) + 1);
-    strcpy(tokens[*t], current_string);
-    (*t)++;
 }
 
 void add_token(Token **tokens, int *t, Token token) {

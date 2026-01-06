@@ -18,9 +18,8 @@ typedef struct {
 } Token;
 
 Token **tokenise(char*, int*);
+Token **print_tokens(Token**, int);
 int is_in(char, char*);
-void add_token_char(char**, int*, char);
-void add_token_str(char**, int*, char*);
 void add_token(Token**, int*, Token);
 Token init_token(TokenType, char*);
 
