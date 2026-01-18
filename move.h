@@ -9,13 +9,19 @@ typedef struct
     PieceType piece;
     Position from;
     Position to;
-    PieceType promotion; // what the piece has promoted to
     bool is_capture;
+
+    // castling
     bool is_castle_kingside;
     bool is_castle_queenside;
+
+    // promotion
+    bool is_promotion;
+    PieceType promotion;
+
+    // check/mate
     bool is_check;
     bool is_checkmate;
-    bool is_promotion;
 } Move;
 
 Move *initialise_move();

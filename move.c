@@ -10,13 +10,16 @@ Move *initialise_move()
     move->piece = TYPE_NONE;
     move->from = from;
     move->to = to;
-    move->promotion = TYPE_NONE;
     move->is_capture = false;
+
     move->is_castle_kingside = false;
     move->is_castle_queenside = false;
+
+    move->is_promotion = false;
+    move->promotion = TYPE_NONE;
+
     move->is_check = false;
     move->is_checkmate = false;
-    move->is_promotion = false;
 
     return move;
 }
