@@ -21,6 +21,7 @@ San *initialise_san()
     san->promotion = TYPE_NONE;
 
     san->suffix = SAN_SUFFIX_NONE;
+    return san;
 }
 
 bool destroy_san(San *san)
