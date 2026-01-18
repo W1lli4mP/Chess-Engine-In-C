@@ -4,6 +4,7 @@ Node *initialise_node(void)
 {
     Node *node = (Node *) malloc(sizeof(Node));
     node->data = node->next = node->prev = NULL;
+    return node;
 }
 
 void free_node(Node *node)
@@ -14,20 +15,20 @@ void free_node(Node *node)
 
 LinkedList *initialise_linked_list()
 {
-    LinkedList *list = (LinkedList *) malloc(sizeof(LinkedList *));
+    LinkedList *list = malloc(sizeof *list);
     list->head = list->tail = NULL;
     return list;
 }
 
 void free_linked_list(LinkedList *list)
 {
-    Node *next;
+    Node *curr = list->head;
 
-    while (list->head)
+    while (curr)
     {
-        next = list->head-next;
-        free_node(next);
-        list->head = next;
+        Node *next = curr->next;
+        free_node(curr);
+        curr = next;
     }
     free(list);
 }

@@ -1,5 +1,4 @@
-<move> ::= <castle> | <piece-move> | <pawn-move>
-<move> ::= <move> | <move> <check>
+<move> ::= (<castle> | <piece-move> | <pawn-move>) <check>?
 
 <piece-move> ::= <piece> <square>
                | <piece> <capture> <square>

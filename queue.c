@@ -7,8 +7,9 @@ Queue *initialise_queue()
 
 void push_queue(Queue *queue, void *data, size_t data_size)
 {
-    append_linked_list(queue, NULL);
-    memcpy(queue->tail->data, data, data_size);
+    void *copy = malloc(data_size);
+    memcpy(copy, data, data_size);
+    append_linked_list(queue, copy);
 }
 
 void *pop_queue(Queue *queue)
@@ -30,6 +31,6 @@ void *peek_queue(Queue *queue)
 void free_queue(Queue *queue)
 {
     void *data;
-    while (data = pop_queue(queue)) free(queue);
+    while ((data = pop_queue(queue)) != NULL) free(data);
     free_linked_list(queue);
 }

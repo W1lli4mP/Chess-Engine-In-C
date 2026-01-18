@@ -2,13 +2,35 @@
 #define PARSER_H
 #include "position.h"
 #include "queue.h"
+#include "move.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 
+typedef enum
+{
+    TOKEN_CHECK,
+    TOKEN_EQUAL,
+    TOKEN_CAPTURE,
+    TOKEN_LINE,
+    TOKEN_CIRCLE,
+    TOKEN_COL,
+    TOKEN_ROW,
+    TOKEN_PIECE
+} Token;
+
+typedef struct
+{
+    Token token;
+    char character;
+    int pos;
+} Lex;
+
 // err_pos to record the position of where the error occured if any
-bool algebraic_chess_parser(const char *user_input, int *err_pos, Position *position_out);
+Move *algebraic_chess_parser(const char *user_input, int *err_pos);
 
 bool lexer(const char *user_input, int *err_pos, Queue *queue_out);
+
+bool parser(Queue *token_queue, int *err_pos, Move *move_out);
 
 #endif

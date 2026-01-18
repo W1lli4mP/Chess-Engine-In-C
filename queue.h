@@ -2,6 +2,7 @@
 #define QUEUE_H
 #include "linked_list.h"
 #include <stdlib.h>
+#include <string.h>
 
 typedef LinkedList Queue;
 

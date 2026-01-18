@@ -6,7 +6,7 @@ CFLAGS = -g -Wall -Wextra
 TARGET = chess
 
 # source files
-SRCS = main.c board.c piece.c
+SRCS = main.c board.c piece.c parser.c move.c queue.c linked_list.c
 
 # object files
 OBJS = $(SRCS:.c=.o)
