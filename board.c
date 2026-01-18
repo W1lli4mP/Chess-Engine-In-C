@@ -99,7 +99,7 @@ bool apply_move(Board *board, Move move)
     if (!valid_move(board, move)) return false; // should handle legal moves in the future
 
     Piece *piece = board->grid[move.from.row][move.from.col];
-    Piece *target = board->grid[move.to.row][move.to.row];
+    Piece *target = board->grid[move.to.row][move.to.col];
 
     // move piece from original position to destination
     board->grid[move.to.row][move.to.col] = piece;
