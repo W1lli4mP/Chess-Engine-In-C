@@ -1,25 +1,110 @@
 #include <stdio.h>
+#include <stdbool.h>
 #include "piece.h"
 #include "board.h"
 #include "position.h"
 #include "parser.h"
 #include "move.h"
 
-static char piece_type_to_char(PieceType p);
-
-int main(int argc, char **argv)
+// helper for printing
+static char piece_type_to_char(PieceType p)
 {
-    // print piece
-    // Board *board = initialise_board();
-    // print_board(board, 0); // 0 = black view, 1 = white view
+    switch (p)
+    {
+        case TYPE_ROOK: return 'R';
+        case TYPE_KNIGHT: return 'N';
+        case TYPE_BISHOP: return 'B';
+        case TYPE_QUEEN: return 'Q';
+        case TYPE_KING: return 'K';
+        case TYPE_PAWN: return 'P';
+        default: return '-';
+    }
+}
 
-    // Move move = { .from.col = 0, .from.row = 0, .to.col = 1, .to.row = 1 };
-    // apply_move(board, move);
+int main()
+{
+    Board *board = initialise_board();
 
-    // printf("------------------------\n");
-    // print_board(board, 0);
+    bool running = true;
+    while (running)
+    {
+        // 1) draw board
+        print_board(board, 0); // 0 = black view, 1 = white view
 
-    // destroy_board(board);
+        // 2) ask for input
+        char input[8];
+        // infinite loop until input is valid
+        while (1)
+        {
+            if (!fgets(input, sizeof input, stdin))
+            {
+                puts("Invalid input entered\n");
+                return 1;
+            }
+            
+            size_t n = strcspn(input, "\n");
+
+            // terminate newline if newline found (implies input length is sufficient)
+            if (input[n] == '\n')
+            {
+                input[n] = '\0';
+                break;
+            }
+
+            int c;
+            while ((c = getchar() != '\n' && c != EOF)) {} // no newline implies too many chars, flush remaining chars
+            puts("Too long, try again");
+        }
+
+        // 3) apply the input (move)
+        int err_pos = -1;
+        Move *move = algebraic_chess_parser(input, &err_pos);
+
+        // error handling
+        if (!move)
+        {
+            fprintf(stderr, "Parsing failed at %d\n", err_pos);
+            return 1;
+        }
+
+        // TODO: add semantic analysis
+
+        apply_move(board, *move);
+        destroy_move(move);
+
+        printf("------------------------\n");
+
+    }
+
+    destroy_board(board);
+
+    
+    return 0;
+}
+
+    /*
+    game loop structure
+    draw board
+    ask input
+    apply input
+    
+    draw board if input valid
+    else retry input
+    
+    */
+
+    /*
+    DEBUG PRINTS
+
+    printf("Input: \"%s\", err: %d\n", input, err_pos);
+    printf("%c, (%d, %d) to (%d, %d)\n", piece_type_to_char(move->piece), move->from.col, move->from.row, move->to.col, move->to.row);
+    if (move->is_castle_kingside || move->is_castle_queenside) printf("Castling\n");
+    if (move->is_check) printf("Check!\n");
+    if (move->is_checkmate) printf("Checkmate!\n");
+    if (move->is_promotion) printf("Promoting to %c\n", piece_type_to_char(move->promotion));
+    destroy_move(move);
+    */
+
 
     /*
         TODO
@@ -35,44 +120,3 @@ int main(int argc, char **argv)
         - add user inputs
             - algebraic chess parser
     */
-
-    // parser testing
-    if (argc != 2) return 1;
-    const char *input = argv[1];
-    int err_pos = 0;
-    Move *move = algebraic_chess_parser(input, &err_pos);
-
-    printf("Input: \"%s\", err: %d\n", input, err_pos);
-
-    // error handling
-    if (!move)
-    {
-        printf("Parse failed at %d\n", err_pos);
-        return 1;
-    }
-
-    printf("%c, (%d, %d) to (%d, %d)\n", piece_type_to_char(move->piece), move->from.col, move->from.row, move->to.col, move->to.row);
-    if (move->is_castle_kingside || move->is_castle_queenside) printf("Castling\n");
-    if (move->is_check) printf("Check!\n");
-    if (move->is_checkmate) printf("Checkmate!\n");
-    if (move->is_promotion) printf("Promoting to %c\n", piece_type_to_char(move->promotion));
-    destroy_move(move);
-
-    return 0;
-}
-
-static char piece_type_to_char(PieceType p)
-{
-    switch (p)
-    {
-        case TYPE_ROOK: return 'R';
-        case TYPE_KNIGHT: return 'N';
-        case TYPE_BISHOP: return 'B';
-        case TYPE_QUEEN: return 'Q';
-        case TYPE_KING: return 'K';
-        case TYPE_PAWN: return 'P';
-        default: return '-';
-    }
-}
-
-// where i left off: fix parser disambiguation moves and captures
