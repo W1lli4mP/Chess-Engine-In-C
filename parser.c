@@ -5,12 +5,11 @@ static bool expect(Queue *queue, Token token, Lex *lex_out, int *err_pos);
 static bool accept(Queue *queue, Token token, Lex *lex_out);
 
 
-static void parse_check(Queue *queue, Move *move_out);
+static void parse_check(Queue *queue, San *san_out);
 static bool parse_square(Queue *queue, Position *pos_out, int *err_pos);
 static bool parse_promotion(Queue *queue, PieceType *piece_out, int *err_pos);
-
-static bool parse_castle(Queue *queue, Move *move_out, int *err_pos);
-static bool parse_piece_move(Queue *queue, Move *move_out, int *err_pos);
+static bool parse_castle(Queue *queue, San *san_out, int *err_pos);
+static bool parse_piece_move(Queue *queue, San *san_out, int *err_pos);
 
 bool tokenisation(char c, Lex *l)
 {
@@ -135,15 +134,15 @@ static bool accept(Queue *queue, Token token, Lex *lex_out)
     return false;
 }
 
-static void parse_check(Queue *queue, Move *move_out)
+static void parse_check(Queue *queue, San *san_out)
 {
     Lex temp;
 
     // + or # (optional for check/mate)
     if (accept(queue, TOKEN_CHECK, &temp))
     {
-        move_out->is_check = (temp.character == '+');
-        move_out->is_checkmate = (temp.character == '#');
+        if (temp.character == '+') san_out->suffix = SAN_SUFFIX_CHECK;
+        if (temp.character == '#') san_out->suffix = SAN_SUFFIX_MATE;
     }
 }
 
@@ -187,7 +186,7 @@ static bool parse_promotion(Queue *queue, PieceType *piece_out, int *err_pos)
     return true;
 }
 
-static bool parse_castle(Queue *queue, Move *move_out, int *err_pos)
+static bool parse_castle(Queue *queue, San *san_out, int *err_pos)
 {
     Lex temp;
 
@@ -205,24 +204,24 @@ static bool parse_castle(Queue *queue, Move *move_out, int *err_pos)
     {
         // O
         if (!expect(queue, TOKEN_CIRCLE, &temp, err_pos)) return false;
-        move_out->is_castle_queenside = true;
+        san_out->is_castle_queenside = true;
     }
     else
     {
-        move_out->is_castle_kingside = true;
+        san_out->is_castle_kingside = true;
     }
 
     return true;
 }
 
-static bool parse_piece_move(Queue *queue, Move *move_out, int *err_pos)
+static bool parse_piece_move(Queue *queue, San *san_out, int *err_pos)
 {
     Lex temp;
 
     // <piece>
     if (!expect(queue, TOKEN_PIECE, &temp, err_pos)) return false;
 
-    move_out->piece = char_to_piece_type(temp.character);
+    san_out->piece = char_to_piece_type(temp.character);
 
     // lookahead
     Lex *t1 = peek_queue(queue); // next token
@@ -235,7 +234,7 @@ static bool parse_piece_move(Queue *queue, Move *move_out, int *err_pos)
         if (!(t2 && t2->token == TOKEN_ROW))
         {
             accept(queue, TOKEN_COL, &temp);
-            move_out->from.col = temp.character - 'a';
+            san_out->from_col = temp.character - 'a';
         }
     }
     // rank disambiguation
@@ -244,26 +243,26 @@ static bool parse_piece_move(Queue *queue, Move *move_out, int *err_pos)
         if (!(t2 && t2->token == TOKEN_COL))
         {
             accept(queue, TOKEN_ROW, &temp);
-            move_out->from.row = temp.character - '1';
+            san_out->from_row = temp.character - '1';
         }
     }
 
     // <capture>?
     if (accept(queue, TOKEN_CAPTURE, &temp))
     {
-        move_out->is_capture = true;
+        san_out->is_capture = true;
     }
 
     // <square>
     Position to;
     if (!parse_square(queue, &to, err_pos)) return false;
 
-    move_out->to = to;
+    san_out->to = to;
 
     return true;
 }
 
-static bool parse_pawn_move(Queue *queue, Move *move_out, int *err_pos)
+static bool parse_pawn_move(Queue *queue, San *san_out, int *err_pos)
 {
     // lookahead initialisation and validation
     Lex *a = peek_queue(queue);
@@ -283,7 +282,7 @@ static bool parse_pawn_move(Queue *queue, Move *move_out, int *err_pos)
         return false;
     }
 
-    move_out->piece = TYPE_PAWN;
+    san_out->piece = TYPE_PAWN;
 
     // <row>?
     if (b->token == TOKEN_ROW)
@@ -291,14 +290,14 @@ static bool parse_pawn_move(Queue *queue, Move *move_out, int *err_pos)
         // <square>
         Position to;
         if (!parse_square(queue, &to, err_pos)) return false;
-        move_out->to = to;
+        san_out->to = to;
 
         // <promotion>?
         PieceType promotion;
         if (parse_promotion(queue, &promotion, err_pos))
         {
-            move_out->is_promotion = true;
-            move_out->promotion = promotion;
+            san_out->is_promotion = true;
+            san_out->promotion = promotion;
         }
 
         return true;
@@ -311,23 +310,23 @@ static bool parse_pawn_move(Queue *queue, Move *move_out, int *err_pos)
 
         // <col>
         if (!expect(queue, TOKEN_COL, &temp, err_pos)) return false;
-        move_out->from.col = temp.character - 'a';
+        san_out->from_col = temp.character - 'a';
 
         // <capture>
         if (!expect(queue, TOKEN_CAPTURE, &temp, err_pos)) return false;
-        move_out->is_capture = true;
+        san_out->is_capture = true;
 
         // <square>
         Position to;
         if (!parse_square(queue, &to, err_pos)) return false;
-        move_out->to = to;
+        san_out->to = to;
 
         // <promotion>?
         PieceType promotion;
         if (parse_promotion(queue, &promotion, err_pos))
         {
-            move_out->is_promotion = true;
-            move_out->promotion = promotion;
+            san_out->is_promotion = true;
+            san_out->promotion = promotion;
         }
 
         return true;
@@ -337,7 +336,7 @@ static bool parse_pawn_move(Queue *queue, Move *move_out, int *err_pos)
     return false;
 }
 
-bool parser(Queue *token_queue, int *err_pos, Move *move_out)
+bool parser(Queue *token_queue, int *err_pos, San *san_out)
 {
     if (!token_queue || !token_queue->head) return false;
 
@@ -348,23 +347,23 @@ bool parser(Queue *token_queue, int *err_pos, Move *move_out)
     // <castle>
     if (first->token == TOKEN_CIRCLE)
     {
-        if (!parse_castle(token_queue, move_out, err_pos)) return false;
+        if (!parse_castle(token_queue, san_out, err_pos)) return false;
     }
 
     // <piece-move>
     else if (first->token == TOKEN_PIECE)
     {
-        if (!parse_piece_move(token_queue, move_out, err_pos)) return false;
+        if (!parse_piece_move(token_queue, san_out, err_pos)) return false;
     }
 
     // <pawn-move>
     else
     {
-        if (!parse_pawn_move(token_queue, move_out, err_pos)) return false;
+        if (!parse_pawn_move(token_queue, san_out, err_pos)) return false;
     }
 
     // parse for checks on trailing tokens
-    parse_check(token_queue, move_out);
+    parse_check(token_queue, san_out);
 
     // check if there are still trailing tokens
     Lex *leftover = peek_queue(token_queue);
@@ -379,30 +378,30 @@ bool parser(Queue *token_queue, int *err_pos, Move *move_out)
 
 
 // convert algebraic chess notation -> playable move
-Move *algebraic_chess_parser(const char *user_input, int *err_pos)
+San *algebraic_chess_parser(const char *user_input, int *err_pos)
 {
     Queue *token_queue = initialise_queue();
 
-    Move *move = initialise_move();
+    San *san = initialise_san();
     
     // tokenise and store into a queue
     if (!lexer(user_input, err_pos, token_queue))
     {
         free_queue(token_queue);
-        destroy_move(move);
+        destroy_san(san);
         return NULL;
     }
 
     // parse and consume tokens then populate a move struct
-    if (!parser(token_queue, err_pos, move))
+    if (!parser(token_queue, err_pos, san))
     {
         free_queue(token_queue);
-        destroy_move(move);
+        destroy_san(san);
         return NULL;
     }
 
     // garbage collection
     free_queue(token_queue);
 
-    return move;
+    return san;
 }

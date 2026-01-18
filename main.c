@@ -5,6 +5,7 @@
 #include "position.h"
 #include "parser.h"
 #include "move.h"
+#include "san.h"
 
 // helper for printing
 static char piece_type_to_char(PieceType p)
@@ -58,19 +59,21 @@ int main()
 
         // 3) apply the input (move)
         int err_pos = -1;
-        Move *move = algebraic_chess_parser(input, &err_pos);
+        San *san = algebraic_chess_parser(input, &err_pos);
 
         // error handling
-        if (!move)
+        if (!san)
         {
             fprintf(stderr, "Parsing failed at %d\n", err_pos);
             return 1;
         }
 
         // TODO: add semantic analysis
+        // validate_san(san);
+        destroy_san(san);
 
-        apply_move(board, *move);
-        destroy_move(move);
+        // apply_move(board, *move);
+        // destroy_move(move);
 
         printf("------------------------\n");
 

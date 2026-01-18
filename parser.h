@@ -2,7 +2,7 @@
 #define PARSER_H
 #include "position.h"
 #include "queue.h"
-#include "move.h"
+#include "san.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -27,10 +27,10 @@ typedef struct
 } Lex;
 
 // err_pos to record the position of where the error occured if any
-Move *algebraic_chess_parser(const char *user_input, int *err_pos);
+San *algebraic_chess_parser(const char *user_input, int *err_pos);
 
 bool lexer(const char *user_input, int *err_pos, Queue *queue_out);
 
-bool parser(Queue *token_queue, int *err_pos, Move *move_out);
+bool parser(Queue *token_queue, int *err_pos, San *san_out);
 
 #endif
