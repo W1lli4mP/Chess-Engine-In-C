@@ -40,7 +40,7 @@ Board *initialise_board()
     return new_board;
 }
 
-Piece *get_piece_at(Board *board, Position piece_pos)
+Piece *get_piece_at(const Board *board, Position piece_pos)
 {
     if (!board) return NULL;
 
@@ -130,7 +130,7 @@ bool valid_move(Board *board, Move move)
     return true;
 }
 
-void print_board(Board *board, int white_pov)
+void print_board(const Board *board, int white_pov)
 {
     int row_start, row_end, row_step;
     int col_start, col_end, col_step;

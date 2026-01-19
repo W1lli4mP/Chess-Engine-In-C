@@ -6,6 +6,11 @@
 #include "parser.h"
 #include "move.h"
 #include "san.h"
+#include "move_gen.h"
+#include "san_resolve.h"
+
+#define WHITE_VIEW 1
+#define BLACK_VIEW 0
 
 // helper for printing
 static char piece_type_to_char(PieceType p)
@@ -30,7 +35,7 @@ int main()
     while (running)
     {
         // 1) draw board
-        print_board(board, 0); // 0 = black view, 1 = white view
+        print_board(board, WHITE_VIEW); // 0 = black view, 1 = white view
 
         // 2) ask for input
         char input[8];
@@ -68,14 +73,29 @@ int main()
             return 1;
         }
 
+        // SAN DEBUG PRINT
+        printf("[SAN] Attempting to move %c to %c%c\n", piece_type_to_char(san->piece), san->to.col + 'a', san->to.row + '1');
+
         // TODO: add semantic analysis
-        // validate_san(san);
+        Move *move = initialise_move();
+        
+        puts("Resolving SAN");
+        ResolveStatus status = resolve_san(board, *san, move);
         destroy_san(san);
 
-        // apply_move(board, *move);
-        // destroy_move(move);
+        if (status == RESOLVE_AMBIGUOUS) puts("AMBIGUOUS MOVE!");
 
-        printf("------------------------\n");
+        // MOVE DEBUG PRINT
+        printf("[MOVE] Attempting to move %c from %c%c to %c%c\n", piece_type_to_char(move->piece), move->from.col + 'a', move->from.row + '1', move->to.col + 'a', move->to.row + '1');
+
+        puts("Attempting to apply move");
+        if (!apply_move(board, *move))
+        {
+            puts("Move failed!");
+        }
+        destroy_move(move);
+
+        puts("------------------------");
 
     }
 
