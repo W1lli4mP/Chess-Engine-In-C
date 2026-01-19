@@ -1,6 +1,7 @@
 #include "move_gen.h"
 
 static bool generate_king_moves(const Board *board, Position piece_location, PositionList *position_list_out);
+static bool generate_pawn_moves(const Board *board, Position piece_location, PositionList *position_list_out);
 
 static bool in_bounds(const Board *board, int row, int col)
 {
@@ -22,11 +23,52 @@ bool generate_pseudo_legal_moves(const Board *board, Position piece_location, Po
     if (!selected_piece) return false;
 
     // generate moves based on the piece type
+    if (selected_piece->type == TYPE_PAWN)
+    {
+        return generate_pawn_moves(board, piece_location, position_list_out);
+    }
     if (selected_piece->type == TYPE_KING)
     {
         return generate_king_moves(board, piece_location, position_list_out);
     }
     else return false;
+}
+
+// TODO: add en passant
+static bool generate_pawn_moves(const Board *board, Position piece_location, PositionList *position_list_out)
+{
+    Piece *selected_piece = get_piece_at(board, piece_location);
+
+    // determine pawn direction based on colour
+    int d = (selected_piece->colour == COLOUR_WHITE) ? 1 : -1;
+
+    int col = piece_location.col;
+    int row = piece_location.row;
+
+    // forward
+    Position f1 = { .row = row + d, .col = col };
+
+    Piece *target = get_piece_at(board, f1);
+
+    // can only move forward to empty squares
+    if (!target)
+    {
+        if (!position_list_append(position_list_out, f1)) return false;
+    
+        // double forward (iff original position was at a starting position)
+        if ((selected_piece->colour == COLOUR_WHITE && piece_location.row == 1) || (selected_piece->colour == COLOUR_BLACK && piece_location.row == board->height - 2))
+        {
+            Position f2 = { .row = row + 2 * d, .col = col };
+
+            Piece *target2 = get_piece_at(board, f2);
+            if (!target2)
+            {
+                if (!position_list_append(position_list_out, f2)) return false;
+            }
+
+        }
+    }
+    return true;
 }
 
 static bool generate_king_moves(const Board *board, Position piece_location, PositionList *position_list_out)
@@ -65,5 +107,3 @@ bool generate_legal_moves(const Board *board, Position piece_location, PositionL
 {
     return generate_pseudo_legal_moves(board, piece_location, position_list_out);
 }
-
-// where i left off: generate king moves
