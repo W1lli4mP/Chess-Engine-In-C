@@ -2,6 +2,7 @@
 
 static bool generate_king_moves(const Board *board, Position piece_location, PositionList *position_list_out);
 static bool generate_pawn_moves(const Board *board, Position piece_location, PositionList *position_list_out);
+static bool generate_knight_moves(const Board *board, Position piece_location, PositionList *position_list_out);
 
 static bool in_bounds(const Board *board, int row, int col)
 {
@@ -30,6 +31,10 @@ bool generate_pseudo_legal_moves(const Board *board, Position piece_location, Po
     if (selected_piece->type == TYPE_KING)
     {
         return generate_king_moves(board, piece_location, position_list_out);
+    }
+    if (selected_piece->type == TYPE_KNIGHT)
+    {
+        return generate_knight_moves(board, piece_location, position_list_out);
     }
     else return false;
 }
@@ -76,6 +81,9 @@ static bool generate_king_moves(const Board *board, Position piece_location, Pos
     static const int d[8][2] = { {0, 1}, {1, 1}, {1, 0}, {1, -1},
                                 {0, -1}, {-1, -1}, {-1, 0}, {-1, 1} };
 
+    // select piece at piece location
+    Piece *selected_piece = get_piece_at(board, piece_location);
+
     for (int i = 0; i < 8; i++)
     {
         int col = piece_location.col + d[i][0];
@@ -83,9 +91,6 @@ static bool generate_king_moves(const Board *board, Position piece_location, Pos
 
         // skip if out of bounds
         if (!in_bounds(board, row, col)) continue;
-
-        // select piece at piece location
-        Piece *selected_piece = get_piece_at(board, piece_location);
 
         // find piece at target destination
         Position to = { .row = row, .col = col };
@@ -99,6 +104,34 @@ static bool generate_king_moves(const Board *board, Position piece_location, Pos
         if (!position_list_append(position_list_out, to)) return false;
     }
     // once all possible moves have been processed successfully, return true
+    return true;
+}
+
+static bool generate_knight_moves(const Board *board, Position piece_location, PositionList *position_list_out)
+{
+    static const int d[8][2] = { {1, 2}, {2, 1}, {2, -1}, {1, -2},
+                              {-1, -2}, {-2, -1}, {-2, 1}, {-1, 2} };
+
+    // locate knight
+    Piece *selected_piece = get_piece_at(board, piece_location);
+
+    for (int i = 0; i < 8; i++)
+    {
+        // apply directions
+        int col = piece_location.col + d[i][0];
+        int row = piece_location.row + d[i][1];
+
+        if (!in_bounds(board, row, col)) continue;
+
+        Position to = { .col = col, .row = row };
+
+        Piece *target = get_piece_at(board, to);
+
+        // friendly piece check
+        if (target && selected_piece->colour == target->colour) continue;
+
+        if(!position_list_append(position_list_out, to)) return false;
+    }
     return true;
 }
 
