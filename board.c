@@ -162,3 +162,8 @@ void print_board(const Board *board, int white_pov)
         putchar('\n'); // faster than printf()
     }
 }
+
+bool in_bounds(const Board *board, int row, int col)
+{
+    return col >= 0 && col < board->width && row >= 0 && row < board->height;
+}

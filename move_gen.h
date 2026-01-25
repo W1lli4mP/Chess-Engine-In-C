@@ -3,6 +3,8 @@
 #include "position.h"
 #include "piece.h"
 #include "board.h"
+#include "rules.h"
+#include <stdbool.h>
 
 #define MAX_MOVES 256
 

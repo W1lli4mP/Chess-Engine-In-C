@@ -9,11 +9,6 @@ static bool generate_bishop_moves(const Board *board, Position piece_location, P
 static bool generate_rook_moves(const Board *board, Position piece_location, PositionList *position_list_out);
 static bool generate_queen_moves(const Board *board, Position piece_location, PositionList *position_list_out);
 
-static bool in_bounds(const Board *board, int row, int col)
-{
-    return col >= 0 && col < board->width && row >= 0 && row < board->height;
-}
-
 static bool position_list_append(PositionList *position_list, Position move)
 {
     if (position_list->count >= MAX_MOVES) return false;
@@ -220,10 +215,4 @@ static bool generate_queen_moves(const Board *board, Position piece_location, Po
                                  {1, 0}, {0, -1}, {-1, 0}, {0, 1} };
 
     return generate_sliding_moves(board, piece_location, position_list_out, d, num_directions);
-}
-
-// TODO: update to handle checks and checkmates
-bool generate_legal_moves(const Board *board, Position piece_location, PositionList *position_list_out)
-{
-    return generate_pseudo_legal_moves(board, piece_location, position_list_out);
 }

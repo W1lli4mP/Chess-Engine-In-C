@@ -76,7 +76,6 @@ int main()
         // SAN DEBUG PRINT
         printf("[SAN] Attempting to move %c to %c%c\n", piece_type_to_char(san->piece), san->to.col + 'a', san->to.row + '1');
 
-        // TODO: add semantic analysis
         Move *move = initialise_move();
         
         puts("Resolving SAN");
@@ -133,14 +132,13 @@ int main()
     /*
         TODO
         - add more piece movement validation (legal moves)
-        - add algebraic chess notation
-        - add user inputs
         - add game loop
+            - add turn handling
         - extend game mechanics
             - checks and checkmate
             - stalemate
             - en passant
             - castling
-        - add user inputs
-            - algebraic chess parser
+        - finalise san resolver
+            - use all san attributes
     */

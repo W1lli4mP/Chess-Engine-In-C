@@ -20,5 +20,6 @@ bool destroy_board(Board *board);
 bool apply_move(Board *board, Move move);
 bool valid_move(Board *board, Move move);
 void print_board(const Board *board, int white_pov);
+bool in_bounds(const Board *board, int row, int col);
 
 #endif
