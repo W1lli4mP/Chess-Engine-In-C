@@ -83,6 +83,7 @@ int main()
         ResolveStatus status = resolve_san(board, *san, move);
         destroy_san(san);
 
+        if (status == RESOLVE_ILLEGAL) puts("ILLEGAL MOVE!");
         if (status == RESOLVE_AMBIGUOUS) puts("AMBIGUOUS MOVE!");
 
         // MOVE DEBUG PRINT
