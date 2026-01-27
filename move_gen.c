@@ -9,13 +9,6 @@ static bool generate_bishop_moves(const Board *board, Position piece_location, P
 static bool generate_rook_moves(const Board *board, Position piece_location, PositionList *position_list_out);
 static bool generate_queen_moves(const Board *board, Position piece_location, PositionList *position_list_out);
 
-static bool position_list_append(PositionList *position_list, Position move)
-{
-    if (position_list->count >= MAX_MOVES) return false;
-    position_list->moves[position_list->count++] = move;
-    return true;
-}
-
 bool generate_pseudo_legal_moves(const Board *board, Position piece_location, PositionList *position_list_out)
 {
     if (!position_list_out) return false;
