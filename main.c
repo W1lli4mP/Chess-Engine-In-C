@@ -27,6 +27,32 @@ static char piece_type_to_char(PieceType p)
     }
 }
 
+static bool ask_input(char *input_out, size_t input_size)
+{
+    // infinite loop until input is valid
+    for (;;)
+    {
+        if (!fgets(input_out, input_size, stdin))
+        {
+            puts("Invalid input entered\n");
+            return false;
+        }
+        
+        size_t n = strcspn(input_out, "\n");
+
+        // terminate newline if newline found (implies input length is sufficient)
+        if (input_out[n] == '\n')
+        {
+            input_out[n] = '\0';
+            return true;
+        }
+
+        int c;
+        while (((c = getchar()) != '\n' && c != EOF)) {} // no newline implies too many chars, flush remaining chars
+        puts("Too long, try again");
+    }
+}
+
 int main()
 {
     Board *board = initialise_board();
@@ -39,28 +65,7 @@ int main()
 
         // 2) ask for input
         char input[8];
-        // infinite loop until input is valid
-        while (1)
-        {
-            if (!fgets(input, sizeof input, stdin))
-            {
-                puts("Invalid input entered\n");
-                return 1;
-            }
-            
-            size_t n = strcspn(input, "\n");
-
-            // terminate newline if newline found (implies input length is sufficient)
-            if (input[n] == '\n')
-            {
-                input[n] = '\0';
-                break;
-            }
-
-            int c;
-            while ((c = getchar() != '\n' && c != EOF)) {} // no newline implies too many chars, flush remaining chars
-            puts("Too long, try again");
-        }
+        if (!ask_input(input, sizeof input)) return 1;
 
         // 3) apply the input (move)
         int err_pos = -1;
@@ -84,6 +89,13 @@ int main()
 
         if (status == RESOLVE_ILLEGAL) puts("ILLEGAL MOVE!");
         if (status == RESOLVE_AMBIGUOUS) puts("AMBIGUOUS MOVE!");
+
+        // dont attempt to apply move if it is illegal
+        if (status == RESOLVE_ILLEGAL)
+        {
+            destroy_move(move);
+            continue;
+        }
 
         // MOVE DEBUG PRINT
         printf("[MOVE] Attempting to move %c from %c%c to %c%c\n", piece_type_to_char(move->piece), move->from.col + 'a', move->from.row + '1', move->to.col + 'a', move->to.row + '1');
@@ -115,19 +127,6 @@ int main()
     else retry input
     
     */
-
-    /*
-    DEBUG PRINTS
-
-    printf("Input: \"%s\", err: %d\n", input, err_pos);
-    printf("%c, (%d, %d) to (%d, %d)\n", piece_type_to_char(move->piece), move->from.col, move->from.row, move->to.col, move->to.row);
-    if (move->is_castle_kingside || move->is_castle_queenside) printf("Castling\n");
-    if (move->is_check) printf("Check!\n");
-    if (move->is_checkmate) printf("Checkmate!\n");
-    if (move->is_promotion) printf("Promoting to %c\n", piece_type_to_char(move->promotion));
-    destroy_move(move);
-    */
-
 
     /*
         TODO
