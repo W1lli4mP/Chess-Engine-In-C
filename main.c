@@ -27,6 +27,23 @@ static char piece_type_to_char(PieceType p)
     }
 }
 
+static void san_debug(const San san)
+{
+    printf("[SAN] Attempting to move %c to %c%c\n", piece_type_to_char(san.piece), san.to.col + 'a', san.to.row + '1');
+}
+
+static void move_debug(const Move move)
+{
+    printf("[MOVE] Attempting to move %c from %c%c to %c%c\n", piece_type_to_char(move.piece), move.from.col + 'a', move.from.row + '1', move.to.col + 'a', move.to.row + '1');
+}
+
+static void san_resolver_debug(const ResolveStatus status)
+{
+    if (status == RESOLVE_OK) puts("[SAN RESOLVER] LEGAL MOVE!");
+    if (status == RESOLVE_AMBIGUOUS) puts("[SAN RESOLVER] AMBIGUOUS MOVE!");
+    if (status == RESOLVE_ILLEGAL) puts("[SAN RESOLVER] ILLEGAL MOVE!");
+}
+
 static bool ask_input(char *input_out, size_t input_size)
 {
     // infinite loop until input is valid
@@ -67,7 +84,7 @@ int main()
         char input[8];
         if (!ask_input(input, sizeof input)) return 1;
 
-        // 3) apply the input (move)
+        // 3) convert input to SAN (string -> san)
         int err_pos = -1;
         San *san = algebraic_chess_parser(input, &err_pos);
 
@@ -79,40 +96,35 @@ int main()
         }
 
         // SAN DEBUG PRINT
-        printf("[SAN] Attempting to move %c to %c%c\n", piece_type_to_char(san->piece), san->to.col + 'a', san->to.row + '1');
+        san_debug(*san);
 
+        // 4) resolve SAN (san -> move)
         Move *move = initialise_move();
         
-        puts("Resolving SAN");
         ResolveStatus status = resolve_san(board, *san, move);
         destroy_san(san);
 
-        if (status == RESOLVE_ILLEGAL) puts("ILLEGAL MOVE!");
-        if (status == RESOLVE_AMBIGUOUS) puts("AMBIGUOUS MOVE!");
+        // SAN RESOLVER DEBUG PRINT
+        san_resolver_debug(status);
 
-        // dont attempt to apply move if it is illegal
-        if (status == RESOLVE_ILLEGAL)
+        // only allow OK moves to be played
+        if (status != RESOLVE_OK)
         {
             destroy_move(move);
             continue;
         }
 
         // MOVE DEBUG PRINT
-        printf("[MOVE] Attempting to move %c from %c%c to %c%c\n", piece_type_to_char(move->piece), move->from.col + 'a', move->from.row + '1', move->to.col + 'a', move->to.row + '1');
+        move_debug(*move);
 
-        puts("Attempting to apply move");
-        if (!apply_move(board, *move))
-        {
-            puts("Move failed!");
-        }
+        if (!apply_move(board, *move)) puts("Move failed!");
+
         destroy_move(move);
 
         puts("------------------------");
-
     }
 
     destroy_board(board);
-
     
     return 0;
 }
