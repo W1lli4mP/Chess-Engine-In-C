@@ -61,23 +61,29 @@ static bool generate_pawn_moves(const Board *board, Position piece_location, Pos
     Piece *target = get_piece_at(board, f1);
 
     // can only move forward to empty squares
-    if (!target)
+    if (!target && !position_list_append(position_list_out, f1)) return false;
     {
-        if (!position_list_append(position_list_out, f1)) return false;
-    
         // double forward (iff original position was at a starting position)
         if ((selected_piece->colour == COLOUR_WHITE && piece_location.row == 1) || (selected_piece->colour == COLOUR_BLACK && piece_location.row == board->height - 2))
         {
             Position f2 = { .row = row + 2 * d, .col = col };
 
             Piece *target2 = get_piece_at(board, f2);
-            if (!target2)
-            {
-                if (!position_list_append(position_list_out, f2)) return false;
-            }
-
+            if (!target2 && !position_list_append(position_list_out, f2)) return false;
         }
     }
+
+    // check for diagonal captures
+    Position left = { .row = row + d, .col = col - 1 };
+    Position right = { .row = row + d, .col = col + 1 };
+
+    Piece *left_enemy = get_piece_at(board, left);
+    Piece *right_enemy = get_piece_at(board, right);
+
+    // append enemies if valid
+    if (left_enemy && left_enemy->colour != selected_piece->colour && !position_list_append(position_list_out, left)) return false;
+    if (right_enemy && right_enemy->colour != selected_piece->colour && !position_list_append(position_list_out, right)) return false;
+
     return true;
 }
 
