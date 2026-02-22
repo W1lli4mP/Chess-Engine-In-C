@@ -245,7 +245,7 @@ bool generate_legal_moves(const Board *board, Position piece_location, PositionL
         // play the move
         if (!simulate_move(&temp_copy, move)) return false;
 
-        // check if move does not leave king in check in order to append, discard move otherwise
+        // don't append if move leaves king in check
         if (!is_in_check(&temp_copy, selected_piece->colour))
         {
             if (!position_list_append(position_list_out, pseudo_moves.moves[i])) return false;
