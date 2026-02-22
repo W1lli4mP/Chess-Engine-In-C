@@ -101,6 +101,14 @@ bool apply_move(Board *board, Move move)
     Piece *piece = board->grid[move.from.row][move.from.col];
     Piece *target = board->grid[move.to.row][move.to.col];
 
+    // handle pawn promotions
+    if (piece->type == TYPE_PAWN && ((piece->colour == COLOUR_WHITE && move.to.row == 7) || (piece->colour == COLOUR_BLACK && move.to.row == 0)))
+    {
+        //* TEMPORARY: auto promote to queen for now
+        piece->sprite = (piece->colour == COLOUR_WHITE) ? SPRITE_WHITE_QUEEN : SPRITE_BLACK_QUEEN;
+        piece->type = TYPE_QUEEN;
+    }
+
     // move piece from original position to destination
     board->grid[move.to.row][move.to.col] = piece;
 
@@ -129,6 +137,7 @@ bool simulate_move(Board *board, Move move)
     return true;
 }
 
+// ! redundant for now
 bool undo_move(Board *board, Move move)
 {
     Piece *piece = board->grid[move.to.row][move.to.col];
