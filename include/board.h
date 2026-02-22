@@ -4,6 +4,8 @@
 #include "position.h"
 #include "move.h"
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 typedef struct
 {
