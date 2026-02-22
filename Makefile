@@ -1,15 +1,16 @@
 # compiler and flags
 CC = gcc
-CFLAGS = -g -Wall -Wextra
+CFLAGS = -g -Wall -Wextra -Iinclude
 
 # executable name
 TARGET = chess
+BUILD_DIR = build
 
 # source files
-SRCS = main.c board.c piece.c parser.c move.c queue.c linked_list.c san.c san_resolve.c move_gen.c rules.c position.c
+SRCS = $(wildcard src/*.c)
 
 # object files
-OBJS = $(SRCS:.c=.o)
+OBJS = $(patsubst src/%.c,$(BUILD_DIR)/%.o,$(SRCS))
 
 # default target
 all: $(TARGET)
@@ -19,8 +20,12 @@ $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS)
 
 # compile object files
-%.o: %.c
+
+$(BUILD_DIR)/%.o: src/%.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
 
 # clean object files and executable
 clean:
