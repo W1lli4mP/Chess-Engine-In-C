@@ -70,6 +70,21 @@ static bool ask_input(char *input_out, size_t input_size)
     }
 }
 
+static bool is_game_over(const Board *board)
+{
+    if (is_checkmate(board, COLOUR_WHITE))
+    {
+        printf("[GAME] Black wins!\n");
+        return true;
+    }
+    else if (is_checkmate(board, COLOUR_BLACK))
+    {
+        printf("[GAME] White wins!\n");
+        return true;
+    }
+    return false;
+}
+
 int main()
 {
     Board *board = initialise_board();
@@ -80,11 +95,18 @@ int main()
         // 1) draw board
         print_board(board, WHITE_VIEW); // 0 = black view, 1 = white view
 
-        // 2) ask for input
+        // 2) check game conditions
+        if (is_game_over(board))
+            {
+                running = false;
+                break;
+            }
+
+        // 3) ask for input
         char input[8];
         if (!ask_input(input, sizeof input)) return 1;
 
-        // 3) convert input to SAN (string -> san)
+        // 4) convert input to SAN (string -> san)
         int err_pos = -1;
         San *san = algebraic_chess_parser(input, &err_pos);
 
@@ -98,7 +120,7 @@ int main()
         // SAN DEBUG PRINT
         san_debug(*san);
 
-        // 4) resolve SAN (san -> move)
+        // 5) resolve SAN (san -> move)
         Move *move = initialise_move();
         
         ResolveStatus status = resolve_san(board, *san, move);
