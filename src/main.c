@@ -29,7 +29,10 @@ static char piece_type_to_char(PieceType p)
 
 static void san_debug(const San san)
 {
-    printf("[SAN] Attempting to move %c to %c%c\n", piece_type_to_char(san.piece), san.to.col + 'a', san.to.row + '1');
+    if (san.from_col != -1)
+        printf("[SAN] Attempting to move %c from %c file to %c%c\n", piece_type_to_char(san.piece), san.from_col + 'a', san.to.col + 'a', san.to.row + '1');
+    else
+        printf("[SAN] Attempting to move %c to %c%c\n", piece_type_to_char(san.piece), san.to.col + 'a', san.to.row + '1');
 }
 
 static void move_debug(const Move move)
@@ -164,14 +167,21 @@ int main()
 
     /*
         TODO
-        - add more piece movement validation (legal moves)
         - add game loop
             - add turn handling
         - extend game mechanics
-            - checks and checkmate
             - stalemate
             - en passant
             - castling
         - finalise san resolver
             - use all san attributes
+        - perft test the move generator (after all game mechanics established)
+        - create engine
+            - random
+            - minimax
+            - alpha beta pruning
+            - improve:
+                - searching
+                - evaluating
+                    - import NNUE
     */
