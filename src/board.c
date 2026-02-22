@@ -113,6 +113,37 @@ bool apply_move(Board *board, Move move)
     return true;
 }
 
+// apply_move() but not destructive (no freeing)
+bool simulate_move(Board *board, Move move)
+{
+    if (!valid_move(board, move)) return false;
+
+    Piece *piece = board->grid[move.from.row][move.from.col];
+
+    // move piece from original position to destination
+    board->grid[move.to.row][move.to.col] = piece;
+
+    // clear original position
+    board->grid[move.from.row][move.from.col] = NULL;
+
+    return true;
+}
+
+bool undo_move(Board *board, Move move)
+{
+    Piece *piece = board->grid[move.to.row][move.to.col];
+    // TODO: handle captures later
+
+    // move piece from destination to original position
+    board->grid[move.from.row][move.from.col] = piece;
+
+    // clear original position
+    // TODO: restore captured pieces here
+    board->grid[move.to.row][move.to.col] = NULL;
+
+    return true;
+}
+
 // extendable helper for future changes
 bool valid_move(Board *board, Move move)
 {

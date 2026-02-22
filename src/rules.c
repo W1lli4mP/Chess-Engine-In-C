@@ -209,26 +209,50 @@ bool is_stalemate(const Board *board, Colour colour)
     return (move_list.count == 0);
 }
 
+static void position_to_move(const Board *board, Position from, Position to, Move *move_out)
+{
+    Piece *selected_piece = get_piece_at(board, from);
+
+    move_out->piece = selected_piece->type;
+    move_out->from = from;
+    move_out->to = to;
+    
+    // TODO: update other attributes in future
+}
+
 // TODO: update to handle checks and checkmates
 bool generate_legal_moves(const Board *board, Position piece_location, PositionList *position_list_out)
 {
-    // calculate pseudo legal moves
-    PositionList pseudo_moves;
+    // create a copy of the board
+    Board temp_copy = *board;
 
-    if (!generate_pseudo_legal_moves(board, piece_location, &pseudo_moves)) return false;
+    // find piece for information
+    Piece *selected_piece = get_piece_at(&temp_copy, piece_location);
+
+    // calculate pseudo legal moves
+    PositionList pseudo_moves = {0};
+
+    if (!generate_pseudo_legal_moves(&temp_copy, piece_location, &pseudo_moves)) return false;
 
     // simulate every move
     for (int i = 0; i < pseudo_moves.count; i++)
     {
+        Move move = {0};
+
+        // convert Position into Move struct
+        position_to_move(&temp_copy, piece_location, pseudo_moves.moves[i], &move);
+
         // play the move
+        if (!simulate_move(&temp_copy, move)) return false;
 
-        // check if this leaves king in check, discard move if true
+        // check if move does not leave king in check in order to append, discard move otherwise
+        if (!is_in_check(&temp_copy, selected_piece->colour))
+        {
+            if (!position_list_append(position_list_out, pseudo_moves.moves[i])) return false;
+        }
 
-        // append to actual move list
-
-        // undo the move after
-
-        // repeat
+        // reset copy back to default
+        temp_copy = *board;
     }
     return true;
 }

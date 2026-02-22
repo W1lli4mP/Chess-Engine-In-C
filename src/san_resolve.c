@@ -30,7 +30,7 @@ ResolveStatus resolve_san(const Board *board, San san, Move *move_out)
 
             // otherwise, check if the selected piece can go to the SAN's desired destination
             PositionList move_list = {0}; // set count=0 and moves to be 0
-            if (!generate_legal_moves(board, current_position, &move_list)) continue;
+            if (!generate_pseudo_legal_moves(board, current_position, &move_list)) continue;
 
             // check if the SAN's desired move is in the list of possible moves
             for (int i = 0; i < move_list.count; i++)
