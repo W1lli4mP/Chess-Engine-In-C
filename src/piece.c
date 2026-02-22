@@ -5,7 +5,6 @@
 // helpers for validating attribute inputs
 static int valid_type(PieceType type);
 static int valid_colour(Colour colour);
-static const char *find_sprite(PieceType type, Colour colour);
 
 Piece *initialise_piece()
 {
@@ -52,7 +51,7 @@ static int valid_colour(Colour colour)
     return colour >= COLOUR_NONE && colour <= COLOUR_BLACK;
 }
 
-static const char *find_sprite(PieceType type, Colour colour)
+const char *find_sprite(PieceType type, Colour colour)
 {
     if (colour == COLOUR_WHITE || colour == COLOUR_BLACK)
     {

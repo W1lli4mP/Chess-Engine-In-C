@@ -55,4 +55,6 @@ void print_piece(Piece *p); // prints a singular piece (no newline)
 Piece *create_piece(PieceType type, Colour colour); // initialises a piece and assigns given attributes if valid
 void destroy_piece(Piece *piece); // frees the piece
 
+const char *find_sprite(PieceType type, Colour colour) // helper
+
 #endif
