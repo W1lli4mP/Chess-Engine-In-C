@@ -17,7 +17,7 @@ San *initialise_san()
     san->from_row = -1;
 
     // promotion
-    san->is_promotion = true;
+    san->is_promotion = false;
     san->promotion = TYPE_NONE;
 
     san->suffix = SAN_SUFFIX_NONE;
