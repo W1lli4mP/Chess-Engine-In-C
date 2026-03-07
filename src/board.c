@@ -1,7 +1,4 @@
 #include "board.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
 
 Board *initialise_board()
 {
@@ -102,11 +99,10 @@ bool apply_move(Board *board, Move move)
     Piece *target = board->grid[move.to.row][move.to.col];
 
     // handle pawn promotions
-    if (piece->type == TYPE_PAWN && ((piece->colour == COLOUR_WHITE && move.to.row == 7) || (piece->colour == COLOUR_BLACK && move.to.row == 0)))
+    if (move.is_promotion)
     {
-        //* TEMPORARY: auto promote to queen for now
-        piece->sprite = (piece->colour == COLOUR_WHITE) ? SPRITE_WHITE_QUEEN : SPRITE_BLACK_QUEEN;
-        piece->type = TYPE_QUEEN;
+        piece->type = move.promotion;
+        piece->sprite = find_sprite(piece->type, piece->colour);
     }
 
     // move piece from original position to destination
