@@ -183,6 +183,14 @@ static bool parse_promotion(Queue *queue, PieceType *piece_out, int *err_pos)
     if (!expect(queue, TOKEN_PIECE, &temp, err_pos)) return false;
 
     *piece_out = char_to_piece_type(temp.character);
+
+    //* reject pawn from being promoted to a king
+    if (*piece_out == TYPE_KING)
+    {
+        *err_pos = temp.pos;
+        return false;
+    }
+
     return true;
 }
 
@@ -293,9 +301,11 @@ static bool parse_pawn_move(Queue *queue, San *san_out, int *err_pos)
         san_out->to = to;
 
         // <promotion>?
-        PieceType promotion;
-        if (parse_promotion(queue, &promotion, err_pos))
+        Lex *promotion_start = peek_queue(queue);
+        if (promotion_start && promotion_start->token == TOKEN_EQUAL)
         {
+            PieceType promotion;
+            if (!parse_promotion(queue, &promotion, err_pos)) return false;
             san_out->is_promotion = true;
             san_out->promotion = promotion;
         }
@@ -322,9 +332,11 @@ static bool parse_pawn_move(Queue *queue, San *san_out, int *err_pos)
         san_out->to = to;
 
         // <promotion>?
-        PieceType promotion;
-        if (parse_promotion(queue, &promotion, err_pos))
+        Lex *promotion_start = peek_queue(queue);
+        if (promotion_start && promotion_start->token == TOKEN_EQUAL)
         {
+            PieceType promotion;
+            if (!parse_promotion(queue, &promotion, err_pos)) return false;
             san_out->is_promotion = true;
             san_out->promotion = promotion;
         }

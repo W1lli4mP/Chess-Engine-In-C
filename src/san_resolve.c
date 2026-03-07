@@ -1,11 +1,19 @@
 #include "san_resolve.h"
 
+// helper for implicit pawn promotions
+static bool is_pawn_promotion_rank(const Piece *piece, Position to)
+{
+    if (!piece || piece->type != TYPE_PAWN) return false;
+    if (piece->colour == COLOUR_WHITE && to.row == 7) return true;
+    if (piece->colour == COLOUR_BLACK && to.row == 0) return true;
+    return false;
+}
+
 /*
 TODO:
 handle castling
 handle promotions
 handle san suffix (checks/mates)
-handle is capture
 */
 ResolveStatus resolve_san(const Board *board, San san, Move *move_out)
 {
@@ -36,6 +44,9 @@ ResolveStatus resolve_san(const Board *board, San san, Move *move_out)
             Piece *selected_piece = get_piece_at(board, from);
             if (!selected_piece || selected_piece->type != san.piece) continue;
 
+            // promotion moves imply the piece is a pawn
+            if (san.is_promotion && selected_piece->type != TYPE_PAWN) continue;
+
             // check if the selected piece can go to the SAN's square
             PositionList move_list = {0}; // set count=0 and moves to be 0
             if (!generate_legal_moves(board, from, &move_list)) continue;
@@ -55,6 +66,15 @@ ResolveStatus resolve_san(const Board *board, San san, Move *move_out)
                         // don't process move if there is no valid piece (enemy) to capture
                         Piece *enemy = get_piece_at(board, to);
                         if (!enemy) continue;
+                    }
+
+                    // handle promotions (NOTE: they have lower priority than captures)
+                    if (san.is_promotion || is_pawn_promotion_rank(selected_piece, to))
+                    {
+                        move_out->is_promotion = true;
+                        move_out->promotion = (san.promotion == TYPE_NONE) ? TYPE_QUEEN : san.promotion; // default to queens in the case of implicit SAN promotions
+                        if (san.promotion == TYPE_NONE) puts("none");
+                        if (san.promotion == TYPE_PAWN) puts("pawn");
                     }
 
                     // if the status has previously been marked as OK, then there must be more than one piece that can access this move
