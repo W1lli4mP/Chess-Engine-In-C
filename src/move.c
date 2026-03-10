@@ -18,9 +18,6 @@ Move *initialise_move()
     move->is_promotion = false;
     move->promotion = TYPE_NONE;
 
-    move->is_check = false;
-    move->is_checkmate = false;
-
     return move;
 }
 

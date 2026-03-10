@@ -18,10 +18,6 @@ typedef struct
     // promotion
     bool is_promotion;
     PieceType promotion;
-
-    // check/mate
-    bool is_check;
-    bool is_checkmate;
 } Move;
 
 Move *initialise_move();
