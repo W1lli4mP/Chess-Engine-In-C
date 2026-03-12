@@ -13,6 +13,6 @@ typedef enum
 } ResolveStatus;
 
 
-ResolveStatus resolve_san(const Board *board, San san, Move *move_out);
+ResolveStatus resolve_san(const Board *board, San san, Colour side_to_move, Move *move_out);
 
 #endif

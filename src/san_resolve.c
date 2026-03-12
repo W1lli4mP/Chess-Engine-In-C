@@ -4,10 +4,9 @@
 TODO:
 handle castling
 handle san suffix (checks/mates)
-handle turns
 */
 static bool is_pawn_promotion_rank(const Piece *piece, Position to);
-static bool verify_square(const Board *board, San san, Position from, Piece **piece_out);
+static bool verify_square(const Board *board, San san, Position from, Colour side_to_move, Piece **piece_out);
 static ResolveStatus validate_moves(const Board *board, San san, Piece *current_piece, PositionList move_list, Move *move_out);
 static ResolveStatus validate_move(const Board *board, San san, Piece *current_piece, Position to, Move *move_out);
 
@@ -22,7 +21,7 @@ static bool is_pawn_promotion_rank(const Piece *piece, Position to)
 
 
 // verifies ONE square
-static bool verify_square(const Board *board, San san, Position from, Piece **piece_out)
+static bool verify_square(const Board *board, San san, Position from, Colour side_to_move, Piece **piece_out)
 {
     // disambiguation verification
     if (san.from_col != -1 && san.from_col != from.col) return false;
@@ -33,6 +32,7 @@ static bool verify_square(const Board *board, San san, Position from, Piece **pi
 
     if (!current_piece) return false;
     if (current_piece->type != san.piece) return false;
+    if (current_piece->colour != side_to_move) return false;
 
     // extract piece
     *piece_out = current_piece;
@@ -91,7 +91,7 @@ static ResolveStatus validate_move(const Board *board, San san, Piece *current_p
     return RESOLVE_OK;
 }
 
-ResolveStatus resolve_san(const Board *board, San san, Move *move_out)
+ResolveStatus resolve_san(const Board *board, San san, Colour side_to_move, Move *move_out)
 {
     /*
         purpose:
@@ -115,7 +115,7 @@ ResolveStatus resolve_san(const Board *board, San san, Move *move_out)
             // verify square and extract piece if valid
             Position from = { .col = col, .row = row };
             Piece *current_piece = NULL;
-            if (!verify_square(board, san, from, &current_piece)) continue;
+            if (!verify_square(board, san, from, side_to_move, &current_piece)) continue;
 
             // generate moves
             PositionList moves = {0};
