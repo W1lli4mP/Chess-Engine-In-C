@@ -1,5 +1,7 @@
 #include "move_gen.h"
 
+static bool is_king_on_starting_square(const Board *board, Position king_location, Colour king_colour);
+
 static bool generate_king_moves(const Board *board, Position piece_location, PositionList *position_list_out);
 static bool generate_pawn_moves(const Board *board, Position piece_location, PositionList *position_list_out);
 static bool generate_knight_moves(const Board *board, Position piece_location, PositionList *position_list_out);
@@ -87,6 +89,37 @@ static bool generate_pawn_moves(const Board *board, Position piece_location, Pos
     return true;
 }
 
+//! does not use board's dynamic size
+static bool is_king_on_starting_square(const Board *board, Position king_location, Colour king_colour)
+{
+    return (((king_colour == COLOUR_WHITE) ? king_location.row == 0 : king_location.row == 7) && king_location.col == 4);
+}
+
+static bool generate_king_castle_moves(const Board *board, Position piece_location, Piece *selected_piece, bool is_kingside, PositionList *position_list_out)
+{
+    // direction based on kingside or queenside
+    int d = is_kingside ? 1 : -1;
+
+    int rook_offset = is_kingside ? 3 : -4;
+    int empty_squares = is_kingside ? 2 : 3;
+
+    // check king's and rook's intermediate squares
+    for (int i = 1; i <= empty_squares; i++)
+    {
+        Position square = { .col = piece_location.col + i * d, .row = piece_location.row };
+        if (get_piece_at(board, square)) return true;
+    }
+    
+    Position rook_location = { .col = piece_location.col + rook_offset, .row = piece_location.row };
+    Piece *rook = get_piece_at(board, rook_location);
+
+    if (!rook || rook->type != TYPE_ROOK || rook->colour != selected_piece->colour) return true;
+
+    
+    Position castle_destination = { .col = piece_location.col + 2 * d, .row = piece_location.row };
+    return position_list_append(position_list_out, castle_destination);
+}
+
 static bool generate_king_moves(const Board *board, Position piece_location, PositionList *position_list_out)
 {
     static const int d[8][2] = { {0, 1}, {1, 1}, {1, 0}, {1, -1},
@@ -114,6 +147,24 @@ static bool generate_king_moves(const Board *board, Position piece_location, Pos
         // attempt to append move, returning false if failing
         if (!position_list_append(position_list_out, to)) return false;
     }
+
+    // castling
+    //! does not use board's dynamic size
+    if (is_king_on_starting_square(board, piece_location, selected_piece->colour))
+    {
+        // kingside
+        if ((selected_piece->colour == COLOUR_WHITE && board->white_can_castle_kingside) || (selected_piece->colour == COLOUR_BLACK && board->black_can_castle_kingside))
+        {
+            if (!generate_king_castle_moves(board, piece_location, selected_piece, true, position_list_out)) return false;
+        }
+
+        // queenside
+        if ((selected_piece->colour == COLOUR_WHITE && board->white_can_castle_queenside) || (selected_piece->colour == COLOUR_BLACK && board->black_can_castle_queenside))
+        {
+            if (!generate_king_castle_moves(board, piece_location, selected_piece, false, position_list_out)) return false;
+        }
+    }
+
     // once all possible moves have been processed successfully, return true
     return true;
 }
