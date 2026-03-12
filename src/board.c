@@ -6,6 +6,11 @@ Board *initialise_board()
     new_board->height = 8;
     new_board->width = 8;
 
+    new_board->white_can_castle_kingside = true;
+    new_board->white_can_castle_queenside = true;
+    new_board->black_can_castle_kingside = true;
+    new_board->black_can_castle_queenside = true;
+
     for (int row = 0; row < new_board->height; row++)
     {
         for (int col = 0; col < new_board->width; col++)
