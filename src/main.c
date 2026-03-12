@@ -77,39 +77,50 @@ static bool is_game_over(const Board *board)
 {
     if (is_checkmate(board, COLOUR_WHITE))
     {
-        printf("[GAME] Black wins!\n");
+        puts("[GAME] Black wins!");
         return true;
     }
     else if (is_checkmate(board, COLOUR_BLACK))
     {
-        printf("[GAME] White wins!\n");
+        puts("[GAME] White wins!");
         return true;
     }
     return false;
+}
+
+static void turn_debug(Colour side_to_move)
+{
+    if (side_to_move == COLOUR_WHITE) puts("[GAME] White to move");
+    if (side_to_move == COLOUR_BLACK) puts("[GAME] Black to move");
 }
 
 int main()
 {
     Board *board = initialise_board();
 
+    Colour side_to_move = COLOUR_WHITE;
+
     bool running = true;
     while (running)
     {
-        // 1) draw board
+        // 1) indicate turn
+        turn_debug(side_to_move);
+
+        // 2) draw board
         print_board(board, WHITE_VIEW); // 0 = black view, 1 = white view
 
-        // 2) check game conditions
+        // 3) check game conditions
         if (is_game_over(board))
             {
                 running = false;
                 break;
             }
 
-        // 3) ask for input
+        // 4) ask for input
         char input[8];
         if (!ask_input(input, sizeof input)) return 1;
 
-        // 4) convert input to SAN (string -> san)
+        // 5) convert input to SAN (string -> san)
         int err_pos = -1;
         San *san = algebraic_chess_parser(input, &err_pos);
 
@@ -123,7 +134,7 @@ int main()
         // SAN DEBUG PRINT
         san_debug(*san);
 
-        // 5) resolve SAN (san -> move)
+        // 6) resolve SAN (san -> move)
         Move *move = initialise_move();
         
         ResolveStatus status = resolve_san(board, *san, move);
@@ -147,6 +158,9 @@ int main()
         destroy_move(move);
 
         puts("------------------------");
+
+        // 7) change turns
+        side_to_move = (side_to_move == COLOUR_WHITE) ? COLOUR_BLACK : COLOUR_WHITE;
     }
 
     destroy_board(board);
