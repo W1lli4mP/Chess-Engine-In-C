@@ -8,6 +8,7 @@
 #include "san.h"
 #include "move_gen.h"
 #include "san_resolve.h"
+#include "fen_parser.h"
 
 #define WHITE_VIEW 1
 #define BLACK_VIEW 0
@@ -111,10 +112,10 @@ int main()
 
         // 3) check game conditions
         if (is_game_over(board))
-            {
-                running = false;
-                break;
-            }
+        {
+            running = false;
+            break;
+        }
 
         // 4) ask for input
         char input[8];
