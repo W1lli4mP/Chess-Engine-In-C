@@ -1,6 +1,6 @@
 #include "move_gen.h"
 
-static bool is_king_on_starting_square(const Board *board, Position king_location, Colour king_colour);
+static bool is_king_on_starting_square(Position king_location, Colour king_colour);
 
 static bool generate_king_moves(const Board *board, Position piece_location, PositionList *position_list_out);
 static bool generate_pawn_moves(const Board *board, Position piece_location, PositionList *position_list_out);
@@ -90,7 +90,7 @@ static bool generate_pawn_moves(const Board *board, Position piece_location, Pos
 }
 
 //! does not use board's dynamic size
-static bool is_king_on_starting_square(const Board *board, Position king_location, Colour king_colour)
+static bool is_king_on_starting_square(Position king_location, Colour king_colour)
 {
     return (((king_colour == COLOUR_WHITE) ? king_location.row == 0 : king_location.row == 7) && king_location.col == 4);
 }
@@ -150,7 +150,7 @@ static bool generate_king_moves(const Board *board, Position piece_location, Pos
 
     // castling
     //! does not use board's dynamic size
-    if (is_king_on_starting_square(board, piece_location, selected_piece->colour))
+    if (is_king_on_starting_square(piece_location, selected_piece->colour))
     {
         // kingside
         if ((selected_piece->colour == COLOUR_WHITE && board->white_can_castle_kingside) || (selected_piece->colour == COLOUR_BLACK && board->black_can_castle_kingside))
