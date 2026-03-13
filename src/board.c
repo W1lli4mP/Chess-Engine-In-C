@@ -110,9 +110,25 @@ bool apply_move(Board *board, Move move)
         piece->sprite = find_sprite(piece->type, piece->colour);
     }
 
+    //* cannot test yet
+    // // handle castling
+    // if (move.is_castle_kingside)
+    // {
+    //     // // move king
+    //     // board->grid[move.to.row][move.to.col] = piece;
+    //     //? king is already moved in code below (change later to better clarity maybe)
+
+    //     // move rook
+    //     Piece *rook = board->grid[move.to.row][board->width];
+    //     board->grid[move.to.row][move.to.col - 1] = rook;
+    //     board->grid[move.to.row][board->width] = NULL;
+    // }
+
     // move piece from original position to destination
     board->grid[move.to.row][move.to.col] = piece;
 
+    //! can use is_capture from Move
+    //! captures should not happen if is_capture is false
     // if there was a piece on the destination (aka a capture), destroy/free it
     if (target) destroy_piece(target);
 
@@ -207,4 +223,52 @@ void print_board(const Board *board, int white_pov)
 bool in_bounds(const Board *board, int row, int col)
 {
     return col >= 0 && col < board->width && row >= 0 && row < board->height;
+}
+
+Board *initialise_empty_board()
+{
+    Board *new_board = malloc(sizeof *new_board);
+    if (!new_board) return NULL;
+
+    new_board->height = 8;
+    new_board->width = 8;
+
+    new_board->white_can_castle_kingside = false;
+    new_board->white_can_castle_queenside = false;
+    new_board->black_can_castle_kingside = false;
+    new_board->black_can_castle_queenside = false;
+
+    for (int row = 0; row < new_board->height; row++)
+    {
+        for (int col = 0; col < new_board->width; col++)
+        {
+            new_board->grid[row][col] = NULL;
+        }
+    }
+
+    return new_board;
+}
+
+bool clear_board(Board *board)
+{
+    if (!board) return false;
+
+    for (int row = 0; row < board->height; row++)
+    {
+        for (int col = 0; col < board->width; col++)
+        {
+            if (board->grid[row][col])
+            {
+                destroy_piece(board->grid[row][col]);
+                board->grid[row][col] = NULL;
+            }
+        }
+    }
+
+    board->white_can_castle_kingside = false;
+    board->white_can_castle_queenside = false;
+    board->black_can_castle_kingside = false;
+    board->black_can_castle_queenside = false;
+
+    return true;
 }
