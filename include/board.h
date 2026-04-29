@@ -12,11 +12,6 @@ typedef struct
     Piece *grid[8][8];
     int height;
     int width;
-
-    bool white_can_castle_kingside;
-    bool white_can_castle_queenside;
-    bool black_can_castle_kingside;
-    bool black_can_castle_queenside;
 } Board;
 
 Board *initialise_board();
