@@ -137,7 +137,7 @@ int main()
         // 6) resolve SAN (san -> move)
         Move *move = initialise_move();
         
-        ResolveStatus status = resolve_san(game->board, *san, game->side_to_move, move);
+        ResolveStatus status = resolve_san(game, *san, move);
         destroy_san(san);
 
         // SAN RESOLVER DEBUG PRINT
