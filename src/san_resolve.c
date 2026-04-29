@@ -1,13 +1,15 @@
 #include "san_resolve.h"
+#include "rules.h"
 
 /*
 TODO:
 handle castling
 handle san suffix (checks/mates)
+handle en passant
 */
 static bool is_pawn_promotion_rank(const Piece *piece, Position to);
 static bool verify_square(const Board *board, San san, Position from, Colour side_to_move, Piece **piece_out);
-static ResolveStatus validate_moves(const Board *board, San san, Piece *current_piece, PositionList move_list, Move *move_out);
+static ResolveStatus validate_moves(const GameState *game, San san, Piece *current_piece, PositionList move_list, Move *move_out);
 static ResolveStatus validate_move(const Board *board, San san, Piece *current_piece, Position to, Move *move_out);
 
 // helper for implicit pawn promotions
@@ -23,6 +25,8 @@ static bool is_pawn_promotion_rank(const Piece *piece, Position to)
 // verifies ONE square
 static bool verify_square(const Board *board, San san, Position from, Colour side_to_move, Piece **piece_out)
 {
+    if (!board || !piece_out) return false;
+
     // disambiguation verification
     if (san.from_col != -1 && san.from_col != from.col) return false;
     if (san.from_row != -1 && san.from_row != from.row) return false;
@@ -41,8 +45,12 @@ static bool verify_square(const Board *board, San san, Position from, Colour sid
 
 // populates a Move struct while verifying
 // particularly: to
-static ResolveStatus validate_moves(const Board *board, San san, Piece *current_piece, PositionList move_list, Move *move_out)
+static ResolveStatus validate_moves(const GameState *game, San san, Piece *current_piece, PositionList move_list, Move *move_out)
 {
+    if (!game || !game->board || !current_piece || !move_out) return RESOLVE_ILLEGAL;
+
+    const Board *board = game->board;
+
     bool found = false;
 
     // validate if any moves match the SAN (to)
@@ -69,6 +77,8 @@ static ResolveStatus validate_moves(const Board *board, San san, Piece *current_
 // particularly: is_promotion, promotion
 static ResolveStatus validate_move(const Board *board, San san, Piece *current_piece, Position to, Move *move_out)
 {
+    if (!board || !current_piece || !move_out) return RESOLVE_ILLEGAL;
+
     // captures (target can be an enemy or ally)
     Piece *target = get_piece_at(board, to);
     if (san.is_capture)
@@ -91,7 +101,7 @@ static ResolveStatus validate_move(const Board *board, San san, Piece *current_p
     return RESOLVE_OK;
 }
 
-ResolveStatus resolve_san(const Board *board, San san, Colour side_to_move, Move *move_out)
+ResolveStatus resolve_san(const GameState *game, San san, Move *move_out)
 {
     /*
         purpose:
@@ -99,11 +109,13 @@ ResolveStatus resolve_san(const Board *board, San san, Colour side_to_move, Move
         populates a Move struct iff ok
     */
 
-    // default status to illegal
-    ResolveStatus status = RESOLVE_ILLEGAL;
+    if (!game || !game->board || !move_out) return RESOLVE_ILLEGAL;
+
+    const Board *board = game->board;
+    Colour side_to_move = game->side_to_move;
 
     // updates move_out safely
-    Move found_move;
+    Move found_move = {0};
 
     bool found = false;
 
@@ -119,7 +131,7 @@ ResolveStatus resolve_san(const Board *board, San san, Colour side_to_move, Move
 
             // generate moves
             PositionList moves = {0};
-            if (!generate_legal_moves(board, from, &moves)) continue;
+            if (!generate_legal_moves(game, from, &moves)) continue;
 
             //? i dont know what im doing anymore
             Move temp = {0};
@@ -133,23 +145,25 @@ ResolveStatus resolve_san(const Board *board, San san, Colour side_to_move, Move
             // temp.is_promotion and temp.promotion is decided in validate_move()
 
             // validate the moves list of the current piece
-            ResolveStatus piece_status = validate_moves(board, san, current_piece, moves, &temp);
+            ResolveStatus piece_status = validate_moves(game, san, current_piece, moves, &temp);
 
             if (piece_status == RESOLVE_ILLEGAL) continue;
 
-            // return early if ambiguous has been declared already
-            if (status == RESOLVE_AMBIGUOUS) return RESOLVE_AMBIGUOUS;
+            if (piece_status == RESOLVE_AMBIGUOUS) return RESOLVE_AMBIGUOUS;
 
             if (found) return RESOLVE_AMBIGUOUS;
 
             found_move = temp;
             found = true;
-            status = RESOLVE_OK;
         }
     }
 
     // finally, link the temp Move struct to the output Move struct
-    if (found) *move_out = found_move;
+    if (found)
+    {
+        *move_out = found_move;
+        return RESOLVE_OK;
+    }
 
-    return status;
+    return RESOLVE_ILLEGAL;
 }
