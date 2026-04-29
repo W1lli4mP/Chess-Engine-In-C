@@ -2,8 +2,7 @@
 #define SAN_RESOLVE_H
 #include "san.h"
 #include "move.h"
-#include "move_gen.h"
-#include "board.h"
+#include "game_state.h"
 
 typedef enum
 {
@@ -13,6 +12,6 @@ typedef enum
 } ResolveStatus;
 
 
-ResolveStatus resolve_san(const Board *board, San san, Colour side_to_move, Move *move_out);
+ResolveStatus resolve_san(const GameState *game, San san, Move *move_out);
 
 #endif
