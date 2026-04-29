@@ -157,54 +157,62 @@ static bool attacked_by_diagonal_piece(const Board *board, Position square, Colo
 }
 
 // helper for determining whether a square is attacked - much faster approach than generating moves for each piece
-bool is_square_attacked(const Board *board, Position square, Colour friendly_colour)
+bool is_square_attacked(const GameState *game, Position square, Colour friendly_colour)
 {
+    if (!game || !game->board) return false;
+
     return (
-        attacked_by_knight(board, square, friendly_colour) ||
-        attacked_by_king(board, square, friendly_colour) ||
-        attacked_by_pawn(board, square, friendly_colour) ||
-        attacked_by_orthogonal_piece(board, square, friendly_colour) ||
-        attacked_by_diagonal_piece(board, square, friendly_colour)
+        attacked_by_knight(game->board, square, friendly_colour) ||
+        attacked_by_king(game->board, square, friendly_colour) ||
+        attacked_by_pawn(game->board, square, friendly_colour) ||
+        attacked_by_orthogonal_piece(game->board, square, friendly_colour) ||
+        attacked_by_diagonal_piece(game->board, square, friendly_colour)
     );
 }
 
-bool is_in_check(const Board *board, Colour colour)
+bool is_in_check(const GameState *game, Colour colour)
 {
+    if (!game || !game->board) return false;
+
     // retrieve king position and piece
     Position king_position;
-    if (!find_king_position(board, colour, &king_position)) return false;
+    if (!find_king_position(game->board, colour, &king_position)) return false;
 
-    return is_square_attacked(board, king_position, colour);
+    return is_square_attacked(game, king_position, colour);
 }
 
-bool is_checkmate(const Board *board, Colour colour)
+bool is_checkmate(const GameState *game, Colour colour)
 {
+    if (!game || !game->board) return false;
+
     // king must be in check in order to be in checkmate
-    if (!is_in_check(board, colour)) return false;
+    if (!is_in_check(game, colour)) return false;
 
     // find king position
     Position king_position;
-    if (!find_king_position(board, colour, &king_position)) return false;
+    if (!find_king_position(game->board, colour, &king_position)) return false;
 
     // king must have no moves as well
     PositionList move_list = {0}; // initialise with count = 0 and moves = 0
-    if (!generate_legal_moves(board, king_position, &move_list)) return false;
+    if (!generate_legal_moves(game->board, king_position, &move_list)) return false;
 
     return (move_list.count == 0);
 }
 
-bool is_stalemate(const Board *board, Colour colour)
+bool is_stalemate(const GameState *game, Colour colour)
 {
+    if (!game || !game->board) return false;
+
     // king must not be in check in order to be in stalemate
-    if (is_in_check(board, colour)) return false;
+    if (is_in_check(game, colour)) return false;
 
     // find king position
     Position king_position;
-    if (!find_king_position(board, colour, &king_position)) return false;
+    if (!find_king_position(game->board, colour, &king_position)) return false;
 
     // king must have no moves as well
     PositionList move_list = {0}; // initialise with count = 0 and moves = 0
-    if (!generate_legal_moves(board, king_position, &move_list)) return false;
+    if (!generate_legal_moves(game->board, king_position, &move_list)) return false;
 
     return (move_list.count == 0);
 }
@@ -221,13 +229,18 @@ static void position_to_move(const Board *board, Position from, Position to, Mov
 }
 
 // TODO: update to handle checks and checkmates
-bool generate_legal_moves(const Board *board, Position piece_location, PositionList *position_list_out)
+bool generate_legal_moves(const GameState *game, Position piece_location, PositionList *position_list_out)
 {
+    if (!game || !game->board || !position_list_out) return false;
+
     // create a copy of the board
+    const Board *board = game->board;
+
     Board temp_copy = *board;
 
     // find piece for information
     Piece *selected_piece = get_piece_at(&temp_copy, piece_location);
+    if (!selected_piece) return false;
 
     // calculate pseudo legal moves
     PositionList pseudo_moves = {0};
@@ -245,8 +258,11 @@ bool generate_legal_moves(const Board *board, Position piece_location, PositionL
         // play the move
         if (!simulate_move(&temp_copy, move)) return false;
 
+        GameState temp_game = *game;
+        temp_game.board = &temp_copy;
+
         // don't append if move leaves king in check
-        if (!is_in_check(&temp_copy, selected_piece->colour))
+        if (!is_in_check(&temp_game, selected_piece->colour))
         {
             if (!position_list_append(position_list_out, pseudo_moves.moves[i])) return false;
         }
