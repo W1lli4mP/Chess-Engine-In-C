@@ -30,11 +30,13 @@ typedef struct
     int fullmove_number;
 } GameState;
 
-GameState *create_game_state();
-GameState *create_starting_game_state();
+GameState *create_game_state(void);
+GameState *create_starting_game_state(void);
 
 void destroy_game_state(GameState *game);
 
 void switch_side_to_move(GameState *game);
+
+bool reset_game_state(GameState *game);
 
 #endif

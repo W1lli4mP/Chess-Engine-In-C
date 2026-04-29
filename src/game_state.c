@@ -49,3 +49,29 @@ void switch_side_to_move(GameState *game)
     
     if (game->side_to_move == COLOUR_WHITE) game->fullmove_number++;
 }
+
+bool reset_game_state(GameState *game)
+{
+    if (!game) return false;
+
+    Board *new_board = initialise_board();
+    if (!new_board) return false;
+
+    destroy_board(game->board);
+    game->board = new_board;
+
+    game->side_to_move = COLOUR_WHITE;
+
+    game->castling_rights.white_can_castle_kingside = true;
+    game->castling_rights.white_can_castle_queenside = true;
+    game->castling_rights.black_can_castle_kingside = true;
+    game->castling_rights.black_can_castle_queenside = true;
+
+    game->has_en_passant_target = false;
+    game->en_passant_target = (Position) { .row = -1, .col = -1 };
+
+    game->halfmove_clock = 0;
+    game->fullmove_number = 1;
+
+    return true;
+}
