@@ -1,7 +1,5 @@
 #include "move_gen.h"
 
-static bool is_king_on_starting_square(Position king_location, Colour king_colour);
-
 static bool generate_king_moves(const Board *board, Position piece_location, PositionList *position_list_out);
 static bool generate_pawn_moves(const Board *board, Position piece_location, PositionList *position_list_out);
 static bool generate_knight_moves(const Board *board, Position piece_location, PositionList *position_list_out);
@@ -13,43 +11,36 @@ static bool generate_queen_moves(const Board *board, Position piece_location, Po
 
 bool generate_pseudo_legal_moves(const Board *board, Position piece_location, PositionList *position_list_out)
 {
-    if (!position_list_out) return false;
+    if (!board || !position_list_out) return false;
 
     Piece *selected_piece = get_piece_at(board, piece_location);
     if (!selected_piece) return false;
 
     // generate moves based on the piece type
-    if (selected_piece->type == TYPE_PAWN)
+    switch (selected_piece->type)
     {
-        return generate_pawn_moves(board, piece_location, position_list_out);
+        case TYPE_PAWN:
+            return generate_pawn_moves(board, piece_location, position_list_out);
+        case TYPE_KING:
+            return generate_king_moves(board, piece_location, position_list_out);
+        case TYPE_KNIGHT:
+            return generate_knight_moves(board, piece_location, position_list_out);
+        case TYPE_BISHOP:
+            return generate_bishop_moves(board, piece_location, position_list_out);
+        case TYPE_ROOK:
+            return generate_rook_moves(board, piece_location, position_list_out);
+        case TYPE_QUEEN:
+            return generate_queen_moves(board, piece_location, position_list_out);
+        default:
+            return false;
     }
-    if (selected_piece->type == TYPE_KING)
-    {
-        return generate_king_moves(board, piece_location, position_list_out);
-    }
-    if (selected_piece->type == TYPE_KNIGHT)
-    {
-        return generate_knight_moves(board, piece_location, position_list_out);
-    }
-    if (selected_piece->type == TYPE_BISHOP)
-    {
-        return generate_bishop_moves(board, piece_location, position_list_out);
-    }
-    if (selected_piece->type == TYPE_ROOK)
-    {
-        return generate_rook_moves(board, piece_location, position_list_out);
-    }
-    if (selected_piece->type == TYPE_QUEEN)
-    {
-        return generate_queen_moves(board, piece_location, position_list_out);
-    }
-    else return false;
 }
 
 // TODO: add en passant
 static bool generate_pawn_moves(const Board *board, Position piece_location, PositionList *position_list_out)
 {
     Piece *selected_piece = get_piece_at(board, piece_location);
+    if (!selected_piece) return false;
 
     // determine pawn direction based on colour
     int d = (selected_piece->colour == COLOUR_WHITE) ? 1 : -1;
@@ -63,8 +54,10 @@ static bool generate_pawn_moves(const Board *board, Position piece_location, Pos
     Piece *target = get_piece_at(board, f1);
 
     // can only move forward to empty squares
-    if (!target && !position_list_append(position_list_out, f1)) return false;
+    if (!target)
     {
+        if (!position_list_append(position_list_out, f1)) return false;
+
         // double forward (iff original position was at a starting position)
         if ((selected_piece->colour == COLOUR_WHITE && piece_location.row == 1) || (selected_piece->colour == COLOUR_BLACK && piece_location.row == board->height - 2))
         {
@@ -89,44 +82,16 @@ static bool generate_pawn_moves(const Board *board, Position piece_location, Pos
     return true;
 }
 
-//! does not use board's dynamic size
-static bool is_king_on_starting_square(Position king_location, Colour king_colour)
-{
-    return (((king_colour == COLOUR_WHITE) ? king_location.row == 0 : king_location.row == 7) && king_location.col == 4);
-}
-
-static bool generate_king_castle_moves(const Board *board, Position piece_location, Piece *selected_piece, bool is_kingside, PositionList *position_list_out)
-{
-    // direction based on kingside or queenside
-    int d = is_kingside ? 1 : -1;
-
-    int rook_offset = is_kingside ? 3 : -4;
-    int empty_squares = is_kingside ? 2 : 3;
-
-    // check king's and rook's intermediate squares
-    for (int i = 1; i <= empty_squares; i++)
-    {
-        Position square = { .col = piece_location.col + i * d, .row = piece_location.row };
-        if (get_piece_at(board, square)) return true;
-    }
-    
-    Position rook_location = { .col = piece_location.col + rook_offset, .row = piece_location.row };
-    Piece *rook = get_piece_at(board, rook_location);
-
-    if (!rook || rook->type != TYPE_ROOK || rook->colour != selected_piece->colour) return true;
-
-    
-    Position castle_destination = { .col = piece_location.col + 2 * d, .row = piece_location.row };
-    return position_list_append(position_list_out, castle_destination);
-}
-
 static bool generate_king_moves(const Board *board, Position piece_location, PositionList *position_list_out)
 {
-    static const int d[8][2] = { {0, 1}, {1, 1}, {1, 0}, {1, -1},
-                                {0, -1}, {-1, -1}, {-1, 0}, {-1, 1} };
+    static const int d[8][2] = {
+        {0, 1}, {1, 1}, {1, 0}, {1, -1},
+        {0, -1}, {-1, -1}, {-1, 0}, {-1, 1}
+    };
 
     // select piece at piece location
     Piece *selected_piece = get_piece_at(board, piece_location);
+    if (!selected_piece) return false;
 
     for (int i = 0; i < 8; i++)
     {
@@ -138,7 +103,6 @@ static bool generate_king_moves(const Board *board, Position piece_location, Pos
 
         // find piece at target destination
         Position to = { .row = row, .col = col };
-
         Piece *target = get_piece_at(board, to);
 
         // selected piece cannot capture friendly pieces - dont append
@@ -146,23 +110,6 @@ static bool generate_king_moves(const Board *board, Position piece_location, Pos
 
         // attempt to append move, returning false if failing
         if (!position_list_append(position_list_out, to)) return false;
-    }
-
-    // castling
-    //! does not use board's dynamic size
-    if (is_king_on_starting_square(piece_location, selected_piece->colour))
-    {
-        // kingside
-        if ((selected_piece->colour == COLOUR_WHITE && board->white_can_castle_kingside) || (selected_piece->colour == COLOUR_BLACK && board->black_can_castle_kingside))
-        {
-            if (!generate_king_castle_moves(board, piece_location, selected_piece, true, position_list_out)) return false;
-        }
-
-        // queenside
-        if ((selected_piece->colour == COLOUR_WHITE && board->white_can_castle_queenside) || (selected_piece->colour == COLOUR_BLACK && board->black_can_castle_queenside))
-        {
-            if (!generate_king_castle_moves(board, piece_location, selected_piece, false, position_list_out)) return false;
-        }
     }
 
     // once all possible moves have been processed successfully, return true
@@ -176,6 +123,7 @@ static bool generate_knight_moves(const Board *board, Position piece_location, P
 
     // locate knight
     Piece *selected_piece = get_piece_at(board, piece_location);
+    if (!selected_piece) return false;
 
     for (int i = 0; i < 8; i++)
     {
@@ -201,6 +149,7 @@ static bool generate_knight_moves(const Board *board, Position piece_location, P
 static bool generate_sliding_moves(const Board *board, Position piece_location, PositionList *position_list_out, const int d[][2], const int num_directions)
 {
     Piece *selected_piece = get_piece_at(board, piece_location);
+    if (!selected_piece) return false;
 
     // iterate and "slide" through each direction possible
     for (int i = 0; i < num_directions; i++)
