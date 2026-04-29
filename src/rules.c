@@ -157,7 +157,7 @@ static bool attacked_by_diagonal_piece(const Board *board, Position square, Colo
 }
 
 // helper for checkmate/stalemate
-static bool side_has_legal_moves(const GameState *game, Colour colour);
+static bool side_has_legal_move(const GameState *game, Colour colour);
 
 // helper for determining whether a square is attacked - much faster approach than generating moves for each piece
 bool is_square_attacked(const GameState *game, Position square, Colour friendly_colour)
@@ -186,12 +186,12 @@ bool is_in_check(const GameState *game, Colour colour)
 
 bool is_checkmate(const GameState *game, Colour colour)
 {
-    return is_in_check(game, colour) && !side_has_legal_moves(game, colour);
+    return is_in_check(game, colour) && !side_has_legal_move(game, colour);
 }
 
 bool is_stalemate(const GameState *game, Colour colour)
 {
-    return is_in_check(game, colour) && side_has_legal_moves(game, colour);
+    return is_in_check(game, colour) && side_has_legal_move(game, colour);
 }
 
 static void position_to_move(const Board *board, Position from, Position to, Move *move_out)
@@ -251,7 +251,7 @@ bool generate_legal_moves(const GameState *game, Position piece_location, Positi
 }
 
 // iterate through all pieces belonging to a side to verify if they at least one piece has a legal move
-static bool side_has_legal_moves(const GameState *game, Colour colour)
+static bool side_has_legal_move(const GameState *game, Colour colour)
 {
     if (!game || !game->board) return false;
 
