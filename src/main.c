@@ -10,6 +10,7 @@
 #include "san_resolve.h"
 #include "fen_parser.h"
 #include "game_state.h"
+#include "rules.h"
 
 #define WHITE_VIEW 1
 #define BLACK_VIEW 0
