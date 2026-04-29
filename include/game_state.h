@@ -33,8 +33,8 @@ typedef struct
 GameState *create_game_state();
 GameState *create_starting_game_state();
 
-void destroy_game_state();
+void destroy_game_state(GameState *game);
 
-void switch_side_to_move();
+void switch_side_to_move(GameState *game);
 
 #endif
