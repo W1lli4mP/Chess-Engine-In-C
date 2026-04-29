@@ -75,14 +75,14 @@ static bool ask_input(char *input_out, size_t input_size)
     }
 }
 
-static bool is_game_over(const Board *board)
+static bool is_game_over(const GameState *game)
 {
-    if (is_checkmate(board, COLOUR_WHITE))
+    if (is_checkmate(game, COLOUR_WHITE))
     {
         puts("[GAME] Black wins!");
         return true;
     }
-    else if (is_checkmate(board, COLOUR_BLACK))
+    else if (is_checkmate(game, COLOUR_BLACK))
     {
         puts("[GAME] White wins!");
         return true;
@@ -110,7 +110,7 @@ int main()
         print_board(game->board, WHITE_VIEW); // 0 = black view, 1 = white view
 
         // 3) check game conditions
-        if (is_game_over(game->board))
+        if (is_game_over(game))
         {
             running = false;
             break;
