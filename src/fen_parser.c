@@ -6,9 +6,9 @@ static bool parse_uint(const char *fen, int *i, int *int_out, int *err_pos);
 static bool expect_space(const char *fen, int *i, int *err_pos);
 
 static bool parse_piece_placement(Board *board, const char *fen, int *i, int *err_pos);
-static bool parse_side_to_move(const char *fen, int *i, FenMeta *meta_out, int *err_pos);
-static bool parse_castling(Board *board, const char *fen, int *i, int *err_pos);
-static bool parse_en_passant(const char *fen, int *i, FenMeta *meta_out, int *err_pos);
+static bool parse_side_to_move(const char *fen, int *i, Colour *side_to_move_out, int *err_pos);
+static bool parse_castling(CastlingRights *rights, const char *fen, int *i, int *err_pos);
+static bool parse_en_passant(const char *fen, int *i, bool *has_en_passant_target_out, Position *en_passant_target_out, int *err_pos);
 
 // side helpers
 static bool fen_char_to_piece(char c, PieceType *type_out, Colour *colour_out)
@@ -151,18 +151,18 @@ static bool parse_piece_placement(Board *board, const char *fen, int *i, int *er
     return true;
 }
 
-static bool parse_side_to_move(const char *fen, int *i, FenMeta *meta_out, int *err_pos)
+static bool parse_side_to_move(const char *fen, int *i, Colour *side_to_move_out, int *err_pos)
 {
     if (fen[*i] == 'w')
     {
-        if (meta_out) meta_out->white_to_move = true;
+        if (side_to_move_out) *side_to_move_out = COLOUR_WHITE;
         (*i)++;
         return true;
     }
 
     if (fen[*i] == 'b')
     {
-        if (meta_out) meta_out->white_to_move = false;
+        if (side_to_move_out) *side_to_move_out = COLOUR_BLACK;
         (*i)++;
         return true;
     }
@@ -171,13 +171,13 @@ static bool parse_side_to_move(const char *fen, int *i, FenMeta *meta_out, int *
     return false;
 }
 
-static bool parse_castling(Board *board, const char *fen, int *i, int *err_pos)
+static bool parse_castling(CastlingRights *rights, const char *fen, int *i, int *err_pos)
 {
     // reset all castling rights before reading the field
-    board->white_can_castle_kingside = false;
-    board->white_can_castle_queenside = false;
-    board->black_can_castle_kingside = false;
-    board->black_can_castle_queenside = false;
+    rights->white_can_castle_kingside = false;
+    rights->white_can_castle_queenside = false;
+    rights->black_can_castle_kingside = false;
+    rights->black_can_castle_queenside = false;
 
     if (fen[*i] == '-')
     {
@@ -193,39 +193,39 @@ static bool parse_castling(Board *board, const char *fen, int *i, int *err_pos)
         switch (fen[*i])
         {
             case 'K':
-                if (board->white_can_castle_kingside)
+                if (rights->white_can_castle_kingside)
                 {
                     if (err_pos) *err_pos = *i;
                     return false;
                 }
-                board->white_can_castle_kingside = true;
+                rights->white_can_castle_kingside = true;
                 break;
             
             case 'Q':
-                if (board->white_can_castle_queenside)
+                if (rights->white_can_castle_queenside)
                 {
                     if (err_pos) *err_pos = *i;
                     return false;
                 }
-                board->white_can_castle_queenside = true;
+                rights->white_can_castle_queenside = true;
                 break;
             
             case 'k':
-                if (board->black_can_castle_kingside)
+                if (rights->black_can_castle_kingside)
                 {
                     if (err_pos) *err_pos = *i;
                     return false;
                 }
-                board->black_can_castle_kingside = true;
+                rights->black_can_castle_kingside = true;
                 break;
 
             case 'q':
-                if (board->black_can_castle_queenside)
+                if (rights->black_can_castle_queenside)
                 {
                     if (err_pos) *err_pos = *i;
                     return false;
                 }
-                board->black_can_castle_queenside = true;
+                rights->black_can_castle_queenside = true;
                 break;
 
             // unexpected characters render the entire field as invalid
@@ -248,10 +248,12 @@ static bool parse_castling(Board *board, const char *fen, int *i, int *err_pos)
     return true;
 }
 
-static bool parse_en_passant(const char *fen, int *i, FenMeta *meta_out, int *err_pos)
+static bool parse_en_passant(const char *fen, int *i, bool *has_en_passant_target_out, Position *en_passant_target_out, int *err_pos)
 {
     // default to no en passant target
-    if (meta_out) meta_out->has_en_passant = false;
+    if (has_en_passant_target_out) *has_en_passant_target_out = false;
+
+    if (en_passant_target_out) *en_passant_target_out = (Position) { .row = -1, .col = -1 };
 
     // check if there is no en passant square
     if (fen[*i] == '-')
@@ -276,12 +278,16 @@ static bool parse_en_passant(const char *fen, int *i, FenMeta *meta_out, int *er
         return false;
     }
 
-    // store parsed squaare in metadata
-    if (meta_out)
+    // store parsed square
+    if (has_en_passant_target_out)
     {
-        meta_out->has_en_passant = true;
-        meta_out->en_passant.col = col - 'a';
-        meta_out->en_passant.row = row - '1';
+        *has_en_passant_target_out = true;
+    }
+
+    if (en_passant_target_out)
+    {
+        en_passant_target_out->col = col - 'a';
+        en_passant_target_out->row = row - '1';
     }
 
     // consume both characters of the square
@@ -289,12 +295,12 @@ static bool parse_en_passant(const char *fen, int *i, FenMeta *meta_out, int *er
     return true;
 }
 
-// parses a complete FEN string and loads it into the board
-// parsing is done on a temporary board to separate conflicts
-// actual board is modified iff entire FEN is valid
-bool load_fen(Board *board_out, const char *fen, FenMeta *meta_out, int *err_pos)
+// parses a complete FEN string and loads it into the game's board
+// parsing is done temporary attributes to separate conflicts
+//! actual attributes is modified iff entire FEN is valid
+bool load_fen(GameState *game, const char *fen, int *err_pos)
 {
-    if (!board_out || !fen)
+    if (!game || !game->board || !fen)
     {
         if (err_pos) *err_pos = 0;
         return false;
@@ -309,16 +315,21 @@ bool load_fen(Board *board_out, const char *fen, FenMeta *meta_out, int *err_pos
         return false;
     }
 
-    // initialise metadata defaults before parsing
-    if (meta_out)
-    {
-        meta_out->white_to_move = true;
-        meta_out->has_en_passant = false;
-        meta_out->en_passant.row = -1;
-        meta_out->en_passant.col = -1;
-        meta_out->halfmove_clock = 0;
-        meta_out->fullmove_number = 1;
-    }
+    // initialise defaults before parsing
+    Colour side_to_move = COLOUR_WHITE;
+
+    CastlingRights castling_rights = {
+        .white_can_castle_kingside = false,
+        .white_can_castle_queenside = false,
+        .black_can_castle_kingside = false,
+        .black_can_castle_queenside = false
+    };
+
+    bool has_en_passant_target = false;
+    Position en_passant_target = { .row = -1, .col = -1 };
+
+    int halfmove_clock = 0;
+    int fullmove_number = 1;
 
     // current index for parsing (helps tracks errors)
     int i = 0;
@@ -330,47 +341,25 @@ bool load_fen(Board *board_out, const char *fen, FenMeta *meta_out, int *err_pos
     if (!parse_piece_placement(temp, fen, &i, err_pos)) goto fail;
     if (!expect_space(fen, &i, err_pos)) goto fail;
 
-    if (!parse_side_to_move(fen, &i, meta_out, err_pos)) goto fail;
+    if (!parse_side_to_move(fen, &i, &side_to_move, err_pos)) goto fail;
     if (!expect_space(fen, &i, err_pos)) goto fail;
 
-    if (!parse_castling(temp, fen, &i, err_pos)) goto fail;
+    if (!parse_castling(&castling_rights, fen, &i, err_pos)) goto fail;
     if (!expect_space(fen, &i, err_pos)) goto fail;
 
-    if (!parse_en_passant(fen, &i, meta_out, err_pos)) goto fail;
+    if (!parse_en_passant(fen, &i, &has_en_passant_target, &en_passant_target, err_pos)) goto fail;
     if (!expect_space(fen, &i, err_pos)) goto fail;
 
     // halfmove clock field
-    if (meta_out)
-    {
-        if (!parse_uint(fen, &i, &meta_out->halfmove_clock, err_pos)) goto fail;
-    }
-    else
-    {
-        int ignored;
-        if (!parse_uint(fen, &i, &ignored, err_pos)) goto fail;
-    }
-
+    if (!parse_uint(fen, &i, &halfmove_clock, err_pos)) goto fail;
     if (!expect_space(fen, &i, err_pos)) goto fail;
 
     // fullmove number field
-    if (meta_out)
+    if (!parse_uint(fen, &i, &fullmove_number, err_pos)) goto fail;
+    if (fullmove_number < 1)
     {
-        if (!parse_uint(fen, &i, &meta_out->fullmove_number, err_pos)) goto fail;
-        if (meta_out->fullmove_number < 1)
-        {
-            if (err_pos) *err_pos = i;
-            goto fail;
-        }   
-    }
-    else
-    {
-        int ignored;
-        if (!parse_uint(fen, &i, &ignored, err_pos)) goto fail;
-        if (ignored < 1)
-        {
-            if (err_pos) *err_pos = i;
-            goto fail;
-        }
+        if (err_pos) *err_pos = i;
+        goto fail;
     }
 
     // reject any trailing characters after 6 required FEN fields
@@ -381,7 +370,7 @@ bool load_fen(Board *board_out, const char *fen, FenMeta *meta_out, int *err_pos
     }
 
     // overwrite actual board
-    if (!clear_board(board_out))
+    if (!clear_board(game->board))
     {
         if (err_pos) *err_pos = 0;
         goto fail;
@@ -392,19 +381,21 @@ bool load_fen(Board *board_out, const char *fen, FenMeta *meta_out, int *err_pos
     {
         for (int col = 0; col < 8; col++)
         {
-            board_out->grid[row][col] = temp->grid[row][col];
+            game->board->grid[row][col] = temp->grid[row][col];
             temp->grid[row][col] = NULL;
         }
     }
 
     // copy all attributes
-    board_out->height = temp->height;
-    board_out->width = temp->width;
+    game->board->height = temp->height;
+    game->board->width = temp->width;
 
-    board_out->white_can_castle_kingside = temp->white_can_castle_kingside;
-    board_out->white_can_castle_queenside = temp->white_can_castle_queenside;
-    board_out->black_can_castle_kingside = temp->black_can_castle_kingside;
-    board_out->black_can_castle_queenside = temp->black_can_castle_queenside;
+    game->side_to_move = side_to_move;
+    game->castling_rights = castling_rights;
+    game->has_en_passant_target = has_en_passant_target;
+    game->en_passant_target = en_passant_target;
+    game->halfmove_clock = halfmove_clock;
+    game->fullmove_number = fullmove_number;
 
     destroy_board(temp);
     return true;
