@@ -9,6 +9,7 @@
 #include "move_gen.h"
 #include "san_resolve.h"
 #include "fen_parser.h"
+#include "game_state.h"
 
 #define WHITE_VIEW 1
 #define BLACK_VIEW 0
@@ -97,21 +98,19 @@ static void turn_debug(Colour side_to_move)
 
 int main()
 {
-    Board *board = initialise_board();
-
-    Colour side_to_move = COLOUR_WHITE;
+    GameState *game = create_starting_game_state();
 
     bool running = true;
     while (running)
     {
         // 1) indicate turn
-        turn_debug(side_to_move);
+        turn_debug(game->side_to_move);
 
         // 2) draw board
-        print_board(board, WHITE_VIEW); // 0 = black view, 1 = white view
+        print_board(game->board, WHITE_VIEW); // 0 = black view, 1 = white view
 
         // 3) check game conditions
-        if (is_game_over(board))
+        if (is_game_over(game->board))
         {
             running = false;
             break;
@@ -138,7 +137,7 @@ int main()
         // 6) resolve SAN (san -> move)
         Move *move = initialise_move();
         
-        ResolveStatus status = resolve_san(board, *san, side_to_move, move);
+        ResolveStatus status = resolve_san(game->board, *san, game->side_to_move, move);
         destroy_san(san);
 
         // SAN RESOLVER DEBUG PRINT
@@ -154,17 +153,17 @@ int main()
         // MOVE DEBUG PRINT
         move_debug(*move);
 
-        if (!apply_move(board, *move)) puts("Move failed!");
+        if (!apply_move(game->board, *move)) puts("Move failed!");
 
         destroy_move(move);
 
         puts("------------------------");
 
         // 7) change turns
-        side_to_move = (side_to_move == COLOUR_WHITE) ? COLOUR_BLACK : COLOUR_WHITE;
+        switch_side_to_move(game);
     }
 
-    destroy_board(board);
+    destroy_game_state(game);
     
     return 0;
 }
