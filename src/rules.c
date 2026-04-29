@@ -156,6 +156,9 @@ static bool attacked_by_diagonal_piece(const Board *board, Position square, Colo
     return attacked_by_sliding_piece(board, square, friendly_colour, d, TYPE_BISHOP);
 }
 
+// helper for checkmate/stalemate
+static bool side_has_legal_moves(const GameState *game, Colour colour);
+
 // helper for determining whether a square is attacked - much faster approach than generating moves for each piece
 bool is_square_attacked(const GameState *game, Position square, Colour friendly_colour)
 {
@@ -183,38 +186,12 @@ bool is_in_check(const GameState *game, Colour colour)
 
 bool is_checkmate(const GameState *game, Colour colour)
 {
-    if (!game || !game->board) return false;
-
-    // king must be in check in order to be in checkmate
-    if (!is_in_check(game, colour)) return false;
-
-    // find king position
-    Position king_position;
-    if (!find_king_position(game->board, colour, &king_position)) return false;
-
-    // king must have no moves as well
-    PositionList move_list = {0}; // initialise with count = 0 and moves = 0
-    if (!generate_legal_moves(game->board, king_position, &move_list)) return false;
-
-    return (move_list.count == 0);
+    return is_in_check(game, colour) && !side_has_legal_moves(game, colour);
 }
 
 bool is_stalemate(const GameState *game, Colour colour)
 {
-    if (!game || !game->board) return false;
-
-    // king must not be in check in order to be in stalemate
-    if (is_in_check(game, colour)) return false;
-
-    // find king position
-    Position king_position;
-    if (!find_king_position(game->board, colour, &king_position)) return false;
-
-    // king must have no moves as well
-    PositionList move_list = {0}; // initialise with count = 0 and moves = 0
-    if (!generate_legal_moves(game->board, king_position, &move_list)) return false;
-
-    return (move_list.count == 0);
+    return is_in_check(game, colour) && side_has_legal_moves(game, colour);
 }
 
 static void position_to_move(const Board *board, Position from, Position to, Move *move_out)
@@ -271,4 +248,30 @@ bool generate_legal_moves(const GameState *game, Position piece_location, Positi
         temp_copy = *board;
     }
     return true;
+}
+
+// iterate through all pieces belonging to a side to verify if they at least one piece has a legal move
+static bool side_has_legal_moves(const GameState *game, Colour colour)
+{
+    if (!game || !game->board) return false;
+
+    const Board *board = game->board;
+
+    for (int row = 0; row < board->height; row++)
+    {
+        for (int col = 0; col < board->width; col++)
+        {
+            Position from = { .row = row, .col = col };
+            Piece *piece = get_piece_at(board, from);
+
+            if (!piece || piece->colour != colour) continue;
+
+            PositionList moves = {0};
+
+            if (!generate_legal_moves(game, from, &moves)) return false;
+
+            if (moves.count > 0) return true;
+        }
+    }
+    return false;
 }
