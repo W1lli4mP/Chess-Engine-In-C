@@ -272,7 +272,8 @@ static bool parse_en_passant(const char *fen, int *i, bool *has_en_passant_targe
         return false;
     }
 
-    if (row < '1' || row > '8')
+    // en passant targets can only be in rows 3 or 6
+    if (row != '3' && row != '6')
     {
         if (err_pos) *err_pos = *i + 1;
         return false;
