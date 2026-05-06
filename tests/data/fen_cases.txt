@@ -1,7 +1,123 @@
-# expected|fen
-valid|8/8/8/8/8/8/8/8 w - - 0 1
-valid|rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
-valid|r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1
-invalid|8/8/8/8/8/8/8 w - - 0 1
-invalid|8/8/8/8/8/8/8/8 x - - 0 1
-invalid|8/8/8/8/8/8/8/8 w - - 0 0
+# id|expected|fen
+
+# ------------------------
+# VALID: empty / starting / normal positions
+# ------------------------
+fen.placement.empty_board.valid|valid|8/8/8/8/8/8/8/8 w - - 0 1
+fen.placement.starting_position.valid|valid|rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+fen.placement.normal_opening_position.valid|valid|rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2
+
+# ------------------------
+# VALID: castling rights
+# ------------------------
+fen.castling.all_rights.valid|valid|r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1
+fen.castling.white_rights_only.valid|valid|r3k2r/8/8/8/8/8/8/R3K2R b KQ - 0 1
+fen.castling.black_rights_only.valid|valid|r3k2r/8/8/8/8/8/8/R3K2R w kq - 0 1
+fen.castling.no_rights.valid|valid|r3k2r/8/8/8/8/8/8/R3K2R b - - 0 1
+
+# ------------------------
+# VALID: en passant targets
+# ------------------------
+fen.en_passant.none.valid|valid|8/8/8/8/8/8/8/8 w - - 0 1
+fen.en_passant.d6.valid|valid|8/8/8/3pP3/8/8/8/8 w - d6 0 1
+fen.en_passant.e3.valid|valid|8/8/8/8/3Pp3/8/8/8 b - e3 0 1
+fen.en_passant.opening_d3.valid|valid|rnbqkbnr/pppp1ppp/8/4p3/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 2
+
+# ------------------------
+# VALID: move counters
+# ------------------------
+fen.counters.large_halfmove.valid|valid|8/8/8/8/8/8/8/8 w - - 99 100
+fen.counters.black_to_move_fullmove_42.valid|valid|8/8/8/8/8/8/8/8 b - - 0 42
+
+# ------------------------
+# INVALID: wrong number of ranks
+# ------------------------
+fen.placement.too_few_ranks.invalid|invalid|8/8/8/8/8/8/8 w - - 0 1
+fen.placement.too_many_ranks.invalid|invalid|8/8/8/8/8/8/8/8/8 w - - 0 1
+
+# ------------------------
+# INVALID: rank widths
+# ------------------------
+fen.placement.rank_digit_too_large.invalid|invalid|9/8/8/8/8/8/8/8 w - - 0 1
+fen.placement.first_rank_too_narrow.invalid|invalid|7/8/8/8/8/8/8/8 w - - 0 1
+fen.placement.last_rank_too_wide.invalid|invalid|8/8/8/8/8/8/8/9 w - - 0 1
+fen.placement.last_rank_too_narrow.invalid|invalid|8/8/8/8/8/8/8/7 w - - 0 1
+fen.placement.mixed_rank_too_wide.invalid|invalid|4p4/8/8/8/8/8/8/8 w - - 0 1
+fen.placement.mixed_rank_too_wide_alt.invalid|invalid|3p5/8/8/8/8/8/8/8 w - - 0 1
+
+# ------------------------
+# INVALID: bad piece placement syntax
+# ------------------------
+fen.placement.trailing_slash.invalid|invalid|8/8/8/8/8/8/8/8/ w - - 0 1
+fen.placement.leading_slash.invalid|invalid|/8/8/8/8/8/8/8/8 w - - 0 1
+fen.placement.double_slash.invalid|invalid|8//8/8/8/8/8/8/8 w - - 0 1
+fen.placement.trailing_char_after_board.invalid|invalid|8/8/8/8/8/8/8/8x w - - 0 1
+fen.fields.extra_field.invalid|invalid|8/8/8/8/8/8/8/8 w - - 0 1 extra
+
+# ------------------------
+# INVALID: illegal piece characters
+# ------------------------
+fen.placement.illegal_piece_upper_x.invalid|invalid|8/8/8/8/8/8/8/7X w - - 0 1
+fen.placement.illegal_piece_lower_z.invalid|invalid|8/8/8/8/8/8/8/7z w - - 0 1
+fen.placement.illegal_piece_symbol.invalid|invalid|8/8/8/8/8/8/8/7* w - - 0 1
+
+# ------------------------
+# INVALID: side to move
+# ------------------------
+fen.side.invalid_token_x.invalid|invalid|8/8/8/8/8/8/8/8 x - - 0 1
+fen.side.uppercase_w.invalid|invalid|8/8/8/8/8/8/8/8 W - - 0 1
+fen.side.word_black.invalid|invalid|8/8/8/8/8/8/8/8 black - - 0 1
+fen.side.dash.invalid|invalid|8/8/8/8/8/8/8/8 - - - 0 1
+
+# ------------------------
+# INVALID: castling rights
+# ------------------------
+fen.castling.bad_char_a.invalid|invalid|8/8/8/8/8/8/8/8 w A - 0 1
+fen.castling.extra_char_x.invalid|invalid|8/8/8/8/8/8/8/8 w KQkqx - 0 1
+fen.castling.duplicate_k.invalid|invalid|8/8/8/8/8/8/8/8 w KK - 0 1
+fen.castling.duplicate_mixed_k.invalid|invalid|8/8/8/8/8/8/8/8 w KQK - 0 1
+fen.castling.double_dash.invalid|invalid|8/8/8/8/8/8/8/8 w -- - 0 1
+fen.castling.dash_inside_rights.invalid|invalid|8/8/8/8/8/8/8/8 w K-Q - 0 1
+
+# ------------------------
+# INVALID: en passant
+# ------------------------
+fen.en_passant.rank_1.invalid|invalid|8/8/8/8/8/8/8/8 w - a1 0 1
+fen.en_passant.rank_8.invalid|invalid|8/8/8/8/8/8/8/8 w - h8 0 1
+fen.en_passant.bad_file_i.invalid|invalid|8/8/8/8/8/8/8/8 w - i3 0 1
+fen.en_passant.bad_rank_9.invalid|invalid|8/8/8/8/8/8/8/8 w - a9 0 1
+fen.en_passant.double_file.invalid|invalid|8/8/8/8/8/8/8/8 w - aa 0 1
+fen.en_passant.reversed_square.invalid|invalid|8/8/8/8/8/8/8/8 w - 3a 0 1
+fen.en_passant.rank_4.invalid|invalid|8/8/8/8/8/8/8/8 w - e4 0 1
+
+# ------------------------
+# INVALID: halfmove clock
+# ------------------------
+fen.counters.negative_halfmove.invalid|invalid|8/8/8/8/8/8/8/8 w - - -1 1
+fen.counters.non_numeric_halfmove.invalid|invalid|8/8/8/8/8/8/8/8 w - - x 1
+fen.counters.trailing_char_halfmove.invalid|invalid|8/8/8/8/8/8/8/8 w - - 1x 1
+
+# ------------------------
+# INVALID: fullmove number
+# ------------------------
+fen.counters.zero_fullmove.invalid|invalid|8/8/8/8/8/8/8/8 w - - 0 0
+fen.counters.negative_fullmove.invalid|invalid|8/8/8/8/8/8/8/8 w - - 0 -1
+fen.counters.non_numeric_fullmove.invalid|invalid|8/8/8/8/8/8/8/8 w - - 0 x
+fen.counters.trailing_char_fullmove.invalid|invalid|8/8/8/8/8/8/8/8 w - - 0 1x
+
+# ------------------------
+# INVALID: missing fields
+# ------------------------
+fen.fields.only_board.invalid|invalid|8/8/8/8/8/8/8/8
+fen.fields.missing_castling.invalid|invalid|8/8/8/8/8/8/8/8 w
+fen.fields.missing_en_passant.invalid|invalid|8/8/8/8/8/8/8/8 w -
+fen.fields.missing_halfmove.invalid|invalid|8/8/8/8/8/8/8/8 w - -
+fen.fields.missing_fullmove.invalid|invalid|8/8/8/8/8/8/8/8 w - - 0
+
+# ------------------------
+# INVALID: spacing issues
+# ------------------------
+fen.spacing.double_space_after_board.invalid|invalid|8/8/8/8/8/8/8/8  w - - 0 1
+fen.spacing.double_space_after_side.invalid|invalid|8/8/8/8/8/8/8/8 w  - - 0 1
+fen.spacing.double_space_after_castling.invalid|invalid|8/8/8/8/8/8/8/8 w -  - 0 1
+fen.spacing.double_space_after_en_passant.invalid|invalid|8/8/8/8/8/8/8/8 w - -  0 1
