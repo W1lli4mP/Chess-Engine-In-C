@@ -138,7 +138,7 @@ static ResolveStatus validate_move(
     return RESOLVE_OK;
 }
 
-ResolveStatus resolve_san(const GameState *game, San san, Move *move_out)
+ResolveStatus resolve_san(GameState *game, San san, Move *move_out)
 {
     /*
         purpose:
