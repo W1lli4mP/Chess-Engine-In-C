@@ -38,6 +38,12 @@ static bool expected_square_seen(const Position *seen, int seen_count, Position 
 
 static bool move_list_contains_to_square(const MoveList *moves, Position expected_to);
 
+static void print_expected_moves(const char *expected_moves_text);
+
+static void print_move_list_destinations(const MoveList *moves);
+
+static void position_to_square(Position position, char out[3]);
+
 int main()
 {
     puts("------------------------");
@@ -201,6 +207,21 @@ static bool run_move_gen_case(
     // reason is only outputted when failure occurs; no need for a ternary operator
     print_move_gen_result(test_id, ok, "generated moves did not match expected moves");
 
+    // report failed test cases
+    if (!ok)
+    {
+        printf("Expected count: %d\n", expected_count);
+        printf("Actual count: %d\n", moves.count);
+
+        printf("Expected moves: ");
+        print_expected_moves(expected_moves_text);
+
+        printf("Actual moves: ");
+        print_move_list_destinations(&moves);
+
+        puts("------------------------");
+    }
+
     destroy_game_state(game);
     return ok;
 }
@@ -214,13 +235,14 @@ static void print_move_gen_result(
 {
     printf("Test: %s\n", test_id);
     
-    //? could change reason format
+    // print a separator only when passed; other function prints a separator when failed
     if (passed)
+    {
         puts("Result: PASS");
+        puts("------------------------");
+    }
     else
         printf("Result: FAIL (reason = %s)\n", reason);
-    
-    puts("------------------------");
 }
 
 static bool parse_square(const char *text, Position *position_out)
@@ -276,7 +298,7 @@ static bool validate_generated_moves(
 
     if (moves->count != expected_count) return false;
 
-    // either 0 or '\0'
+    // if no moves are expected, expected moves field should be empty
     if (expected_count == 0) return expected_moves_text[0] == '\0';
 
     // create a copy and store into a buffer
@@ -337,4 +359,41 @@ static bool move_list_contains_to_square(const MoveList *moves, Position expecte
     }
 
     return false;
+}
+
+static void print_expected_moves(const char *expected_moves_text)
+{
+    if (!expected_moves_text || expected_moves_text[0] == '\0')
+        puts("(none)");
+    else
+        puts(expected_moves_text);
+}
+
+static void print_move_list_destinations(const MoveList *moves)
+{
+    if (!moves)
+    {
+        puts("(null)");
+        return;
+    }
+
+    for (int i = 0; i < moves->count; i++)
+    {
+        char square[3];
+        position_to_square(moves->moves[i].to, square);
+
+        printf("%s", square);
+
+        // add commas if there is a subsequent move
+        if (i + 1 < moves->count) putchar(',');   
+    }
+
+    putchar('\n');
+}
+
+static void position_to_square(Position position, char out[3])
+{
+    out[0] = (char) ('a' + position.col);
+    out[1] = (char) ('1' + position.row);
+    out[2] = '\0';
 }
