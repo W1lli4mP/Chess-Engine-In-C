@@ -6,17 +6,18 @@
 #include "position.h"
 #include "piece.h"
 #include "board.h"
+#include "move.h"
 
 bool generate_pseudo_legal_moves(
-    const Board *board,
+    const GameState *game,
     Position piece_location,
-    PositionList *position_list_out
+    MoveList *moves_out
 );
 
 bool generate_legal_moves(
     const GameState *game,
     Position piece_location,
-    PositionList *position_list_out
+    MoveList *moves_out
 );
 
 #endif
