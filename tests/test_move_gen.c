@@ -29,10 +29,14 @@ static bool parse_square(const char *text, Position *position_out);
 static bool parse_expected_count(const char *text, int *count_out);
 
 static bool validate_generated_moves(
-    MoveList *moves,
+    const MoveList *moves,
     int expected_count,
     const char *expected_moves_text
 );
+
+static bool expected_square_seen(const Position *seen, int seen_count, Position square);
+
+static bool move_list_contains_to_square(const MoveList *moves, Position expected_to);
 
 int main()
 {
@@ -263,10 +267,74 @@ static bool parse_expected_count(const char *text, int *count_out)
 }
 
 static bool validate_generated_moves(
-    MoveList *moves,
+    const MoveList *moves,
     int expected_count,
     const char *expected_moves_text
 )
 {
-    //! complete
+    if (!moves || !expected_moves_text) return false;
+
+    if (moves->count != expected_count) return false;
+
+    // either 0 or '\0'
+    if (expected_count == 0) return expected_moves_text[0] == '\0';
+
+    // create a copy and store into a buffer
+    char buffer[MAX_LINE_LEN];
+    strncpy(buffer, expected_moves_text, sizeof buffer);
+    buffer[sizeof buffer - 1] = '\0';
+
+    Position seen[MAX_MOVES];
+    int seen_count = 0;
+
+    // tokenise each expected move/square
+    char *token = strtok(buffer, ",");
+
+    while (token)
+    {
+        Position expected_to;
+
+        // must be in the form of a square
+        if (!parse_square(token, &expected_to)) return false;
+
+        // cannot have repeated moves in the test case
+        if (expected_square_seen(seen, seen_count, expected_to)) return false;
+
+        // if there is ONE move not in the generated move list, it fails
+        if (!move_list_contains_to_square(moves, expected_to)) return false;
+
+        seen[seen_count++] = expected_to;
+
+        token = strtok(NULL, ",");
+    }
+
+    return seen_count == expected_count;
+}
+
+static bool expected_square_seen(const Position *seen, int seen_count, Position square)
+{
+    if (!seen) return false;
+
+    for (int i = 0; i < seen_count; i++)
+    {
+        // return true to skip already observed squares
+        if (seen[i].row == square.row && seen[i].col == square.col) return true;
+    }
+
+    return false;
+}
+
+static bool move_list_contains_to_square(const MoveList *moves, Position expected_to)
+{
+    if (!moves) return false;
+
+    for (int i = 0; i < moves->count; i++)
+    {
+        Position actual_to = moves->moves[i].to;
+
+        // return true if one of the squares in the move list match the expected move
+        if (actual_to.row == expected_to.row && actual_to.col == expected_to.col) return true;
+    }
+
+    return false;
 }
