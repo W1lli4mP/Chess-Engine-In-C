@@ -9,6 +9,7 @@
 
 #define MOVE_GEN_CASES_FILE "tests/data/move_gen_cases.txt"
 #define MAX_LINE_LEN 256
+#define MAX_MOVES 32 //! 27 is the theoretical limit, but on an 8x8 chess board
 
 static void print_move_gen_result(
     const char *test_id,
@@ -26,7 +27,7 @@ static bool run_move_gen_case(
 
 static bool parse_square(const char *text, Position *position_out);
 
-static bool parse_expected_count(const char *expected_count_text, int *expected_count);
+static bool parse_expected_count(const char *text, int *count_out);
 
 static bool validate_generated_moves(
     MoveList *moves,
@@ -239,9 +240,24 @@ static bool parse_square(const char *text, Position *position_out)
     return true;
 }
 
-static bool parse_expected_result(const char *expected_count_text, int *expected_count)
+static bool parse_expected_count(const char *text, int *count_out)
 {
-    //! complete
+    if (!text || !count_out) return false;
+
+    char *end = NULL;
+    long value = strol(text, &end, 10);
+
+    // no digits were parsed
+    if (end == text) return false;
+
+    // check for extra characters after the number
+    if (*end != '\0') return false;
+
+    // move counts cannot be negative
+    if (value < 0) return false;
+
+    //* cannot exceed max moves
+    if (value > MAX_MOVES) return false;
 }
 
 static bool validate_generated_moves(
