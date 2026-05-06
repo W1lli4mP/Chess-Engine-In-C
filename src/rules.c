@@ -199,7 +199,10 @@ static bool side_has_legal_move(const GameState *game, Colour colour)
 {
     if (!game || !game->board) return false;
 
-    const Board *board = game->board;
+    GameState temp_game = *game;
+    temp_game.side_to_move = colour;
+
+    const Board *board = temp_game.board;
 
     for (int row = 0; row < board->height; row++)
     {
@@ -212,10 +215,11 @@ static bool side_has_legal_move(const GameState *game, Colour colour)
 
             MoveList moves = {0};
 
-            if (!generate_legal_moves(game, from, &moves)) return false;
+            if (!generate_legal_moves(&temp_game, from, &moves)) return false;
 
             if (moves.count > 0) return true;
         }
     }
+
     return false;
 }
