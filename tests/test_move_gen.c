@@ -24,7 +24,7 @@ static bool run_move_gen_case(
     const char *expected_moves
 );
 
-static bool parse_square(const char *from_text, Position *from);
+static bool parse_square(const char *text, Position *position_out);
 
 static bool parse_expected_count(const char *expected_count_text, int *expected_count);
 
@@ -219,9 +219,24 @@ static void print_move_gen_result(
     puts("------------------------");
 }
 
-static bool parse_square(const char *from_text, Position *from)
+static bool parse_square(const char *text, Position *position_out)
 {
-    //! complete
+    if (!text || !position_out) return false;
+
+    // squares must always be denoted as two chars: <col> | <row>
+    if (strlen(text) != 2) return false;
+
+    char col = text[0];
+    char row = text[1];
+
+    if (col < 'a' || col > 'h') return false;
+
+    if (row < '1' || row > '8') return false;
+
+    position_out->col = col - 'a';
+    position_out->row = row - '1';
+
+    return true;
 }
 
 static bool parse_expected_result(const char *expected_count_text, int *expected_count)
