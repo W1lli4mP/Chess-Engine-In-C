@@ -2,10 +2,13 @@
 CC = gcc
 CFLAGS = -g -Wall -Wextra -Iinclude
 
-# executable names
-TARGET = chess
-TEST_FEN_TARGET = test_fen
+# directories
 BUILD_DIR = build
+BIN_DIR = bin
+
+# executable names
+TARGET = $(BIN_DIR)/chess
+TEST_FEN_TARGET = $(BIN_DIR)/test_fen
 
 # source files
 SRCS = $(wildcard src/*.c)
@@ -22,11 +25,11 @@ TEST_FEN_OBJ = $(BUILD_DIR)/test_fen.o
 all: $(TARGET)
 
 # main program
-$(TARGET): $(OBJS)
+$(TARGET): $(OBJS) | $(BIN_DIR)
 	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS)
 
 # fen test executable
-$(TEST_FEN_TARGET): $(COMMON_OBJS) $(TEST_FEN_OBJ)
+$(TEST_FEN_TARGET): $(COMMON_OBJS) $(TEST_FEN_OBJ) | $(BIN_DIR)
 	$(CC) $(CFLAGS) -o $(TEST_FEN_TARGET) $(COMMON_OBJS) $(TEST_FEN_OBJ)
 
 # compile source objects
@@ -34,15 +37,18 @@ $(BUILD_DIR)/%.o: src/%.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # compile test objects
-$(BUILD_DIR)/test_fen.o: tests/test_fen.c | $(BUILD_DIR)
+$(BUILD_DIR)/test_fen.o: $(TEST_FEN_SRC) | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
+$(BIN_DIR):
+	mkdir -p $(BIN_DIR)
+
 # clean object files and executables
 clean:
-	rm -f $(OBJS) $(COMMON_OBJS) $(TEST_FEN_OBJ) $(TARGET) $(TEST_FEN_TARGET)
+	rm -rf $(BUILD_DIR) $(BIN_DIR)
 
 # run main program
 run: $(TARGET)
