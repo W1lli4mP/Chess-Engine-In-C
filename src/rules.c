@@ -191,7 +191,7 @@ bool is_checkmate(const GameState *game, Colour colour)
 
 bool is_stalemate(const GameState *game, Colour colour)
 {
-    return is_in_check(game, colour) && side_has_legal_move(game, colour);
+    return !is_in_check(game, colour) && !side_has_legal_move(game, colour);
 }
 
 static void position_to_move(const Board *board, Position from, Position to, Move *move_out)
