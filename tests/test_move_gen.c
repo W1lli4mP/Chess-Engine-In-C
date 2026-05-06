@@ -3,12 +3,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include "board.h"
+#include "game_state.h"
+#include "fen_parser.h"
 #include "move_gen.h"
 
 #define MOVE_GEN_CASES_FILE "tests/data/move_gen_cases.txt"
 #define MAX_LINE_LEN 256
 
-static bool print_move_gen_result(
+static void print_move_gen_result(
     const char *test_id,
     bool passed,
     const char *reason
@@ -24,9 +26,7 @@ static bool run_move_gen_case(
 
 static bool parse_square(const char *from_text, Position *from);
 
-static bool parse_expected_result(const char *expected_count_text, int *expected_count);
-
-static bool load_fen(GameState *game, const char *fen, int *err_pos);
+static bool parse_expected_count(const char *expected_count_text, int *expected_count);
 
 static bool validate_generated_moves(
     MoveList *moves,
@@ -146,7 +146,7 @@ static bool run_move_gen_case(
     // parse expected result
     int expected_count;
 
-    if (!parse_expected_result(expected_count_text, &expected_count))
+    if (!parse_expected_count(expected_count_text, &expected_count))
     {
         print_move_gen_result(test_id, false, "invalid expected count");
         return false;
@@ -194,14 +194,15 @@ static bool run_move_gen_case(
     // validate generated legal moves
     bool ok = validate_generated_moves(&moves, expected_count, expected_moves_text);
 
-    print_move_gen_result(test_id, false, ok ? "PASS" : "generated moves did not match expected moves");
+    // reason is only outputted when failure occurs; no need for a ternary operator
+    print_move_gen_result(test_id, ok, "generated moves did not match expected moves");
 
     destroy_game_state(game);
     return ok;
 }
 
 // HELPERS
-static bool print_move_gen_result(
+static void print_move_gen_result(
     const char *test_id,
     bool passed,
     const char *reason
@@ -224,11 +225,6 @@ static bool parse_square(const char *from_text, Position *from)
 }
 
 static bool parse_expected_result(const char *expected_count_text, int *expected_count)
-{
-    //! complete
-}
-
-static bool load_fen(GameState *game, const char *fen, int *err_pos)
 {
     //! complete
 }
