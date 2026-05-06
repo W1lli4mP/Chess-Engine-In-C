@@ -8,12 +8,30 @@
 #define MOVE_GEN_CASES_FILE "tests/data/move_gen_cases.txt"
 #define MAX_LINE_LEN 256
 
+static bool print_move_gen_result(
+    const char *test_id,
+    bool passed,
+    const char *reason
+);
+
 static bool run_move_gen_case(
     const char *test_id,
     const char *fen,
     const char *from,
     const char *expected_count,
     const char *expected_moves
+);
+
+static bool parse_square(const char *from_text, Position *from);
+
+static bool parse_expected_result(const char *expected_count_text, int *expected_count);
+
+static bool load_fen(GameState *game, const char *fen, int *err_pos);
+
+static bool validate_generated_moves(
+    MoveList *moves,
+    int expected_count,
+    const char *expected_moves_text
 );
 
 int main()
@@ -107,13 +125,118 @@ int main()
     return passed != total;
 }
 
-//* HELPER
+//* MAIN HELPER
 static bool run_move_gen_case(
     const char *test_id,
     const char *fen,
-    const char *from,
-    const char *expected_count,
-    const char *expected_moves
+    const char *from_text,
+    const char *expected_count_text,
+    const char *expected_moves_text
+)
+{
+    Position from;
+
+    // parse square
+    if (!parse_square(from_text, &from))
+    {
+        print_move_gen_result(test_id, false, "invalid from square");
+        return false;
+    }
+
+    // parse expected result
+    int expected_count;
+
+    if (!parse_expected_result(expected_count_text, &expected_count))
+    {
+        print_move_gen_result(test_id, false, "invalid expected count");
+        return false;
+    }
+
+    // setup game state
+    GameState *game = create_game_state();
+
+    if (!game)
+    {
+        print_move_gen_result(test_id, false, "failed to create game state");
+        return false;
+    }
+
+    // setup empty board state
+    game->board = initialise_empty_board();
+
+    if (!game->board)
+    {
+        destroy_game_state(game);
+        print_move_gen_result(test_id, false, "failed to create board");
+        return false;
+    }
+
+    int err_pos = -1;
+
+    // load FEN
+    if (!load_fen(game, fen, &err_pos))
+    {
+        destroy_game_state(game);
+        print_move_gen_result(test_id, false, "failed to load FEN");
+        return false;
+    }
+
+    // generate legal moves
+    MoveList moves = {0};
+
+    if (!generate_legal_moves(game, from, &moves))
+    {
+        destroy_game_state(game);
+        print_move_gen_result(test_id, false, "failed to generate legal moves");
+        return false;
+    }
+
+    // validate generated legal moves
+    bool ok = validate_generated_moves(&moves, expected_count, expected_moves_text);
+
+    print_move_gen_result(test_id, false, ok ? "PASS" : "generated moves did not match expected moves");
+
+    destroy_game_state(game);
+    return ok;
+}
+
+// HELPERS
+static bool print_move_gen_result(
+    const char *test_id,
+    bool passed,
+    const char *reason
+)
+{
+    printf("Test: %s\n", test_id);
+    
+    //? could change reason format
+    if (passed)
+        puts("Result: PASS");
+    else
+        printf("Result: FAIL (reason = %s)\n", reason);
+    
+    puts("------------------------");
+}
+
+static bool parse_square(const char *from_text, Position *from)
+{
+    //! complete
+}
+
+static bool parse_expected_result(const char *expected_count_text, int *expected_count)
+{
+    //! complete
+}
+
+static bool load_fen(GameState *game, const char *fen, int *err_pos)
+{
+    //! complete
+}
+
+static bool validate_generated_moves(
+    MoveList *moves,
+    int expected_count,
+    const char *expected_moves_text
 )
 {
     //! complete
