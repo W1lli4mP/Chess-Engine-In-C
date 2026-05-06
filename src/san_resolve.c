@@ -1,5 +1,5 @@
 #include "san_resolve.h"
-#include "rules.h"
+#include "move_gen.h"
 
 /*
 TODO:
@@ -8,9 +8,28 @@ handle san suffix (checks/mates)
 handle en passant
 */
 static bool is_pawn_promotion_rank(const Piece *piece, Position to);
-static bool verify_square(const Board *board, San san, Position from, Colour side_to_move, Piece **piece_out);
-static ResolveStatus validate_moves(const GameState *game, San san, Piece *current_piece, PositionList move_list, Move *move_out);
-static ResolveStatus validate_move(const Board *board, San san, Piece *current_piece, Position to, Move *move_out);
+
+static bool verify_square(
+    const Board *board,
+    San san,
+    Position from,
+    Colour side_to_move,
+    Piece **piece_out
+);
+
+static ResolveStatus validate_moves(
+    San san,
+    Piece *current_piece,
+    MoveList move_list,
+    Move *move_out
+);
+
+static ResolveStatus validate_move(
+    San san,
+    Piece *current_piece,
+    Move candidate,
+    Move *move_out
+);
 
 // helper for implicit pawn promotions
 static bool is_pawn_promotion_rank(const Piece *piece, Position to)
@@ -23,7 +42,13 @@ static bool is_pawn_promotion_rank(const Piece *piece, Position to)
 
 
 // verifies ONE square
-static bool verify_square(const Board *board, San san, Position from, Colour side_to_move, Piece **piece_out)
+static bool verify_square(
+    const Board *board,
+    San san,
+    Position from,
+    Colour side_to_move,
+    Piece **piece_out
+)
 {
     if (!board || !piece_out) return false;
 
@@ -43,61 +68,73 @@ static bool verify_square(const Board *board, San san, Position from, Colour sid
     return true;
 }
 
-// populates a Move struct while verifying
-// particularly: to
-static ResolveStatus validate_moves(const GameState *game, San san, Piece *current_piece, PositionList move_list, Move *move_out)
+// finds exactly ONE generated legal move match the SAN
+static ResolveStatus validate_moves(
+    San san,
+    Piece *current_piece,
+    MoveList move_list,
+    Move *move_out
+)
 {
-    if (!game || !game->board || !current_piece || !move_out) return RESOLVE_ILLEGAL;
-
-    const Board *board = game->board;
+    if (!current_piece || !move_out) return RESOLVE_ILLEGAL;
 
     bool found = false;
 
     // validate if any moves match the SAN (to)
     for (int i = 0; i < move_list.count; i++)
     {
-        Position to = move_list.moves[i];
-        if (to.col != san.to.col || to.row != san.to.row) continue;
+        Move candidate = move_list.moves[i];
+
+        if (candidate.to.col != san.to.col || candidate.to.row != san.to.row) continue;
 
         //* validate if the move match the SAN's other attributes
-        ResolveStatus current_status = validate_move(board, san, current_piece, to, move_out);
+        ResolveStatus current_status = validate_move(san, current_piece, candidate, move_out);
+
         if (current_status != RESOLVE_OK) continue;
 
         // cannot have repeats
         if (found) return RESOLVE_AMBIGUOUS;
 
-        move_out->to = to;
         found = true;
     }
+
     return found ? RESOLVE_OK : RESOLVE_ILLEGAL;
 }
 
-// helper that verifies a singular valid move based on SAN intent
-// also populates a Move struct while verifying
-// particularly: is_promotion, promotion
-static ResolveStatus validate_move(const Board *board, San san, Piece *current_piece, Position to, Move *move_out)
+// verifies one generated legal move against the SAN intent
+// and copies it into move_out if valid
+static ResolveStatus validate_move(
+    San san,
+    Piece *current_piece,
+    Move candidate,
+    Move *move_out
+)
 {
-    if (!board || !current_piece || !move_out) return RESOLVE_ILLEGAL;
+    if (!current_piece || !move_out) return RESOLVE_ILLEGAL;
+
+    Position to = candidate.to;
 
     // captures (target can be an enemy or ally)
-    Piece *target = get_piece_at(board, to);
-    if (san.is_capture)
-    {
-        if (!target) return RESOLVE_ILLEGAL;
-        if (target->colour == current_piece->colour) return RESOLVE_ILLEGAL;
-    }
-    else if (target) return RESOLVE_ILLEGAL;
+    if (san.is_capture != candidate.is_capture) return RESOLVE_ILLEGAL;
 
     // explicit and implicit promotions
-    if (san.is_promotion || is_pawn_promotion_rank(current_piece, to))
-    {
-        if (!is_pawn_promotion_rank(current_piece, to)) return RESOLVE_ILLEGAL;
+    bool reaches_promotion_rank = is_pawn_promotion_rank(current_piece, to);
 
-        // default to queen if no promotion piece is explicitly given
-        move_out->is_promotion = true;
-        move_out->promotion = (san.promotion == TYPE_NONE) ? TYPE_QUEEN : san.promotion;
+    if (san.is_promotion)
+    {
+        if (!reaches_promotion_rank) return RESOLVE_ILLEGAL;
+
+        candidate.is_promotion = true;
+        candidate.promotion = san.promotion;
+    }
+    else if (reaches_promotion_rank)
+    {
+        //! defaults to queen if no promotion piece is explicitly given
+        candidate.is_promotion = true;
+        candidate.promotion = TYPE_QUEEN;
     }
 
+    *move_out = candidate;
     return RESOLVE_OK;
 }
 
@@ -116,36 +153,29 @@ ResolveStatus resolve_san(const GameState *game, San san, Move *move_out)
 
     // updates move_out safely
     Move found_move = {0};
-
     bool found = false;
 
     for (int row = 0; row < board->height; row++)
     {
         for (int col = 0; col < board->width; col++)
         {
-            //? how it works: finds a move that satisfies the SAN, if there is more than one move, resolve as ambiguous, else populate move_out
+            //? finds source pieces whose legal moves match the SAN
+            //? more than one match means the SAN is ambiguous
             // verify square and extract piece if valid
             Position from = { .col = col, .row = row };
+
             Piece *current_piece = NULL;
             if (!verify_square(board, san, from, side_to_move, &current_piece)) continue;
 
             // generate moves
-            PositionList moves = {0};
+            MoveList moves = {0};
+
             if (!generate_legal_moves(game, from, &moves)) continue;
 
-            //? i dont know what im doing anymore
             Move temp = {0};
-            // update rest of temp
-            temp.piece = san.piece;
-            temp.from = from;
-            // temp.to is decided in validate_moves()
-            temp.is_capture = san.is_capture;
-            temp.is_castle_kingside = san.is_castle_kingside;
-            temp.is_castle_queenside = san.is_castle_queenside;
-            // temp.is_promotion and temp.promotion is decided in validate_move()
 
             // validate the moves list of the current piece
-            ResolveStatus piece_status = validate_moves(game, san, current_piece, moves, &temp);
+            ResolveStatus piece_status = validate_moves(san, current_piece, moves, &temp);
 
             if (piece_status == RESOLVE_ILLEGAL) continue;
 
