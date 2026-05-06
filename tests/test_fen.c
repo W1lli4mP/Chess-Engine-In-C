@@ -23,65 +23,91 @@ static void print_result(const char *fen, bool passed, int err_pos, bool expecte
 
 static bool test_valid_fen(const char *fen)
 {
-    Board *board = initialise_empty_board();
+    // initialise new game state
+    GameState *game = create_game_state();
 
-    if (!board)
+    if (!game)
+    {
+        puts("Failed to allocate game state");
+        return false;
+    }
+
+    // make the game state's board empty
+    game->board = initialise_empty_board();
+
+    if (!game->board)
     {
         puts("Failed to allocate board");
         return false;
     }
 
-    FenMeta meta;
+    // set error position
     int err_pos = -1;
 
-    bool ok = load_fen(board, fen, &meta, &err_pos);
+    bool ok = load_fen(game, fen, &err_pos);
 
     print_result(fen, ok, err_pos, true);
 
     if (ok)
     {
-        print_board(board, 1);
-        printf("Side to move: %s\n", meta.white_to_move ? "white" : "black");
+        print_board(game->board, 1);
+        printf("Side to move: %s\n", (game->side_to_move == COLOUR_WHITE) ? "white" : "black");
         printf("Castling: K=%d Q=%d k=%d q=%d\n",
-               board->white_can_castle_kingside,
-               board->white_can_castle_queenside,
-               board->black_can_castle_kingside,
-               board->black_can_castle_queenside);
+            game->castling_rights.white_can_castle_kingside,
+            game->castling_rights.white_can_castle_queenside,
+            game->castling_rights.black_can_castle_kingside,
+            game->castling_rights.black_can_castle_queenside
+        );
 
-        if (meta.has_en_passant)
-            printf("En passant: %c%c\n",
-                   'a' + meta.en_passant.col,
-                   '1' + meta.en_passant.row);
+        if (game->has_en_passant_target)
+        {
+            printf(
+                "En passant: %c%c\n",
+                'a' + game->en_passant_target.col,
+                '1' + game->en_passant_target.row
+            );
+        }
         else
             puts("En passant: -");
         
-        printf("Halfmove: %d\n", meta.halfmove_clock);
-        printf("Fullmove: %d\n", meta.fullmove_number);
+        printf("Halfmove: %d\n", game->halfmove_clock);
+        printf("Fullmove %d\n", game->fullmove_number);
+
         puts("------------------------");
     }
 
-    destroy_board(board);
+    destroy_game_state(game);
     return ok;
 }
 
 static bool test_invalid_fen(const char *fen)
 {
-    Board *board = initialise_empty_board();
-    
-    if (!board)
+    // initialise new game state
+    GameState *game = create_game_state();
+
+    if (!game)
+    {
+        puts("Failed to allocate game state");
+        return false;
+    }
+
+    // make the game state's board empty
+    game->board = initialise_empty_board();
+
+    if (!game->board)
     {
         puts("Failed to allocate board");
         return false;
     }
 
-    FenMeta meta;
+    // set error position
     int err_pos = -1;
 
-    bool ok = load_fen(board, fen, &meta, &err_pos);
+    bool ok = load_fen(game, fen, &err_pos);
 
     print_result(fen, !ok, err_pos, false);
 
-    destroy_board(board);
+    destroy_game_state(game);
     return !ok;
 }
 
