@@ -1,4 +1,5 @@
 #include "move_gen.h"
+#include "rules.h"
 
 static bool append_normal_move(
     const Board *board,
@@ -50,6 +51,8 @@ static bool generate_queen_moves(
     Position piece_location,
     MoveList *moves_out
 );
+
+static bool is_empty_square(const Board *board, Position position);
 
 //* MAIN HELPER
 // constructs Move from two Position's and appends if possible
@@ -157,6 +160,44 @@ bool generate_legal_moves(
     return true;
 }
 
+bool generate_all_legal_moves(
+    const GameState *game,
+    MoveList *moves_out
+)
+{
+    if (!game || !game->board || !moves_out) return false;
+
+    const Board *board = game->board;
+
+    // iterate through entire board
+    for (int row = 0; row < board->height; row++)
+    {
+        for (int col = 0; col < board->width; col++)
+        {
+            Position from = { .row = row, .col = col };
+
+            // retrieve pieces of the side's turn to move
+            Piece *piece = get_piece_at(board, from);
+            if (!piece) continue;
+
+            if (piece->colour != game->side_to_move) continue;
+
+            MoveList piece_moves = {0};
+
+            if (!generate_legal_moves(game, from, &piece_moves)) return false;
+
+            for (int i = 0; i < piece_moves.count; i++)
+            {
+                // append all generated legal moves to moves_out
+                if (!move_list_append(moves_out, piece_moves.moves[i])) return false;
+            }
+
+        }
+    }
+
+    return true;
+}
+
 //* HELPERS
 // TODO: add en passant
 static bool generate_pawn_moves(
@@ -179,20 +220,18 @@ static bool generate_pawn_moves(
     // forward
     Position f1 = { .row = row + d, .col = col };
 
-    Piece *target = get_piece_at(board, f1);
-
     // can only move forward to empty squares
-    if (!target)
+    if (is_empty_square(board, f1))
     {
         if (!append_normal_move(board, piece_location, f1, moves_out)) return false;
 
         // double forward (iff original position was at a starting position)
         if ((selected_piece->colour == COLOUR_WHITE && piece_location.row == 1) || (selected_piece->colour == COLOUR_BLACK && piece_location.row == board->height - 2))
         {
+            // repeat the same but for second forward move
             Position f2 = { .row = row + 2 * d, .col = col };
 
-            Piece *target2 = get_piece_at(board, f2);
-            if (!target2)
+            if (is_empty_square(board, f2))
             {
                 if (!append_normal_move(board, piece_location, f2, moves_out)) return false;
             }
@@ -292,7 +331,7 @@ static bool generate_knight_moves(
         // friendly piece check
         if (target && selected_piece->colour == target->colour) continue;
 
-        if(!append_normal_move(board, piece_location, to, moves_out)) return false;
+        if (!append_normal_move(board, piece_location, to, moves_out)) return false;
     }
 
     return true;
@@ -387,4 +426,10 @@ static bool generate_queen_moves(
     };
 
     return generate_sliding_moves(game, piece_location, moves_out, d, 8);
+}
+
+// avoids having to use in_bounds() and get_piece_at() afterwards
+static bool is_empty_square(const Board *board, Position position)
+{
+    return in_bounds(board, position.row, position.col) && get_piece_at(board, position) == NULL;
 }
