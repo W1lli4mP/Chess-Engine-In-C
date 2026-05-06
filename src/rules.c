@@ -205,51 +205,6 @@ static void position_to_move(const Board *board, Position from, Position to, Mov
     // TODO: update other attributes in future
 }
 
-// TODO: update to handle checks and checkmates
-bool generate_legal_moves(const GameState *game, Position piece_location, PositionList *position_list_out)
-{
-    if (!game || !game->board || !position_list_out) return false;
-
-    // create a copy of the board
-    const Board *board = game->board;
-
-    Board temp_copy = *board;
-
-    // find piece for information
-    Piece *selected_piece = get_piece_at(&temp_copy, piece_location);
-    if (!selected_piece) return false;
-
-    // calculate pseudo legal moves
-    PositionList pseudo_moves = {0};
-
-    if (!generate_pseudo_legal_moves(&temp_copy, piece_location, &pseudo_moves)) return false;
-
-    // simulate every move
-    for (int i = 0; i < pseudo_moves.count; i++)
-    {
-        Move move = {0};
-
-        // convert Position into Move struct
-        position_to_move(&temp_copy, piece_location, pseudo_moves.moves[i], &move);
-
-        // play the move
-        if (!simulate_move(&temp_copy, move)) return false;
-
-        GameState temp_game = *game;
-        temp_game.board = &temp_copy;
-
-        // don't append if move leaves king in check
-        if (!is_in_check(&temp_game, selected_piece->colour))
-        {
-            if (!position_list_append(position_list_out, pseudo_moves.moves[i])) return false;
-        }
-
-        // reset copy back to default
-        temp_copy = *board;
-    }
-    return true;
-}
-
 // iterate through all pieces belonging to a side to verify if they at least one piece has a legal move
 static bool side_has_legal_move(const GameState *game, Colour colour)
 {
