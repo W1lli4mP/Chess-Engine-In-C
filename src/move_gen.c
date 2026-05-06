@@ -1,5 +1,6 @@
 #include "move_gen.h"
 #include "rules.h"
+#include "move_apply.h"
 
 static bool append_normal_move(
     const Board *board,
@@ -9,25 +10,25 @@ static bool append_normal_move(
 );
 
 static bool generate_pawn_moves(
-    const GameState *game,
+    GameState *game,
     Position piece_location,
     MoveList *moves_out
 );
 
 static bool generate_king_moves(
-    const GameState *game,
+    GameState *game,
     Position piece_location,
     MoveList *moves_out
 );
 
 static bool generate_knight_moves(
-    const GameState *game,
+    GameState *game,
     Position piece_location,
     MoveList *moves_out
 );
 
 static bool generate_sliding_moves(
-    const GameState *game,
+    GameState *game,
     Position piece_location,
     MoveList *moves_out,
     const int d[][2],
@@ -35,19 +36,19 @@ static bool generate_sliding_moves(
 );
 
 static bool generate_bishop_moves(
-    const GameState *game,
+    GameState *game,
     Position piece_location,
     MoveList *moves_out
 );
 
 static bool generate_rook_moves(
-    const GameState *game,
+    GameState *game,
     Position piece_location,
     MoveList *moves_out
 );
 
 static bool generate_queen_moves(
-    const GameState *game,
+    GameState *game,
     Position piece_location,
     MoveList *moves_out
 );
@@ -82,7 +83,7 @@ static bool append_normal_move(
 
 //* MAIN FUNCTIONS
 bool generate_pseudo_legal_moves(
-    const GameState *game,
+    GameState *game,
     Position piece_location,
     MoveList *moves_out
 )
@@ -119,7 +120,7 @@ bool generate_pseudo_legal_moves(
 }
 
 bool generate_legal_moves(
-    const GameState *game,
+    GameState *game,
     Position piece_location,
     MoveList *moves_out
 )
@@ -131,6 +132,9 @@ bool generate_legal_moves(
     // find piece for information
     Piece *selected_piece = get_piece_at(board, piece_location);
     if (!selected_piece) return false;
+    
+    // retrieve moving colour before applying move
+    Colour moving_colour = selected_piece->colour;
 
     // calculate pseudo legal moves
     MoveList pseudo_moves = {0};
@@ -142,16 +146,18 @@ bool generate_legal_moves(
     {
         Move move = pseudo_moves.moves[i];
 
-        Board temp_board = *board;
+        UndoInfo undo;
 
         // play the move
-        if (!simulate_move(&temp_board, move)) return false;
+        if (!make_move(game, move, &undo)) return false;
 
-        GameState temp_game = *game;
-        temp_game.board = &temp_board;
+        bool leaves_king_in_check = is_in_check(game, moving_colour);
+
+        // restore the move if possible
+        if (!unmake_move(game, move, &undo)) return false;
 
         // don't append if move leaves king in check
-        if (!is_in_check(&temp_game, selected_piece->colour))
+        if (!leaves_king_in_check)
         {
             if (!move_list_append(moves_out, move)) return false;
         }
@@ -161,7 +167,7 @@ bool generate_legal_moves(
 }
 
 bool generate_all_legal_moves(
-    const GameState *game,
+    GameState *game,
     MoveList *moves_out
 )
 {
@@ -201,7 +207,7 @@ bool generate_all_legal_moves(
 //* HELPERS
 // TODO: add en passant
 static bool generate_pawn_moves(
-    const GameState *game,
+    GameState *game,
     Position piece_location,
     MoveList *moves_out
 )
@@ -262,7 +268,7 @@ static bool generate_pawn_moves(
 }
 
 static bool generate_king_moves(
-    const GameState *game,
+    GameState *game,
     Position piece_location,
     MoveList *moves_out
 )
@@ -302,7 +308,7 @@ static bool generate_king_moves(
 }
 
 static bool generate_knight_moves(
-    const GameState *game,
+    GameState *game,
     Position piece_location,
     MoveList *moves_out
 )
@@ -339,7 +345,7 @@ static bool generate_knight_moves(
 
 // helper for sliding pieces: bishops, rooks and queens
 static bool generate_sliding_moves(
-    const GameState *game,
+    GameState *game,
     Position piece_location,
     MoveList *moves_out,
     const int d[][2],
@@ -392,7 +398,7 @@ static bool generate_sliding_moves(
 
 // sliding piece movement
 static bool generate_bishop_moves(
-    const GameState *game,
+    GameState *game,
     Position piece_location,
     MoveList *moves_out
 )
@@ -403,7 +409,7 @@ static bool generate_bishop_moves(
 }
 
 static bool generate_rook_moves(
-    const GameState *game,
+    GameState *game,
     Position piece_location,
     MoveList *moves_out
 )
@@ -414,7 +420,7 @@ static bool generate_rook_moves(
 }
 
 static bool generate_queen_moves(
-    const GameState *game,
+    GameState *game,
     Position piece_location,
     MoveList *moves_out
 )
