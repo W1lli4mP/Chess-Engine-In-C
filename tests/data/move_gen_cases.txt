@@ -17,3 +17,22 @@ movegen.pawn.capture_both.black|8/4p3/3P1P2/8/8/8/8/8 b - - 0 1|e7|4|d6,e6,e5,f6
 movegen.rook.center.empty|8/8/8/8/3R4/8/8/8 w - - 0 1|d4|14|d1,d2,d3,d5,d6,d7,d8,a4,b4,c4,e4,f4,g4,h4
 movegen.rook.blocked_by_friendly|8/8/3P4/8/1P1R2P1/8/3P4/8 w - - 0 1|d4|5|d3,c4,d5,e4,f4
 movegen.rook.capture_enemies|8/8/3p4/8/1p1R2p1/8/3p4/8 w - - 0 1|d4|9|d2,d3,d5,d6,b4,c4,e4,f4,g4
+
+# Bishops
+movegen.bishop.center.empty|8/8/8/8/3B4/8/8/8 w - - 0 1|d4|13|a1,b2,c3,e5,f6,g7,h8,a7,b6,c5,e3,f2,g1
+movegen.bishop.blocked_by_friendly|8/8/1P3P2/8/3B4/2P1P3/8/8 w - - 0 1|d4|2|c5,e5
+movegen.bishop.capture_enemies|8/8/1p3p2/8/3B4/2p1p3/8/8 w - - 0 1|d4|6|b6,c5,e5,f6,c3,e3
+
+# Queens
+movegen.queen.center.empty|8/8/8/8/3Q4/8/8/8 w - - 0 1|d4|27|d1,d2,d3,d5,d6,d7,d8,a4,b4,c4,e4,f4,g4,h4,a1,b2,c3,e5,f6,g7,h8,a7,b6,c5,e3,f2,g1
+movegen.queen.blocked_by_friendly|8/8/1P1P1P2/8/1P1Q2P1/2P1P3/8/8 w - - 0 1|d4|9|e5,c5,e4,f4,d3,d2,d1,c4,d5
+movegen.queen.capture_enemies|8/8/1p1p1p2/8/1p1Q2p1/2p1p3/8/8 w - - 0 1|d4|16|e5,f6,e3,c3,c5,b6,e4,f4,g4,d3,d2,d1,c4,b4,d5,d6
+
+# Kings
+movegen.king.center.empty|8/8/8/8/3K4/8/8/8 w - - 0 1|d4|8|c3,d3,e3,c4,e4,c5,d5,e5
+movegen.king.corner.empty|8/8/8/8/8/8/8/K7 w - - 0 1|a1|3|a2,b1,b2
+movegen.king.friendly_occupied.excluded|8/8/8/8/2PPP3/2PKP3/2PPP3/8 w - - 0 1|d3|0|
+
+# Legal move filtering / checks
+movegen.king.capture_enemies|8/8/8/8/2ppp3/2pKp3/2ppp3/8 w - - 0 1|d3|5|e4,e2,d2,c2,c4
+movegen.king.cannot_move_into_rook_check|4r3/8/8/8/3K4/8/8/8 w - - 0 1|d4|5|d5,d3,c3,c4,c5
