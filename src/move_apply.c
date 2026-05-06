@@ -12,7 +12,7 @@ bool make_move(GameState *game, Move move, UndoInfo *undo_out)
     if (!piece) return false;
 
     Piece *captured = get_piece_at(board, move.to);
-    if (!captured) return false;
+    // captured can be NULL so don't use add a NULL check
 
     // encapsulate relevant game state information into UndoInfo
     undo_out->captured_piece = captured;
@@ -27,8 +27,8 @@ bool make_move(GameState *game, Move move, UndoInfo *undo_out)
     undo_out->previous_moved_piece_type = piece->type;
 
     // update board state
-    set_piece_at(board, move.to, piece);
-    set_piece_at(board, move.from, NULL);
+    if (!set_piece_at(board, move.to, piece)) return false;
+    if (!set_piece_at(board, move.from, NULL)) return false;
 
     // update game state
     game->side_to_move = (game->side_to_move == COLOUR_WHITE) ? COLOUR_BLACK : COLOUR_WHITE;
@@ -61,8 +61,8 @@ bool unmake_move(GameState *game, Move move, const UndoInfo *undo)
     piece->sprite = find_sprite(piece->type, piece->colour);
 
     // undo board state
-    set_piece_at(board, move.from, piece);
-    set_piece_at(board, move.to, undo->captured_piece);
+    if (!set_piece_at(board, move.from, piece)) return false;
+    if (!set_piece_at(board, move.to, undo->captured_piece)) return false;
 
     // undo game state
     game->side_to_move = undo->previous_side_to_move;
