@@ -29,6 +29,7 @@ static bool test_valid_fen(const char *fen)
     if (!game)
     {
         puts("Failed to allocate game state");
+        destroy_game_state(game);
         return false;
     }
 
@@ -38,6 +39,7 @@ static bool test_valid_fen(const char *fen)
     if (!game->board)
     {
         puts("Failed to allocate board");
+        destroy_game_state(game);
         return false;
     }
 
@@ -68,8 +70,10 @@ static bool test_valid_fen(const char *fen)
             );
         }
         else
+        {
             puts("En passant: -");
-        
+        }
+
         printf("Halfmove: %d\n", game->halfmove_clock);
         printf("Fullmove %d\n", game->fullmove_number);
 
@@ -88,6 +92,7 @@ static bool test_invalid_fen(const char *fen)
     if (!game)
     {
         puts("Failed to allocate game state");
+        destroy_game_state(game);
         return false;
     }
 
@@ -97,6 +102,7 @@ static bool test_invalid_fen(const char *fen)
     if (!game->board)
     {
         puts("Failed to allocate board");
+        destroy_game_state(game);
         return false;
     }
 
