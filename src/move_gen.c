@@ -1,88 +1,172 @@
 #include "move_gen.h"
 
-static bool generate_king_moves(const Board *board, Position piece_location, PositionList *position_list_out);
-static bool generate_pawn_moves(const Board *board, Position piece_location, PositionList *position_list_out);
-static bool generate_knight_moves(const Board *board, Position piece_location, PositionList *position_list_out);
+static bool append_normal_move(
+    const Board *board,
+    Position from,
+    Position to,
+    MoveList *moves_out
+);
 
-static bool generate_sliding_moves(const Board *board, Position piece_location, PositionList *position_list_out, const int d[][2], const int num_directions);
-static bool generate_bishop_moves(const Board *board, Position piece_location, PositionList *position_list_out);
-static bool generate_rook_moves(const Board *board, Position piece_location, PositionList *position_list_out);
-static bool generate_queen_moves(const Board *board, Position piece_location, PositionList *position_list_out);
+static bool generate_pawn_moves(
+    const GameState *game,
+    Position piece_location,
+    MoveList *moves_out
+);
 
-bool generate_pseudo_legal_moves(const Board *board, Position piece_location, PositionList *position_list_out)
+static bool generate_king_moves(
+    const GameState *game,
+    Position piece_location,
+    MoveList *moves_out
+);
+
+static bool generate_knight_moves(
+    const GameState *game,
+    Position piece_location,
+    MoveList *moves_out
+);
+
+static bool generate_sliding_moves(
+    const GameState *game,
+    Position piece_location,
+    MoveList *moves_out,
+    const int d[][2],
+    int num_directions
+);
+
+static bool generate_bishop_moves(
+    const GameState *game,
+    Position piece_location,
+    MoveList *moves_out
+);
+
+static bool generate_rook_moves(
+    const GameState *game,
+    Position piece_location,
+    MoveList *moves_out
+);
+
+static bool generate_queen_moves(
+    const GameState *game,
+    Position piece_location,
+    MoveList *moves_out
+);
+
+//* MAIN HELPER
+// constructs Move from two Position's and appends if possible
+static bool append_normal_move(
+    const Board *board,
+    Position from,
+    Position to,
+    MoveList *moves_out
+)
 {
-    if (!board || !position_list_out) return false;
+    // null check
+    if (!board || !moves_out) return false;
 
-    Piece *selected_piece = get_piece_at(board, piece_location);
+    // retrieve piece
+    Piece *piece = get_piece_at(board, from);
+    if (!piece) return false;
+
+    // create move
+    Move move = create_move(piece->type, from, to);
+
+    // add potential capture
+    Piece *target = get_piece_at(board, to);
+    if (target) move.is_capture = true;
+
+    return move_list_append(moves_out, move);
+}
+
+//* MAIN FUNCTIONS
+bool generate_pseudo_legal_moves(
+    const GameState *game,
+    Position piece_location,
+    MoveList *moves_out
+)
+{
+    if (!game || !game->board || !moves_out) return false;
+
+    Piece *selected_piece = get_piece_at(game->board, piece_location);
     if (!selected_piece) return false;
 
     // generate moves based on the piece type
     switch (selected_piece->type)
     {
         case TYPE_PAWN:
-            return generate_pawn_moves(board, piece_location, position_list_out);
+            return generate_pawn_moves(game, piece_location, moves_out);
+
         case TYPE_KING:
-            return generate_king_moves(board, piece_location, position_list_out);
+            return generate_king_moves(game, piece_location, moves_out);
+
         case TYPE_KNIGHT:
-            return generate_knight_moves(board, piece_location, position_list_out);
+            return generate_knight_moves(game, piece_location, moves_out);
+
         case TYPE_BISHOP:
-            return generate_bishop_moves(board, piece_location, position_list_out);
+            return generate_bishop_moves(game, piece_location, moves_out);
+
         case TYPE_ROOK:
-            return generate_rook_moves(board, piece_location, position_list_out);
+            return generate_rook_moves(game, piece_location, moves_out);
+
         case TYPE_QUEEN:
-            return generate_queen_moves(board, piece_location, position_list_out);
+            return generate_queen_moves(game, piece_location, moves_out);
+
         default:
             return false;
     }
 }
 
-bool generate_legal_moves(const GameState *game, Position piece_location, PositionList *position_list_out)
+bool generate_legal_moves(
+    const GameState *game,
+    Position piece_location,
+    MoveList *moves_out
+)
 {
-    if (!game || !game->board || !position_list_out) return false;
+    if (!game || !game->board || !moves_out) return false;
 
-    // create a copy of the board
     const Board *board = game->board;
 
-    Board temp_copy = *board;
-
     // find piece for information
-    Piece *selected_piece = get_piece_at(&temp_copy, piece_location);
+    Piece *selected_piece = get_piece_at(board, piece_location);
     if (!selected_piece) return false;
 
     // calculate pseudo legal moves
-    PositionList pseudo_moves = {0};
+    MoveList pseudo_moves = {0};
 
-    if (!generate_pseudo_legal_moves(&temp_copy, piece_location, &pseudo_moves)) return false;
+    if (!generate_pseudo_legal_moves(game, piece_location, &pseudo_moves)) return false;
 
     // simulate every move
     for (int i = 0; i < pseudo_moves.count; i++)
     {
-        Move move = {0};
+        Move move = pseudo_moves.moves[i];
 
-        // convert Position into Move struct
-        position_to_move(&temp_copy, piece_location, pseudo_moves.moves[i], &move);
+        Board temp_board = *board;
 
         // play the move
-        if (!simulate_move(&temp_copy, move)) return false;
+        if (!simulate_move(&temp_board, move)) return false;
 
         GameState temp_game = *game;
-        temp_game.board = &temp_copy;
+        temp_game.board = &temp_board;
 
         // don't append if move leaves king in check
         if (!is_in_check(&temp_game, selected_piece->colour))
         {
-            if (!position_list_append(position_list_out, pseudo_moves.moves[i])) return false;
+            if (!move_list_append(moves_out, move)) return false;
         }
-
-        // reset copy back to default
-        temp_copy = *board;
     }
+
     return true;
 }
 
+//* HELPERS
 // TODO: add en passant
-static bool generate_pawn_moves(const Board *board, Position piece_location, PositionList *position_list_out)
+static bool generate_pawn_moves(
+    const GameState *game,
+    Position piece_location,
+    MoveList *moves_out
+)
 {
+    const Board *board = game->board;
+
     Piece *selected_piece = get_piece_at(board, piece_location);
     if (!selected_piece) return false;
 
@@ -100,7 +184,7 @@ static bool generate_pawn_moves(const Board *board, Position piece_location, Pos
     // can only move forward to empty squares
     if (!target)
     {
-        if (!position_list_append(position_list_out, f1)) return false;
+        if (!append_normal_move(board, piece_location, f1, moves_out)) return false;
 
         // double forward (iff original position was at a starting position)
         if ((selected_piece->colour == COLOUR_WHITE && piece_location.row == 1) || (selected_piece->colour == COLOUR_BLACK && piece_location.row == board->height - 2))
@@ -108,26 +192,44 @@ static bool generate_pawn_moves(const Board *board, Position piece_location, Pos
             Position f2 = { .row = row + 2 * d, .col = col };
 
             Piece *target2 = get_piece_at(board, f2);
-            if (!target2 && !position_list_append(position_list_out, f2)) return false;
+            if (!target2)
+            {
+                if (!append_normal_move(board, piece_location, f2, moves_out)) return false;
+            }
         }
     }
 
     // check for diagonal captures
-    Position left = { .row = row + d, .col = col - 1 };
-    Position right = { .row = row + d, .col = col + 1 };
+    Position captures[2] = {
+        { .row = row + d, .col = col - 1 },
+        { .row = row + d, .col = col + 1 }
+    };
 
-    Piece *left_enemy = get_piece_at(board, left);
-    Piece *right_enemy = get_piece_at(board, right);
+    // check both left and right diagonal captures
+    for (int i = 0; i < 2; i++)
+    {
+        Position to = captures[i];
 
-    // append enemies if valid
-    if (left_enemy && left_enemy->colour != selected_piece->colour && !position_list_append(position_list_out, left)) return false;
-    if (right_enemy && right_enemy->colour != selected_piece->colour && !position_list_append(position_list_out, right)) return false;
+        Piece *target = get_piece_at(board, to);
+
+        // append enemies if valid
+        if (target && target->colour != selected_piece->colour)
+        {
+            if (!append_normal_move(board, piece_location, to, moves_out)) return false;
+        }
+    }
 
     return true;
 }
 
-static bool generate_king_moves(const Board *board, Position piece_location, PositionList *position_list_out)
+static bool generate_king_moves(
+    const GameState *game,
+    Position piece_location,
+    MoveList *moves_out
+)
 {
+    const Board *board = game->board;
+
     static const int d[8][2] = {
         {0, 1}, {1, 1}, {1, 0}, {1, -1},
         {0, -1}, {-1, -1}, {-1, 0}, {-1, 1}
@@ -153,15 +255,21 @@ static bool generate_king_moves(const Board *board, Position piece_location, Pos
         if (target && selected_piece->colour == target->colour) continue;
 
         // attempt to append move, returning false if failing
-        if (!position_list_append(position_list_out, to)) return false;
+        if (!append_normal_move(board, piece_location, to, moves_out)) return false;
     }
 
     // once all possible moves have been processed successfully, return true
     return true;
 }
 
-static bool generate_knight_moves(const Board *board, Position piece_location, PositionList *position_list_out)
+static bool generate_knight_moves(
+    const GameState *game,
+    Position piece_location,
+    MoveList *moves_out
+)
 {
+    const Board *board = game->board;
+
     static const int d[8][2] = { {1, 2}, {2, 1}, {2, -1}, {1, -2},
                               {-1, -2}, {-2, -1}, {-2, 1}, {-1, 2} };
 
@@ -184,14 +292,23 @@ static bool generate_knight_moves(const Board *board, Position piece_location, P
         // friendly piece check
         if (target && selected_piece->colour == target->colour) continue;
 
-        if(!position_list_append(position_list_out, to)) return false;
+        if(!append_normal_move(board, piece_location, to, moves_out)) return false;
     }
+
     return true;
 }
 
 // helper for sliding pieces: bishops, rooks and queens
-static bool generate_sliding_moves(const Board *board, Position piece_location, PositionList *position_list_out, const int d[][2], const int num_directions)
+static bool generate_sliding_moves(
+    const GameState *game,
+    Position piece_location,
+    MoveList *moves_out,
+    const int d[][2],
+    const int num_directions
+)
 {
+    const Board *board = game->board;
+
     Piece *selected_piece = get_piece_at(board, piece_location);
     if (!selected_piece) return false;
 
@@ -208,10 +325,10 @@ static bool generate_sliding_moves(const Board *board, Position piece_location, 
             int col = piece_location.col + d[i][0] * dy;
             int row = piece_location.row + d[i][1] * dx;
 
-            Position to = { .col = col, .row = row };
-
             // check if move is in bounds
             if (!in_bounds(board, row, col)) break;
+
+            Position to = { .col = col, .row = row };
 
             // select piece on destination
             Piece *target = get_piece_at(board, to);
@@ -220,7 +337,7 @@ static bool generate_sliding_moves(const Board *board, Position piece_location, 
             if (target && selected_piece->colour == target->colour) break;
             
             // append (only options are empty square or enemy piece)
-            if (!position_list_append(position_list_out, to)) return false;
+            if (!append_normal_move(board, piece_location, to, moves_out)) return false;
 
             // check for enemy pieces (to break early)
             if (target && selected_piece->colour != target->colour) break;
@@ -230,32 +347,44 @@ static bool generate_sliding_moves(const Board *board, Position piece_location, 
             dx++;
         }
     }
+
     return true;
 }
 
 // sliding piece movement
-static bool generate_bishop_moves(const Board *board, Position piece_location, PositionList *position_list_out)
+static bool generate_bishop_moves(
+    const GameState *game,
+    Position piece_location,
+    MoveList *moves_out
+)
 {
-    static const int num_directions = 4;
     static const int d[4][2] = { {1, 1}, {1, -1}, {-1, -1}, {-1, 1} };
     
-    return generate_sliding_moves(board, piece_location, position_list_out, d, num_directions);
+    return generate_sliding_moves(game, piece_location, moves_out, d, 4);
 }
 
-static bool generate_rook_moves(const Board *board, Position piece_location, PositionList *position_list_out)
+static bool generate_rook_moves(
+    const GameState *game,
+    Position piece_location,
+    MoveList *moves_out
+)
 {
-    static const int num_directions = 4;
     static const int d[4][2] = { {1, 0}, {0, -1}, {-1, 0}, {0, 1} };
 
-    return generate_sliding_moves(board, piece_location, position_list_out, d, num_directions);
+    return generate_sliding_moves(game, piece_location, moves_out, d, 4);
 }
 
-static bool generate_queen_moves(const Board *board, Position piece_location, PositionList *position_list_out)
+static bool generate_queen_moves(
+    const GameState *game,
+    Position piece_location,
+    MoveList *moves_out
+)
 {
     // combination of bishop and rook directions
-    static const int num_directions = 8;
-    static const int d[8][2] = { {1, 1}, {1, -1}, {-1, -1}, {-1, 1},
-                                 {1, 0}, {0, -1}, {-1, 0}, {0, 1} };
+    static const int d[8][2] = {
+        {1, 1}, {1, -1}, {-1, -1}, {-1, 1},
+        {1, 0}, {0, -1}, {-1, 0}, {0, 1}
+    };
 
-    return generate_sliding_moves(board, piece_location, position_list_out, d, num_directions);
+    return generate_sliding_moves(game, piece_location, moves_out, d, 8);
 }
