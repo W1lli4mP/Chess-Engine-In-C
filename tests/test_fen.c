@@ -8,8 +8,9 @@
 #define FEN_CASES_FILE "tests/data/fen_cases.txt"
 #define MAX_LINE_LEN 256
 
-static void print_result(const char *fen, bool passed, int err_pos, bool expected_valid)
+static void print_result(const char *test_id, const char *fen, bool passed, int err_pos, bool expected_valid)
 {
+    printf("Test: %s\n", test_id);
     printf("FEN: %s\n", fen);
     printf("Expected: %s\n", expected_valid ? "valid" : "invalid");
 
@@ -21,7 +22,7 @@ static void print_result(const char *fen, bool passed, int err_pos, bool expecte
     puts("------------------------");
 }
 
-static bool test_valid_fen(const char *fen)
+static bool test_valid_fen(const char *test_id, const char *fen)
 {
     // initialise new game state
     GameState *game = create_game_state();
@@ -48,7 +49,7 @@ static bool test_valid_fen(const char *fen)
 
     bool ok = load_fen(game, fen, &err_pos);
 
-    print_result(fen, ok, err_pos, true);
+    print_result(test_id, fen, ok, err_pos, true);
 
     if (ok)
     {
@@ -84,7 +85,7 @@ static bool test_valid_fen(const char *fen)
     return ok;
 }
 
-static bool test_invalid_fen(const char *fen)
+static bool test_invalid_fen(const char *test_id, const char *fen)
 {
     // initialise new game state
     GameState *game = create_game_state();
@@ -111,7 +112,7 @@ static bool test_invalid_fen(const char *fen)
 
     bool ok = load_fen(game, fen, &err_pos);
 
-    print_result(fen, !ok, err_pos, false);
+    print_result(test_id, fen, !ok, err_pos, false);
 
     destroy_game_state(game);
     return !ok;
@@ -119,6 +120,8 @@ static bool test_invalid_fen(const char *fen)
 
 int main()
 {
+    puts("------------------------");
+
     FILE *fp = fopen(FEN_CASES_FILE, "r");
     if (!fp)
     {
@@ -139,29 +142,44 @@ int main()
         // skip blank lines and comments
         if (line[0] == '\0' || line[0] == '#') continue;
 
-        // separator
-        char *sep = strchr(line, '|');
+        char *test_id = line;
 
-        if (!sep)
+        // 1st separator
+        char *sep1 = strchr(line, '|');
+
+        if (!sep1)
         {
             printf("Malformed test line: %s\n", line);
             continue;
         }
 
-        *sep = '\0';
+        *sep1 = '\0';
 
-        char *expected = line;
-        char *fen = sep + 1;
+        char *expected = sep1 + 1;
+        
+        // 2nd separator
+        char *sep2 = strchr(expected, '|');
 
+        if (!sep2)
+        {
+            printf("Malformed test line: %s\n", line);
+            continue;
+        }
+
+        *sep2 = '\0';
+
+        char *fen = sep2 + 1;
+
+        // process test case
         if (strcmp(expected, "valid") == 0)
         {
             total++;
-            if (test_valid_fen(fen)) passed++;
+            if (test_valid_fen(test_id, fen)) passed++;
         }
         else if (strcmp(expected, "invalid") == 0)
         {
             total++;
-            if (test_invalid_fen(fen)) passed++;
+            if (test_invalid_fen(test_id, fen)) passed++;
         }
         else
         {
