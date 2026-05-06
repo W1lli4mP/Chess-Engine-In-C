@@ -194,17 +194,6 @@ bool is_stalemate(const GameState *game, Colour colour)
     return !is_in_check(game, colour) && !side_has_legal_move(game, colour);
 }
 
-static void position_to_move(const Board *board, Position from, Position to, Move *move_out)
-{
-    Piece *selected_piece = get_piece_at(board, from);
-
-    move_out->piece = selected_piece->type;
-    move_out->from = from;
-    move_out->to = to;
-    
-    // TODO: update other attributes in future
-}
-
 // iterate through all pieces belonging to a side to verify if they at least one piece has a legal move
 static bool side_has_legal_move(const GameState *game, Colour colour)
 {
@@ -221,7 +210,7 @@ static bool side_has_legal_move(const GameState *game, Colour colour)
 
             if (!piece || piece->colour != colour) continue;
 
-            PositionList moves = {0};
+            MoveList moves = {0};
 
             if (!generate_legal_moves(game, from, &moves)) return false;
 
