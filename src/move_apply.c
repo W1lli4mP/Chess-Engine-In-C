@@ -12,7 +12,7 @@ bool make_move(GameState *game, Move move, UndoInfo *undo_out)
     if (!piece) return false;
 
     Piece *captured = get_piece_at(board, move.to);
-    // captured can be NULL so don't use add a NULL check
+    // captured can be NULL so don't add a NULL check
 
     // encapsulate relevant game state information into UndoInfo
     undo_out->captured_piece = captured;
