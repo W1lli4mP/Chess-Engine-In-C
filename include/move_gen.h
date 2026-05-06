@@ -13,7 +13,8 @@ bool generate_pseudo_legal_moves(
     PositionList *position_list_out
 );
 
-bool generate_legal_moves(const GameState *game,
+bool generate_legal_moves(
+    const GameState *game,
     Position piece_location,
     PositionList *position_list_out
 );
