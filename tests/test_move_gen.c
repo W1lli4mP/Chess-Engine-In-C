@@ -192,7 +192,12 @@ static bool run_move_gen_case(
     if (!load_fen(game, fen, &err_pos))
     {
         destroy_game_state(game);
-        print_move_gen_result(test_id, false, "failed to load FEN");
+
+        // add FEN parser's err position indexing
+        char reason[128];
+        snprintf(reason, sizeof reason, "failed to load FEN at err_pos = %d", err_pos);
+        print_move_gen_result(test_id, false, reason);
+
         return false;
     }
 
