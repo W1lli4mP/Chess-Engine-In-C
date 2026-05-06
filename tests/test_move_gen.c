@@ -70,12 +70,17 @@ int main()
 
         char *test_id = line;
 
+        // keep the original line for debug outputs of malformed lines
+        char original[MAX_LINE_LEN] ;
+        strncpy(original, line, sizeof original);
+        original[sizeof original - 1] = '\0';
+
         // 1st separator
         char *sep1 = strchr(line, '|');
 
         if (!sep1)
         {
-            printf("Malformed test line: %s\n", line);
+            printf("Malformed test line: %s\n", original);
             continue;
         }
 
@@ -88,7 +93,7 @@ int main()
 
         if (!sep2)
         {
-            printf("Malformed test line: %s\n", line);
+            printf("Malformed test line: %s\n", original);
             continue;
         }
 
@@ -101,7 +106,7 @@ int main()
 
         if (!sep3)
         {
-            printf("Malformed test line: %s\n", line);
+            printf("Malformed test line: %s\n", original);
             continue;
         }
 
@@ -114,7 +119,7 @@ int main()
 
         if (!sep4)
         {
-            printf("Malformed test line: %s\n", line);
+            printf("Malformed test line: %s\n", original);
             continue;
         }
 
