@@ -12,3 +12,7 @@ moveapply.white_promotion_knight|8/4P3/8/8/8/8/8/8 w - - 0 1|e7|e8|promotion=N
 moveapply.black_promotion_rook|8/8/8/8/8/8/4p3/8 b - - 0 1|e2|e1|promotion=R
 moveapply.black_promotion_bishop|8/8/8/8/8/8/4p3/8 b - - 0 1|e2|e1|promotion=B
 moveapply.black_promotion_knight|8/8/8/8/8/8/4p3/8 b - - 0 1|e2|e1|promotion=N
+moveapply.white_castle_kingside|r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1|e1|g1|castle_kingside
+moveapply.white_castle_queenside|r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1|e1|c1|castle_queenside
+moveapply.black_castle_kingside|r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1|e8|g8|castle_kingside
+moveapply.black_castle_queenside|r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1|e8|c8|castle_queenside
