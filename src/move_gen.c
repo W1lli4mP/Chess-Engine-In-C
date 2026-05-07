@@ -31,6 +31,29 @@ static bool generate_pawn_moves(
     MoveList *moves_out
 );
 
+static bool castling_path_clear_and_safe(
+    GameState *game,
+    Colour colour,
+    Position empty_squares[],
+    int empty_count,
+    Position safe_squares[],
+    int safe_count
+);
+
+static bool append_castling_move(
+    const Board *board,
+    Position from,
+    Position to,
+    bool kingside,
+    MoveList *moves_out
+);
+
+static bool append_castling_moves(
+    GameState *game,
+    Position king_location,
+    MoveList *moves_out
+);
+
 static bool generate_king_moves(
     GameState *game,
     Position piece_location,
@@ -347,6 +370,176 @@ static bool generate_pawn_moves(
     return true;
 }
 
+static bool castling_path_clear_and_safe(
+    GameState *game,
+    Colour colour,
+    Position empty_squares[],
+    int empty_count,
+    Position safe_squares[],
+    int safe_count
+)
+{
+    if (!game ||!game->board) return false;
+
+    // must all be empty squares in the path
+    for (int i = 0; i < empty_count; i++)
+    {
+        if (!is_empty_square(game->board, empty_squares[i])) return false;
+    }
+
+    // must all be safe squares in the path
+    for (int i = 0; i < safe_count; i++)
+    {
+        if (is_square_attacked(game, safe_squares[i], colour)) return false;
+    }
+
+    return true;
+}
+
+static bool append_castling_move(
+    const Board *board,
+    Position from,
+    Position to,
+    bool kingside,
+    MoveList *moves_out
+)
+{
+    if (!board || !moves_out) return false;
+
+    Piece *king = get_piece_at(board, from);
+    if (!king || king->type != TYPE_KING) return false;
+
+    Move move = create_move(TYPE_KING, from, to);
+
+    if (kingside)
+        move.is_castle_kingside = true;
+    else
+        move.is_castle_queenside = true;
+    
+    return move_list_append(moves_out, move);
+}
+
+static bool append_castling_moves(
+    GameState *game,
+    Position king_location,
+    MoveList *moves_out
+)
+{
+    if (!game || !game->board || !moves_out) return false;
+
+    const Board *board = game->board;
+
+    Piece *king = get_piece_at(board, king_location);
+    if (!king) return false;
+
+    Colour colour = king->colour;
+
+    // king must be on starting square
+    int start_row;
+
+    if (colour == COLOUR_WHITE)
+        start_row = 0;
+    else if (colour == COLOUR_BLACK)
+        start_row = 7;
+    else
+        return true;
+    
+    Position king_start = { .row = start_row, .col = 4 };
+
+    // return true since nothing failed (like appending 0 moves successfully)
+    if (king_location.row != king_start.row || king_location.col != king_start.col) return true;
+
+    // cannot castle when in check but not a fail
+    if (is_in_check(game, colour)) return true;
+
+    // castling logic:
+    /*
+        subsequent squares cannot be attacked (+- 2 on the king's column position)
+        rook must be in the corner:
+            -4 squares if queenside
+            +3 squares if kingside
+        
+        // rook AND king must not have moved once
+            - simplified by using the 4 flags
+        
+    */
+
+    // check if the king has castling rights
+    CastlingRights rights = game->castling_rights;
+
+    bool can_kingside = 
+        (colour == COLOUR_WHITE && rights.white_can_castle_kingside) ||
+        (colour == COLOUR_BLACK && rights.black_can_castle_kingside);
+    
+    if (can_kingside)
+    {
+        Position rook_location = { .row = start_row, .col = 7 };
+        Piece *rook = get_piece_at(board, rook_location);
+        
+        // check squares individually; more robust
+        Position empty_squares[2] = {
+            { .row = start_row, .col = 5},
+            { .row = start_row, .col = 6}
+        };
+
+        Position safe_squares[3] = {
+            { .row = start_row, .col = 4 },
+            { .row = start_row, .col = 5 },
+            { .row = start_row, .col = 6 }
+        };
+
+        // rook must be valid and castling path must be clear and safe
+        if (
+            rook &&
+            rook->type == TYPE_ROOK &&
+            rook->colour == colour &&
+            castling_path_clear_and_safe(game, colour, empty_squares, 2, safe_squares, 3)
+        )
+        {
+            Position to = { .row = start_row, .col = 6};
+
+            if (!append_castling_move(board, king_location, to, true, moves_out)) return false;
+        }
+    }
+
+    // same for queenside (just more empty squares)
+    bool can_queenside = 
+        (colour == COLOUR_WHITE && rights.white_can_castle_queenside) ||
+        (colour == COLOUR_BLACK && rights.black_can_castle_queenside);
+    
+    if (can_queenside)
+    {
+        Position rook_location = { .row = start_row, .col = 0 };
+        Piece *rook = get_piece_at(board, rook_location);
+        
+        Position empty_squares[3] = {
+            { .row = start_row, .col = 3 },
+            { .row = start_row, .col = 2 },
+            { .row = start_row, .col = 1 }
+        };
+
+        Position safe_squares[3] = {
+            { .row = start_row, .col = 4 },
+            { .row = start_row, .col = 3 },
+            { .row = start_row, .col = 2 }
+        };
+
+        if (
+            rook &&
+            rook->type == TYPE_ROOK &&
+            rook->colour == colour &&
+            castling_path_clear_and_safe(game, colour, empty_squares, 3, safe_squares, 3)
+        )
+        {
+            Position to = { .row = start_row, .col = 2 };
+
+            if (!append_castling_move(board, king_location, to, false, moves_out)) return false;
+        }
+    }
+
+    return true;
+}
+
 static bool generate_king_moves(
     GameState *game,
     Position piece_location,
@@ -382,6 +575,9 @@ static bool generate_king_moves(
         // attempt to append move, returning false if failing
         if (!append_normal_move(board, piece_location, to, moves_out)) return false;
     }
+
+    // calculate and add valid castling moves
+    if (!append_castling_moves(game, piece_location, moves_out)) return false;
 
     // once all possible moves have been processed successfully, return true
     return true;
