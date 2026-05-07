@@ -10,6 +10,7 @@ BIN_DIR = bin
 TARGET = $(BIN_DIR)/chess
 TEST_FEN_TARGET = $(BIN_DIR)/test_fen
 TEST_MOVE_GEN_TARGET = $(BIN_DIR)/test_move_gen
+TEST_MOVE_APPLY_TARGET = $(BIN_DIR)/test_move_apply
 
 # source files
 SRCS = $(wildcard src/*.c)
@@ -18,6 +19,7 @@ COMMON_SRCS = $(filter-out $(MAIN_SRC), $(SRCS))
 
 TEST_FEN_SRC = tests/test_fen.c
 TEST_MOVE_GEN_SRC = tests/test_move_gen.c
+TEST_MOVE_APPLY_SRC = tests/test_move_apply.c
 
 # object files
 OBJS = $(patsubst src/%.c,$(BUILD_DIR)/%.o,$(SRCS))
@@ -25,6 +27,7 @@ COMMON_OBJS = $(patsubst src/%.c,$(BUILD_DIR)/%.o,$(COMMON_SRCS))
 
 TEST_FEN_OBJ = $(BUILD_DIR)/test_fen.o
 TEST_MOVE_GEN_OBJ = $(BUILD_DIR)/test_move_gen.o
+TEST_MOVE_APPLY_OBJ = $(BUILD_DIR)/test_move_apply.o
 
 # default target
 all: $(TARGET)
@@ -41,6 +44,10 @@ $(TEST_FEN_TARGET): $(COMMON_OBJS) $(TEST_FEN_OBJ) | $(BIN_DIR)
 $(TEST_MOVE_GEN_TARGET): $(COMMON_OBJS) $(TEST_MOVE_GEN_OBJ) | $(BIN_DIR)
 	$(CC) $(CFLAGS) -o $(TEST_MOVE_GEN_TARGET) $(COMMON_OBJS) $(TEST_MOVE_GEN_OBJ)
 
+# move apply test executable
+$(TEST_MOVE_APPLY_TARGET): $(COMMON_OBJS) $(TEST_MOVE_APPLY_OBJ) | $(BIN_DIR)
+	$(CC) $(CFLAGS) -o $(TEST_MOVE_APPLY_TARGET) $(COMMON_OBJS) $(TEST_MOVE_APPLY_OBJ)
+
 # compile source objects
 $(BUILD_DIR)/%.o: src/%.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -50,6 +57,9 @@ $(BUILD_DIR)/test_fen.o: $(TEST_FEN_SRC) | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/test_move_gen.o: $(TEST_MOVE_GEN_SRC) | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/test_move_apply.o: $(TEST_MOVE_APPLY_SRC) | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR):
@@ -74,8 +84,12 @@ run_fen: $(TEST_FEN_TARGET)
 run_move_gen: $(TEST_MOVE_GEN_TARGET)
 	./$(TEST_MOVE_GEN_TARGET)
 
+# run move apply tests
+run_move_apply: $(TEST_MOVE_APPLY_TARGET)
+	./$(TEST_MOVE_APPLY_TARGET)
+
 # run all tests
-test: run_fen run_move_gen
+test: run_fen run_move_gen run_move_apply
 
 # valgrind main program
 valgrind: $(TARGET)
