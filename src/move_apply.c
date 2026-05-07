@@ -1,5 +1,6 @@
 #include "move_apply.h"
 
+// TODO: need to mutate castling rights accordingly, in make_move()
 bool make_move(GameState *game, Move move, UndoInfo *undo_out)
 {
     if (!game || !game->board || !undo_out) return false;
@@ -34,6 +35,44 @@ bool make_move(GameState *game, Move move, UndoInfo *undo_out)
         if (!valid_rank) return false;
     }
 
+    // handle castling
+    if (move.is_castle_kingside || move.is_castle_queenside)
+    {
+        // initial castling validation
+        if (piece->type != TYPE_KING) return false;
+        if (captured) return false; // cannot capture AND castle
+        if (move.is_castle_kingside && move.is_castle_queenside) return false;
+        if (move.from.row != move.to.row) return false;
+
+        if (move.is_castle_kingside && move.to.col != move.from.col + 2) return false;
+        if (move.is_castle_queenside && move.to.col != move.from.col - 2) return false;
+
+        // actual logic
+        int row = move.from.row;
+
+        Position rook_from = move.is_castle_kingside
+            ? (Position) { .row = row, .col = 7}
+            : (Position) { .row = row, .col = 0};
+        
+        Position rook_to = move.is_castle_kingside
+            ? (Position) { .row = row, .col = 5 }
+            : (Position) { .row = row, .col = 3};
+
+        Piece *rook = get_piece_at(board, rook_from);
+
+        if (!rook || rook->type != TYPE_ROOK || rook->colour != piece->colour) return false;
+
+        undo_out->castling_rook = rook;
+        undo_out->castling_rook_from = rook_from;
+        undo_out->castling_rook_to = rook_to;
+    }
+    else
+    {
+        undo_out->castling_rook = NULL;
+        undo_out->castling_rook_from = (Position) { .row = -1, .col = -1 };
+        undo_out->castling_rook_to = (Position) { .row = -1, .col = -1 };
+    }
+
     // encapsulate relevant game state information into UndoInfo
     undo_out->captured_piece = captured;
     undo_out->captured_position = move.to;
@@ -55,6 +94,13 @@ bool make_move(GameState *game, Move move, UndoInfo *undo_out)
     {
         piece->type = move.promotion;
         piece->sprite = find_sprite(piece->type, piece->colour);
+    }
+
+    //* move the rook if move is a castle
+    if (move.is_castle_kingside || move.is_castle_queenside)
+    {
+        if (!set_piece_at(board, undo_out->castling_rook_to, undo_out->castling_rook)) return false;
+        if (!set_piece_at(board, undo_out->castling_rook_from, NULL)) return false;
     }
 
     // update game state
@@ -83,6 +129,13 @@ bool unmake_move(GameState *game, Move move, const UndoInfo *undo)
 
     Piece *piece = get_piece_at(board, move.to);
     if (!piece) return false;
+
+    if (undo->castling_rook)
+    {
+        // revert castled rook
+        if (!set_piece_at(board, undo->castling_rook_from, undo->castling_rook)) return false;
+        if (!set_piece_at(board, undo->castling_rook_to, NULL)) return false;
+    }
 
     // undo piece state
     piece->type = undo->previous_moved_piece_type;
