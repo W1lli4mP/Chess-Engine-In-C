@@ -10,6 +10,7 @@
 #define MOVE_GEN_CASES_FILE "tests/data/move_gen_cases.txt"
 #define MAX_LINE_LEN 256
 
+// TODO: extend to support castling
 typedef struct
 {
     Position to;
