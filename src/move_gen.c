@@ -379,7 +379,7 @@ static bool castling_path_clear_and_safe(
     int safe_count
 )
 {
-    if (!game ||!game->board) return false;
+    if (!game || !game->board) return false;
 
     // must all be empty squares in the path
     for (int i = 0; i < empty_count; i++)
