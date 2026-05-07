@@ -15,7 +15,7 @@ static bool run_move_apply_case(
     const char *fen,
     const char *from_text,
     const char *move_text,
-    const char *expected_after_fen_like_note_text
+    const char *note_text
 );
 
 static void print_move_apply_result(
@@ -131,12 +131,12 @@ int main()
 
         *sep4 = '\0';
 
-        char *expected_after = sep4 + 1;
+        char *note = sep4 + 1;
         
         // process test case
         total++;
 
-        if (run_move_apply_case(test_id, fen, from, to, expected_after)) passed++;
+        if (run_move_apply_case(test_id, fen, from, to, note)) passed++;
     }
 
     fclose(fp);
@@ -152,7 +152,7 @@ static bool run_move_apply_case(
     const char *fen,
     const char *from_text,
     const char *to_text,
-    const char *expected_after_text
+    const char *note_text
 )
 {
     // parse from square
@@ -208,9 +208,6 @@ static bool run_move_apply_case(
     }
 
     //* verify game states pre and post make_move and unmake_move
-    //! reserved for future en passant/castling/promotion expectations
-    (void) expected_after_text; // TEMPORARY
-
     Piece *moved_piece = get_piece_at(game->board, from);
 
     if (!moved_piece)
@@ -236,26 +233,36 @@ static bool run_move_apply_case(
     // update move with captured flag
     if (captured_piece) move.is_capture = true;
 
-    // update move with promotion flags if expected after text specifies it
-    if (strcmp(expected_after_text, "promotion=Q") == 0)
+    // update move with promotion flags if note text specifies it
+    if (strcmp(note_text, "promotion=Q") == 0)
     {
         move.is_promotion = true;
         move.promotion = TYPE_QUEEN;
     }
-    else if (strcmp(expected_after_text, "promotion=R") == 0)
+    else if (strcmp(note_text, "promotion=R") == 0)
     {
         move.is_promotion = true;
         move.promotion = TYPE_ROOK;
     }
-    else if (strcmp(expected_after_text, "promotion=B") == 0)
+    else if (strcmp(note_text, "promotion=B") == 0)
     {
         move.is_promotion = true;
         move.promotion = TYPE_BISHOP;
     }
-    else if (strcmp(expected_after_text, "promotion=N") == 0)
+    else if (strcmp(note_text, "promotion=N") == 0)
     {
         move.is_promotion = true;
         move.promotion = TYPE_KNIGHT;
+    }
+    
+    // update move with castling flags if note text specifies it
+    if (strcmp(note_text, "castle_kingside") == 0)
+    {
+        move.is_castle_kingside = true;
+    }
+    else if (strcmp(note_text, "castle_queenside") == 0)
+    {
+        move.is_castle_queenside = true;
     }
 
     // populate UndoInfo object to unmake the move afterwards
@@ -416,6 +423,32 @@ static bool verify_after_make(
     // verify promotion
     if (move.is_promotion && to_piece->type != move.promotion) return false;
 
+    // verify castling
+    if (move.is_castle_kingside)
+    {
+        Position rook_to = { .row = move.from.row, .col = 5 };
+        Position rook_from = { .row = move.from.row, .col = 7 };
+
+        // there should be a rook that has moved to the destination
+        Piece *rook = get_piece_at(game->board, rook_to);
+        if (!rook || rook->type != TYPE_ROOK || rook->colour != moved_piece->colour) return false;
+        
+        // there should not be a rook that has just moved away from the source
+        if (get_piece_at(game->board, rook_from) != NULL) return false;
+    }
+    if (move.is_castle_queenside)
+    {
+        Position rook_to = { .row = move.from.row, .col = 3 };
+        Position rook_from = { .row = move.from.row, .col = 0 };
+
+        // there should be a rook that has moved to the destination
+        Piece *rook = get_piece_at(game->board, rook_to);
+        if (!rook || rook->type != TYPE_ROOK || rook->colour != moved_piece->colour) return false;
+        
+        // there should not be a rook that has just moved away from the source
+        if (get_piece_at(game->board, rook_from) != NULL) return false;
+    }
+
     //* NORMAL GAME STATE ATTRIBUTES
 
     // verify side
@@ -462,6 +495,33 @@ static bool verify_after_unmake(
 
     // promotion (check AFTER verifying moved piece)
     if (from_piece->type != move.piece) return false;
+
+    // castling
+    if (move.is_castle_kingside)
+    {
+        Position rook_from = { .row = move.from.row, .col = 7 };
+        Position rook_to = { .row = move.from.row, .col = 5 };
+
+        // after unmake, rook should be back on original square
+        Piece *rook = get_piece_at(game->board, rook_from);
+        if (!rook || rook->type != TYPE_ROOK || rook->colour != moved_piece->colour) return false;
+        
+        // rook destination square should be empty again
+        if (get_piece_at(game->board, rook_to) != NULL) return false;
+    }
+
+    if (move.is_castle_queenside)
+    {
+        Position rook_from = { .row = move.from.row, .col = 0 };
+        Position rook_to = { .row = move.from.row, .col = 3 };
+
+        // after unmake, rook should be back on original square
+        Piece *rook = get_piece_at(game->board, rook_from);
+        if (!rook || rook->type != TYPE_ROOK || rook->colour != moved_piece->colour) return false;
+        
+        // rook destination square should be empty again
+        if (get_piece_at(game->board, rook_to) != NULL) return false;
+    }
 
     if (to_piece != captured_piece) return false;
 
