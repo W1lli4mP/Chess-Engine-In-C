@@ -31,6 +31,8 @@ static ResolveStatus validate_move(
     Move *move_out
 );
 
+static ResolveStatus resolve_castling_san(GameState *game, San san, Move *move_out);
+
 // helper for implicit pawn promotions
 static bool is_pawn_promotion_rank(const Piece *piece, Position to)
 {
@@ -134,6 +136,51 @@ static ResolveStatus validate_move(
     return RESOLVE_OK;
 }
 
+static ResolveStatus resolve_castling_san(GameState *game, San san, Move *move_out)
+{
+    if (!game || !game->board || !move_out) return false;
+
+    // retrieve the king
+    int row;
+
+    if (game->side_to_move == COLOUR_WHITE)
+        row = 0;
+    else if (game->side_to_move == COLOUR_BLACK)
+        row = 7;
+    else
+        return RESOLVE_ILLEGAL;
+    
+    Position king_from = { .row = row, .col = 4 };
+    Position king_to = san.is_castle_kingside
+        ? (Position) { .row = row, .col = 6 }
+        : (Position) { .row = row, .col = 2 };
+    
+    Piece *king = get_piece_at(game->board, king_from);
+
+    if (!king || king->type != TYPE_KING || king->colour != game->side_to_move) return RESOLVE_ILLEGAL;
+
+    // scan through all moves until there is a match between the SAN input and available outputs
+    MoveList moves = {0};
+
+    if (!generate_legal_moves(game, king_from, &moves)) return RESOLVE_ILLEGAL;
+
+    for (int i = 0; i < moves.count; i++)
+    {
+        Move candidate = moves.moves[i];
+
+        if (candidate.to.row != king_to.row || candidate.to.col != king_to.col) continue;
+
+        if (san.is_castle_kingside && !candidate.is_castle_kingside) continue;
+
+        if (san.is_castle_queenside && !candidate.is_castle_queenside) continue;
+
+        *move_out = candidate;
+        return RESOLVE_OK;
+    }
+
+    return RESOLVE_ILLEGAL;
+}
+
 ResolveStatus resolve_san(GameState *game, San san, Move *move_out)
 {
     /*
@@ -150,6 +197,10 @@ ResolveStatus resolve_san(GameState *game, San san, Move *move_out)
     // updates move_out safely
     Move found_move = {0};
     bool found = false;
+
+    //* if castling, no need to scan the board
+    if (san.is_castle_kingside || san.is_castle_queenside)
+        return resolve_castling_san(game, san, move_out);
 
     for (int row = 0; row < board->height; row++)
     {
