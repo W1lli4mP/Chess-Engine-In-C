@@ -15,6 +15,10 @@ typedef struct
 
     CastlingRights previous_castling_rights;
 
+    Piece *castling_rook;
+    Position castling_rook_from;
+    Position castling_rook_to;
+
     bool previous_has_en_passant_target;
     Position previous_en_passant_target;
 
