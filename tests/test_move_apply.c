@@ -233,7 +233,30 @@ static bool run_move_apply_case(
     // create move
     Move move = create_move(moved_piece->type, from, to);
 
+    // update move with captured flag
     if (captured_piece) move.is_capture = true;
+
+    // update move with promotion flags if expected after text specifies it
+    if (strcmp(expected_after_text, "promotion=Q") == 0)
+    {
+        move.is_promotion = true;
+        move.promotion = TYPE_QUEEN;
+    }
+    else if (strcmp(expected_after_text, "promotion=R") == 0)
+    {
+        move.is_promotion = true;
+        move.promotion = TYPE_ROOK;
+    }
+    else if (strcmp(expected_after_text, "promotion=B") == 0)
+    {
+        move.is_promotion = true;
+        move.promotion = TYPE_BISHOP;
+    }
+    else if (strcmp(expected_after_text, "promotion=N") == 0)
+    {
+        move.is_promotion = true;
+        move.promotion = TYPE_KNIGHT;
+    }
 
     // populate UndoInfo object to unmake the move afterwards
     UndoInfo undo;
@@ -390,6 +413,11 @@ static bool verify_after_make(
     // destination square should contain the piece that has just moved
     if (to_piece != moved_piece) return false;
 
+    // verify promotion
+    if (move.is_promotion && to_piece->type != move.promotion) return false;
+
+    //* NORMAL GAME STATE ATTRIBUTES
+
     // verify side
     Colour expected_side = (original_side_to_move == COLOUR_WHITE) ? COLOUR_BLACK : COLOUR_WHITE;
 
@@ -429,6 +457,10 @@ static bool verify_after_unmake(
     Piece *from_piece = get_piece_at(game->board, move.from);
     Piece *to_piece = get_piece_at(game->board, move.to);
 
+    // promotion
+    if (from_piece->type != move.piece) return false;
+
+    //* NORMAL GAME STATE ATTRIBUTES
     if (from_piece != moved_piece) return false;
 
     if (to_piece != captured_piece) return false;
