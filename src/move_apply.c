@@ -1,6 +1,63 @@
 #include "move_apply.h"
 
-// TODO: need to mutate castling rights accordingly, in make_move()
+static void update_castling_rights_after_move(
+    GameState *game,
+    Move move,
+    Piece *piece,
+    Piece *captured
+);
+
+static void update_castling_rights_after_move(
+    GameState *game,
+    Move move,
+    Piece *piece,
+    Piece *captured
+)
+{
+    if (!game || !piece) return;
+
+    // if a king moves, loses both rights for it's colour
+    if (piece->type == TYPE_KING)
+    {
+        if (piece->colour == COLOUR_WHITE)
+        {
+            game->castling_rights.white_can_castle_kingside = false;
+            game->castling_rights.white_can_castle_queenside = false;
+        }
+        else if (piece->colour == COLOUR_BLACK)
+        {
+            game->castling_rights.black_can_castle_kingside = false;
+            game->castling_rights.black_can_castle_queenside = false;
+        }
+    }
+
+    // if a rook moves, loses one right for it's colour
+    if (piece->type == TYPE_ROOK)
+    {
+        if (move.from.row == 0 && move.from.col == 0)
+            game->castling_rights.white_can_castle_queenside = false;
+        else if (move.from.row == 0 && move.from.col == 7)
+            game->castling_rights.white_can_castle_kingside = false;
+        else if (move.from.row == 7 && move.from.col == 0)
+            game->castling_rights.black_can_castle_queenside = false;
+        else if (move.from.row == 7 && move.from.col == 7)
+            game->castling_rights.black_can_castle_kingside = false;
+    }
+
+    // if a rook is captured, loses one right for it's colour
+    if (captured && captured->type == TYPE_ROOK)
+    {
+        if (move.to.row == 0 && move.to.col == 0)
+            game->castling_rights.white_can_castle_queenside = false;
+        else if (move.to.row == 0 && move.to.col == 7)
+            game->castling_rights.white_can_castle_kingside = false;
+        else if (move.to.row == 7 && move.to.col == 0)
+            game->castling_rights.black_can_castle_queenside = false;
+        else if (move.to.row == 7 && move.to.col == 7)
+            game->castling_rights.black_can_castle_kingside = false;
+    }
+}
+
 bool make_move(GameState *game, Move move, UndoInfo *undo_out)
 {
     if (!game || !game->board || !undo_out) return false;
@@ -40,7 +97,7 @@ bool make_move(GameState *game, Move move, UndoInfo *undo_out)
     {
         // initial castling validation
         if (piece->type != TYPE_KING) return false;
-        if (captured) return false; // cannot capture AND castle
+        if (captured || move.is_capture) return false; // cannot capture AND castle
         if (move.is_castle_kingside && move.is_castle_queenside) return false;
         if (move.from.row != move.to.row) return false;
 
@@ -102,6 +159,9 @@ bool make_move(GameState *game, Move move, UndoInfo *undo_out)
         if (!set_piece_at(board, undo_out->castling_rook_to, undo_out->castling_rook)) return false;
         if (!set_piece_at(board, undo_out->castling_rook_from, NULL)) return false;
     }
+
+    // update castling rights
+    update_castling_rights_after_move(game, move, piece, captured);
 
     // update game state
     game->side_to_move = (game->side_to_move == COLOUR_WHITE) ? COLOUR_BLACK : COLOUR_WHITE;
