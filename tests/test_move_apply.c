@@ -457,11 +457,11 @@ static bool verify_after_unmake(
     Piece *from_piece = get_piece_at(game->board, move.from);
     Piece *to_piece = get_piece_at(game->board, move.to);
 
-    // promotion
-    if (from_piece->type != move.piece) return false;
-
     //* NORMAL GAME STATE ATTRIBUTES
     if (from_piece != moved_piece) return false;
+
+    // promotion (check AFTER verifying moved piece)
+    if (from_piece->type != move.piece) return false;
 
     if (to_piece != captured_piece) return false;
 
