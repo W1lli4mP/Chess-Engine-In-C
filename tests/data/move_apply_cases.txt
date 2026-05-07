@@ -6,3 +6,9 @@ moveapply.black_rook_capture|8/8/8/8/3rP3/8/8/8 b - - 5 9|d4|e4|capture
 moveapply.knight_quiet|8/8/8/8/3N4/8/8/8 w - - 4 2|d4|f5|quiet
 moveapply.white_promotion_queen|8/4P3/8/8/8/8/8/8 w - - 0 1|e7|e8|promotion=Q
 moveapply.black_promotion_queen|8/8/8/8/8/8/4p3/8 b - - 0 1|e2|e1|promotion=Q
+moveapply.white_promotion_rook|8/4P3/8/8/8/8/8/8 w - - 0 1|e7|e8|promotion=R
+moveapply.white_promotion_bishop|8/4P3/8/8/8/8/8/8 w - - 0 1|e7|e8|promotion=B
+moveapply.white_promotion_knight|8/4P3/8/8/8/8/8/8 w - - 0 1|e7|e8|promotion=N
+moveapply.black_promotion_rook|8/8/8/8/8/8/4p3/8 b - - 0 1|e2|e1|promotion=R
+moveapply.black_promotion_bishop|8/8/8/8/8/8/4p3/8 b - - 0 1|e2|e1|promotion=B
+moveapply.black_promotion_knight|8/8/8/8/8/8/4p3/8 b - - 0 1|e2|e1|promotion=N
