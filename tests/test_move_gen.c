@@ -10,6 +10,13 @@
 #define MOVE_GEN_CASES_FILE "tests/data/move_gen_cases.txt"
 #define MAX_LINE_LEN 256
 
+typedef struct
+{
+    Position to;
+    bool is_promotion;
+    PieceType promotion;
+} ExpectedMove;
+
 static void print_move_gen_result(
     const char *test_id,
     bool passed,
@@ -34,13 +41,24 @@ static bool validate_generated_moves(
     const char *expected_moves_text
 );
 
-static bool expected_square_seen(const Position *seen, int seen_count, Position square);
+static bool parse_expected_move(const char *text, ExpectedMove *expected_out);
 
-static bool move_list_contains_to_square(const MoveList *moves, Position expected_to);
+static bool expected_move_seen(
+    const ExpectedMove *seen,
+    int seen_count,
+    ExpectedMove expected
+);
+
+static bool move_list_contains_expected_move(
+    const MoveList *moves,
+    ExpectedMove expected
+);
+
+static bool parse_promotion_piece(char c, PieceType *promotion_out);
 
 static void print_expected_moves(const char *expected_moves_text);
 
-static void print_move_list_destinations(const MoveList *moves);
+static void print_move_list_expected_format(const MoveList *moves);
 
 static void position_to_square(Position position, char out[3]);
 
@@ -227,7 +245,7 @@ static bool run_move_gen_case(
         print_expected_moves(expected_moves_text);
 
         printf("Actual moves: ");
-        print_move_list_destinations(&moves);
+        print_move_list_expected_format(&moves);
 
         puts("------------------------");
     }
@@ -316,7 +334,7 @@ static bool validate_generated_moves(
     strncpy(buffer, expected_moves_text, sizeof buffer);
     buffer[sizeof buffer - 1] = '\0';
 
-    Position seen[MAX_MOVES];
+    ExpectedMove seen[MAX_MOVES];
     int seen_count = 0;
 
     // tokenise each expected move/square
@@ -324,18 +342,20 @@ static bool validate_generated_moves(
 
     while (token)
     {
-        Position expected_to;
+        ExpectedMove expected;
 
-        // must be in the form of a square
-        if (!parse_square(token, &expected_to)) return false;
+        // <square> | <square> <equals> <promotion>
+        if (!parse_expected_move(token, &expected)) return false;
 
         // cannot have repeated moves in the test case
-        if (expected_square_seen(seen, seen_count, expected_to)) return false;
+        if (expected_move_seen(seen, seen_count, expected)) return false;
 
         // if there is ONE move not in the generated move list, it fails
-        if (!move_list_contains_to_square(moves, expected_to)) return false;
+        if (!move_list_contains_expected_move(moves, expected)) return false;
 
-        seen[seen_count++] = expected_to;
+        // guard so count does not exceed maximum moves allocated
+        if (seen_count >= MAX_MOVES) return false;
+        seen[seen_count++] = expected;
 
         token = strtok(NULL, ",");
     }
@@ -343,32 +363,93 @@ static bool validate_generated_moves(
     return seen_count == expected_count;
 }
 
-static bool expected_square_seen(const Position *seen, int seen_count, Position square)
+static bool parse_expected_move(const char *text, ExpectedMove *expected_out)
+{
+    if (!text || !expected_out) return false;
+
+    // verify text length
+    size_t len = strlen(text);
+
+    if (len != 2 && len != 4) return false;
+
+    // extract square from text then parse
+    char square_text[3] = { text[0], text[1], '\0' };
+
+    if (!parse_square(square_text, &expected_out->to)) return false;
+
+    expected_out->is_promotion = false;
+    expected_out->promotion = TYPE_NONE;
+
+    if (len == 4)
+    {
+        if (text[2] != '=') return false;
+
+        expected_out->is_promotion = true;
+
+        if (!parse_promotion_piece(text[3], &expected_out->promotion)) return false;
+    }
+
+    return true;
+}
+
+static bool expected_move_seen(
+    const ExpectedMove *seen,
+    int seen_count,
+    ExpectedMove expected
+)
 {
     if (!seen) return false;
 
+    // skip already observed moves
     for (int i = 0; i < seen_count; i++)
     {
-        // return true to skip already observed squares
-        if (seen[i].row == square.row && seen[i].col == square.col) return true;
+        if (
+            seen[i].to.row == expected.to.row &&
+            seen[i].to.col == expected.to.col &&
+            seen[i].is_promotion == expected.is_promotion &&
+            seen[i].promotion == expected.promotion
+        ) return true;
     }
 
     return false;
 }
 
-static bool move_list_contains_to_square(const MoveList *moves, Position expected_to)
+static bool move_list_contains_expected_move(
+    const MoveList *moves,
+    ExpectedMove expected
+)
 {
     if (!moves) return false;
 
     for (int i = 0; i < moves->count; i++)
     {
-        Position actual_to = moves->moves[i].to;
+        Move move = moves->moves[i];
 
-        // return true if one of the squares in the move list match the expected move
-        if (actual_to.row == expected_to.row && actual_to.col == expected_to.col) return true;
+        // skip mismatches
+        if (move.to.row != expected.to.row || move.to.col != expected.to.col) continue;
+        
+        if (move.is_promotion != expected.is_promotion) continue;
+
+        if (move.is_promotion && move.promotion != expected.promotion) continue;
+
+        return true;
     }
 
     return false;
+}
+
+static bool parse_promotion_piece(char c, PieceType *promotion_out)
+{
+    if (!promotion_out) return false;
+
+    switch (c)
+    {
+        case 'Q': *promotion_out = TYPE_QUEEN; return true;
+        case 'R': *promotion_out = TYPE_ROOK; return true;
+        case 'B': *promotion_out = TYPE_BISHOP; return true;
+        case 'N': *promotion_out = TYPE_KNIGHT; return true;
+        default: return false;
+    }
 }
 
 static void print_expected_moves(const char *expected_moves_text)
@@ -379,7 +460,8 @@ static void print_expected_moves(const char *expected_moves_text)
         puts(expected_moves_text);
 }
 
-static void print_move_list_destinations(const MoveList *moves)
+// renamed due to printing more than just destinations now
+static void print_move_list_expected_format(const MoveList *moves)
 {
     if (!moves)
     {
@@ -393,6 +475,24 @@ static void print_move_list_destinations(const MoveList *moves)
         position_to_square(moves->moves[i].to, square);
 
         printf("%s", square);
+
+        // check for promotion
+        if (moves->moves[i].is_promotion)
+        {
+            char promotion = '?';
+
+            // set promotion piece type
+            switch (moves->moves[i].promotion)
+            {
+                case TYPE_QUEEN: promotion = 'Q'; break;
+                case TYPE_ROOK: promotion = 'R'; break;
+                case TYPE_BISHOP: promotion = 'B'; break;
+                case TYPE_KNIGHT: promotion = 'N'; break;
+                default: break;
+            }
+
+            printf("=%c", promotion);
+        }
 
         // add commas if there is a subsequent move
         if (i + 1 < moves->count) putchar(',');   
