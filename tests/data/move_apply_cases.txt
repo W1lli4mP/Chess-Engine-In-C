@@ -1,0 +1,6 @@
+# id|fen|from|to|note
+moveapply.quiet_white_pawn|8/8/8/8/8/8/4P3/8 w - - 0 1|e2|e3|quiet
+moveapply.quiet_black_pawn|8/8/8/8/8/8/4p3/8 b - - 0 7|e2|e1|quiet
+moveapply.white_rook_capture|8/8/8/8/3Rp3/8/8/8 w - - 12 3|d4|e4|capture
+moveapply.black_rook_capture|8/8/8/8/3rP3/8/8/8 b - - 5 9|d4|e4|capture
+moveapply.knight_quiet|8/8/8/8/3N4/8/8/8 w - - 4 2|d4|f5|quiet
