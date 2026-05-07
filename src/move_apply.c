@@ -14,6 +14,26 @@ bool make_move(GameState *game, Move move, UndoInfo *undo_out)
     Piece *captured = get_piece_at(board, move.to);
     // captured can be NULL so don't add a NULL check
 
+    // promotion validation
+    if (move.is_promotion && piece->type != TYPE_PAWN) return false;
+
+    if (
+        move.is_promotion &&
+        move.promotion != TYPE_QUEEN &&
+        move.promotion != TYPE_ROOK &&
+        move.promotion != TYPE_BISHOP &&
+        move.promotion != TYPE_KNIGHT
+    ) return false;
+
+    if (move.is_promotion)
+    {
+        bool valid_rank = 
+            (piece->colour == COLOUR_WHITE && move.to.row == 7) ||
+            (piece->colour == COLOUR_BLACK && move.to.row == 0);
+
+        if (!valid_rank) return false;
+    }
+
     // encapsulate relevant game state information into UndoInfo
     undo_out->captured_piece = captured;
     undo_out->captured_position = move.to;
@@ -30,6 +50,13 @@ bool make_move(GameState *game, Move move, UndoInfo *undo_out)
     if (!set_piece_at(board, move.to, piece)) return false;
     if (!set_piece_at(board, move.from, NULL)) return false;
 
+    //* promote pawns if move is a promotion
+    if (move.is_promotion)
+    {
+        piece->type = move.promotion;
+        piece->sprite = find_sprite(piece->type, piece->colour);
+    }
+
     // update game state
     game->side_to_move = (game->side_to_move == COLOUR_WHITE) ? COLOUR_BLACK : COLOUR_WHITE;
 
@@ -38,7 +65,8 @@ bool make_move(GameState *game, Move move, UndoInfo *undo_out)
     game->has_en_passant_target = false;
     game->en_passant_target = (Position) { .row = -1, .col = -1 };
 
-    if (piece->type == TYPE_PAWN || captured)
+    // use the saved previous piece type; pawn promotions may affect the current state
+    if (undo_out->previous_moved_piece_type == TYPE_PAWN || captured)
         game->halfmove_clock = 0;
     else
         game->halfmove_clock++;
