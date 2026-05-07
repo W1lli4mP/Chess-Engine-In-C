@@ -112,26 +112,22 @@ static ResolveStatus validate_move(
 {
     if (!current_piece || !move_out) return RESOLVE_ILLEGAL;
 
-    Position to = candidate.to;
-
     // captures (target can be an enemy or ally)
     if (san.is_capture != candidate.is_capture) return RESOLVE_ILLEGAL;
 
     // explicit and implicit promotions
-    bool reaches_promotion_rank = is_pawn_promotion_rank(current_piece, to);
+    bool reaches_promotion_rank = is_pawn_promotion_rank(current_piece, candidate.to);
 
     if (san.is_promotion)
     {
+        if (!candidate.is_promotion) return RESOLVE_ILLEGAL;
         if (!reaches_promotion_rank) return RESOLVE_ILLEGAL;
-
-        candidate.is_promotion = true;
-        candidate.promotion = san.promotion;
+        if (candidate.promotion != san.promotion) return RESOLVE_ILLEGAL;
     }
-    else if (reaches_promotion_rank)
+    else
     {
-        //! defaults to queen if no promotion piece is explicitly given
-        candidate.is_promotion = true;
-        candidate.promotion = TYPE_QUEEN;
+        //* no longer defaults to queen; more strict
+        if (candidate.is_promotion || reaches_promotion_rank) return RESOLVE_ILLEGAL;
     }
 
     *move_out = candidate;
