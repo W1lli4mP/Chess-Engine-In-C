@@ -149,9 +149,9 @@ static bool run_move_gen_case(
     const char *expected_moves_text
 )
 {
+    // parse square
     Position from;
 
-    // parse square
     if (!parse_square(from_text, &from))
     {
         print_move_gen_result(test_id, false, "invalid from square");
