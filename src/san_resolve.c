@@ -3,7 +3,6 @@
 
 /*
 TODO:
-handle castling
 handle san suffix (checks/mates)
 handle en passant
 */
