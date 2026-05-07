@@ -11,6 +11,7 @@
 #include "fen_parser.h"
 #include "game_state.h"
 #include "rules.h"
+#include "move_apply.h"
 
 #define WHITE_VIEW 1
 #define BLACK_VIEW 0
@@ -32,6 +33,18 @@ static char piece_type_to_char(PieceType p)
 
 static void san_debug(const San san)
 {
+    if (san.is_castle_kingside)
+    {
+        puts("[SAN] Attempting to castle kingside");
+        return;
+    }
+
+    if (san.is_castle_queenside)
+    {
+        puts("[SAN] Attempting to castle queenside");
+        return;
+    }
+
     if (san.from_col != -1)
         printf("[SAN] Attempting to move %c from %c file to %c%c\n", piece_type_to_char(san.piece), san.from_col + 'a', san.to.col + 'a', san.to.row + '1');
     else
@@ -154,14 +167,20 @@ int main()
         // MOVE DEBUG PRINT
         move_debug(*move);
 
-        if (!apply_move(game->board, *move)) puts("Move failed!");
+        UndoInfo undo;
+
+        // replace apply_move() with new make_move() system
+        if (!make_move(game, *move, &undo))
+        {
+            puts("Move failed!");
+            destroy_move(move);
+            continue;
+        }
 
         destroy_move(move);
 
         puts("------------------------");
 
-        // 7) change turns
-        switch_side_to_move(game);
     }
 
     destroy_game_state(game);
@@ -182,12 +201,9 @@ int main()
 
     /*
         TODO
-        - add game loop
-            - add turn handling
         - extend game mechanics
             - stalemate
             - en passant
-            - castling
         - finalise san resolver
             - use all san attributes
         - perft test the move generator (after all game mechanics established)
