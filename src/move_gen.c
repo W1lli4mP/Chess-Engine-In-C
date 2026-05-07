@@ -9,6 +9,22 @@ static bool append_normal_move(
     MoveList *moves_out
 );
 
+static bool is_pawn_promotion_rank(Colour colour, int row);
+
+static bool append_pawn_move(
+    const Board *board,
+    Position from,
+    Position to,
+    MoveList *moves_out
+);
+
+static bool append_promotion_moves(
+    const Board *board,
+    Position from,
+    Position to,
+    MoveList *moves_out
+);
+
 static bool generate_pawn_moves(
     GameState *game,
     Position piece_location,
@@ -205,6 +221,69 @@ bool generate_all_legal_moves(
 }
 
 //* HELPERS
+static bool is_pawn_promotion_rank(Colour colour, int row)
+{
+    if (colour == COLOUR_WHITE) return row == 7;
+    if (colour == COLOUR_BLACK) return row == 0;
+    return false;
+}
+
+static bool append_pawn_move(
+    const Board *board,
+    Position from,
+    Position to,
+    MoveList *moves_out
+)
+{
+    if (!board || !moves_out) return false;
+
+    Piece *piece = get_piece_at(board, from);
+    if (!piece || piece->type != TYPE_PAWN) return false;
+
+    if (is_pawn_promotion_rank(piece->colour, to.row))
+        return append_promotion_moves(board, from, to, moves_out);
+    
+    return append_normal_move(board, from, to, moves_out);
+}
+
+static bool append_promotion_moves(
+    const Board *board,
+    Position from,
+    Position to,
+    MoveList *moves_out
+)
+{
+    if (!board || !moves_out) return false;
+
+    Piece *piece = get_piece_at(board, from);
+    if (!piece || piece->type != TYPE_PAWN) return false;
+
+    // observe all pawn promotion options
+    PieceType promotions[4] = {
+        TYPE_QUEEN,
+        TYPE_ROOK,
+        TYPE_BISHOP,
+        TYPE_KNIGHT
+    };
+
+    Piece *target = get_piece_at(board, to);
+
+    for (int i = 0; i < 4; i++)
+    {
+        Move move = create_move(piece->type, from, to);
+
+        if (target) move.is_capture = true;
+
+        // set promotion flag and append pawn promotion option
+        move.is_promotion = true;
+        move.promotion = promotions[i];
+
+        if (!move_list_append(moves_out, move)) return false;
+    }
+
+    return true;
+}
+
 // TODO: add en passant
 static bool generate_pawn_moves(
     GameState *game,
@@ -229,7 +308,7 @@ static bool generate_pawn_moves(
     // can only move forward to empty squares
     if (is_empty_square(board, f1))
     {
-        if (!append_normal_move(board, piece_location, f1, moves_out)) return false;
+        if (!append_pawn_move(board, piece_location, f1, moves_out)) return false;
 
         // double forward (iff original position was at a starting position)
         if ((selected_piece->colour == COLOUR_WHITE && piece_location.row == 1) || (selected_piece->colour == COLOUR_BLACK && piece_location.row == board->height - 2))
@@ -239,6 +318,7 @@ static bool generate_pawn_moves(
 
             if (is_empty_square(board, f2))
             {
+                //* double moves can never promote so treat it as a normal move
                 if (!append_normal_move(board, piece_location, f2, moves_out)) return false;
             }
         }
@@ -260,7 +340,7 @@ static bool generate_pawn_moves(
         // append enemies if valid
         if (target && target->colour != selected_piece->colour)
         {
-            if (!append_normal_move(board, piece_location, to, moves_out)) return false;
+            if (!append_pawn_move(board, piece_location, to, moves_out)) return false;
         }
     }
 
