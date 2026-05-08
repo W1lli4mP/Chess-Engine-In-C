@@ -222,11 +222,11 @@ static bool run_san_resolve_case(
 
     if (!san)
     {
-        destroy_san(san);
         destroy_game_state(game);
         
         char reason[128];
         snprintf(reason, sizeof reason, "failed to parse SAN at err_pos = %d", san_err_pos);
+        print_san_resolve_result(test_id, false, reason);
 
         return false;
     }
@@ -415,7 +415,7 @@ static bool parse_flags(const char *text, ExpectedFlags *flags_out)
         {
             flags_out->castle_queenside = true;
         }
-        else if(strcmp(token, "promotion=") == 0)
+        else if(strncmp(token, "promotion=", 10) == 0)
         {
             flags_out->promotion = true;
 
