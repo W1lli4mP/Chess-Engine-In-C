@@ -267,8 +267,30 @@ static bool run_san_resolve_case(
 // HELPERS
 static bool parse_status(const char *text, ResolveStatus *status_out)
 {
-    //! COMPLETE
-    return true;
+    if (!text || !status_out) return false;
+
+    // parse OK
+    if (strcmp(text, "OK") == 0)
+    {
+        *status_out = RESOLVE_OK;
+        return true;
+    }
+
+    // parse ILLEGAL
+    if (strcmp(text, "ILLEGAL") == 0)
+    {
+        *status_out = RESOLVE_ILLEGAL;
+        return true;
+    }
+
+    // parse AMBIGUOUS
+    if (strcmp(text, "AMBIGUOUS") == 0)
+    {
+        *status_out = RESOLVE_AMBIGUOUS;
+        return true;
+    }
+
+    return false;
 }
 
 static bool parse_square(const char *text, Position *position_out)
