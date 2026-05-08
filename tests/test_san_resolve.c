@@ -154,11 +154,12 @@ static bool run_san_resolve_case(
     }
 
     // parse squares IFF status is OK
+    Position expected_from = { .row = -1, .col = -1 };
+    Position expected_to = { .row = -1, .col = -1 };
+
     if (expected_status == RESOLVE_OK)
     {
         // parse expected from
-        Position expected_from;
-
         if (!parse_square(expected_from_text, &expected_from))
         {
             print_san_resolve_result(test_id, false, "invalid expected from square");
@@ -166,8 +167,6 @@ static bool run_san_resolve_case(
         }
 
         // parse expected to
-        Position expected_to;
-
         if (!parse_square(expected_to_text, &expected_to))
         {
             print_san_resolve_result(test_id, false, "invalid expected to square");
@@ -176,9 +175,8 @@ static bool run_san_resolve_case(
     }
 
     // parse expected flags
-    //! CHANGE
-    char *not_sure;
-    if (!parse_flags(expected_flags_text, &not_sure))
+    ExpectedFlags expected_flags;
+    if (!parse_flags(expected_flags_text, &expected_flags))
     {
         print_san_resolve_result(test_id, false, "invalid expected flags");
         return false;
@@ -256,9 +254,7 @@ static bool run_san_resolve_case(
         return true;
     }
 
-    // validate OK status'
-    //! COMPLETE
-    // add fail too
+    // validate OK moves
 
     destroy_game_state(game);
     return true;
