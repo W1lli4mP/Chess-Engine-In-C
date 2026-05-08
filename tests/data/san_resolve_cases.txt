@@ -1,0 +1,43 @@
+# id|fen|san|expected_status|expected_from|expected_to|expected_flags
+
+# Basic legal moves
+san.pawn.quiet_white|8/8/8/8/8/8/4P3/8 w - - 0 1|e3|OK|e2|e3|none
+san.pawn.quiet_black|8/8/8/8/8/4p3/8/8 b - - 0 1|e2|OK|e3|e2|none
+san.knight.quiet|8/8/8/8/3N4/8/8/8 w - - 0 1|Nf5|OK|d4|f5|none
+san.rook.capture|8/8/8/8/3Rp3/8/8/8 w - - 0 1|Rxe4|OK|d4|e4|capture
+
+# Illegal moves
+san.illegal.no_piece_can_move|8/8/8/8/8/8/4P3/8 w - - 0 1|e5|ILLEGAL|-|-|none
+san.illegal.wrong_side|8/8/8/8/8/8/4p3/8 w - - 0 1|e1|ILLEGAL|-|-|none
+
+# Ambiguity / disambiguation
+san.knight.ambiguous|8/8/8/8/8/2N1N3/8/8 w - - 0 1|Nd5|AMBIGUOUS|-|-|none
+san.knight.disambiguated_file|8/8/8/8/8/2N1N3/8/8 w - - 0 1|Ncd5|OK|c3|d5|none
+san.knight.disambiguated_file_2|8/8/8/8/8/2N1N3/8/8 w - - 0 1|Ned5|OK|e3|d5|none
+
+# Promotions
+san.promotion.white_queen|8/4P3/8/8/8/8/8/8 w - - 0 1|e8=Q|OK|e7|e8|promotion=Q
+san.promotion.white_rook|8/4P3/8/8/8/8/8/8 w - - 0 1|e8=R|OK|e7|e8|promotion=R
+san.promotion.white_bishop|8/4P3/8/8/8/8/8/8 w - - 0 1|e8=B|OK|e7|e8|promotion=B
+san.promotion.white_knight|8/4P3/8/8/8/8/8/8 w - - 0 1|e8=N|OK|e7|e8|promotion=N
+san.promotion.black_queen|8/8/8/8/8/8/4p3/8 b - - 0 1|e1=Q|OK|e2|e1|promotion=Q
+san.promotion.capture_white|3r4/4P3/8/8/8/8/8/8 w - - 0 1|exd8=Q|OK|e7|d8|capture,promotion=Q
+san.promotion.capture_black|8/8/8/8/8/8/4p3/3R4 b - - 0 1|exd1=Q|OK|e2|d1|capture,promotion=Q
+san.promotion.must_be_explicit|8/4P3/8/8/8/8/8/8 w - - 0 1|e8|ILLEGAL|-|-|none
+
+# Castling
+san.castle.white_kingside|r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1|O-O|OK|e1|g1|castle_kingside
+san.castle.white_queenside|r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1|O-O-O|OK|e1|c1|castle_queenside
+san.castle.black_kingside|r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1|O-O|OK|e8|g8|castle_kingside
+san.castle.black_queenside|r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1|O-O-O|OK|e8|c8|castle_queenside
+
+# Optional zero-style castling, only keep these if your parser supports 0-0
+san.castle.white_kingside_zero|r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1|0-0|OK|e1|g1|castle_kingside
+san.castle.white_queenside_zero|r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1|0-0-0|OK|e1|c1|castle_queenside
+
+# Castling illegal cases
+san.castle.no_rights|r3k2r/8/8/8/8/8/8/R3K2R w - - 0 1|O-O|ILLEGAL|-|-|none
+san.castle.blocked_kingside|r3k2r/8/8/8/8/8/8/R3KB1R w KQkq - 0 1|O-O|ILLEGAL|-|-|none
+san.castle.blocked_queenside|r3k2r/8/8/8/8/8/8/R2QK2R w KQkq - 0 1|O-O-O|ILLEGAL|-|-|none
+san.castle.in_check|4r3/8/8/8/8/8/8/R3K2R w KQ - 0 1|O-O|ILLEGAL|-|-|none
+san.castle.crosses_check|5r2/8/8/8/8/8/8/R3K2R w KQ - 0 1|O-O|ILLEGAL|-|-|none
