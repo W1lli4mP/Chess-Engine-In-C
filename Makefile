@@ -25,6 +25,7 @@ TEST_MOVE_APPLY_SRC = tests/test_move_apply.c
 OBJS = $(patsubst src/%.c,$(BUILD_DIR)/%.o,$(SRCS))
 COMMON_OBJS = $(patsubst src/%.c,$(BUILD_DIR)/%.o,$(COMMON_SRCS))
 
+TEST_UTILS_OBJ = $(BUILD_DIR)/test_utils.o
 TEST_FEN_OBJ = $(BUILD_DIR)/test_fen.o
 TEST_MOVE_GEN_OBJ = $(BUILD_DIR)/test_move_gen.o
 TEST_MOVE_APPLY_OBJ = $(BUILD_DIR)/test_move_apply.o
@@ -41,8 +42,8 @@ $(TEST_FEN_TARGET): $(COMMON_OBJS) $(TEST_FEN_OBJ) | $(BIN_DIR)
 	$(CC) $(CFLAGS) -o $(TEST_FEN_TARGET) $(COMMON_OBJS) $(TEST_FEN_OBJ)
 
 # move generation test executable
-$(TEST_MOVE_GEN_TARGET): $(COMMON_OBJS) $(TEST_MOVE_GEN_OBJ) | $(BIN_DIR)
-	$(CC) $(CFLAGS) -o $(TEST_MOVE_GEN_TARGET) $(COMMON_OBJS) $(TEST_MOVE_GEN_OBJ)
+$(TEST_MOVE_GEN_TARGET): $(COMMON_OBJS) $(TEST_UTILS_OBJ) $(TEST_MOVE_GEN_OBJ) | $(BIN_DIR)
+	$(CC) $(CFLAGS) -o $(TEST_MOVE_GEN_TARGET) $(COMMON_OBJS) $(TEST_UTILS_OBJ) $(TEST_MOVE_GEN_OBJ)
 
 # move apply test executable
 $(TEST_MOVE_APPLY_TARGET): $(COMMON_OBJS) $(TEST_MOVE_APPLY_OBJ) | $(BIN_DIR)
@@ -53,6 +54,9 @@ $(BUILD_DIR)/%.o: src/%.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # compile test objects
+$(BUILD_DIR)/test_utils.o: tests/test_utils.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
 $(BUILD_DIR)/test_fen.o: $(TEST_FEN_SRC) | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
@@ -103,4 +107,8 @@ valgrind_fen: $(TEST_FEN_TARGET)
 valgrind_move_gen: $(TEST_MOVE_GEN_TARGET)
 	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./$(TEST_MOVE_GEN_TARGET)
 
-.PHONY: all clean run run_fen run_move_gen test valgrind valgrind_fen valgrind_move_gen
+# valgrind move apply tests
+valgrind_move_apply: $(TEST_MOVE_APPLY_TARGET)
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./$(TEST_MOVE_APPLY_TARGET)
+
+.PHONY: all clean run run_fen run_move_gen run_move_apply test valgrind valgrind_fen valgrind_move_gen valgrind_move_apply
