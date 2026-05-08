@@ -42,6 +42,8 @@ static bool parse_status(const char *text, ResolveStatus *status_out);
 
 static bool parse_square(const char *text, Position *position_out);
 
+static bool parse_promotion_piece(char c, PieceType *promotion_out);
+
 static bool parse_flags(const char *text, ExpectedFlags *flags_out);
 
 int main()
@@ -289,11 +291,71 @@ static bool parse_square(const char *text, Position *position_out)
     return true;
 }
 
+static bool parse_promotion_piece(char c, PieceType *promotion_out)
+{
+    if (!promotion_out) return false;
+
+    switch (c)
+    {
+        case 'Q': *promotion_out = TYPE_QUEEN; return true;
+        case 'R': *promotion_out = TYPE_ROOK; return true;
+        case 'B': *promotion_out = TYPE_BISHOP; return true;
+        case 'N': *promotion_out = TYPE_KNIGHT; return true;
+        default: return false;
+    }
+}
+
 static bool parse_flags(const char *text, ExpectedFlags *flags_out)
 {
     if (!text || !flags_out) return false;
 
-    //! COMPLETE
+    // set all default attributes before modifying
+    *flags_out = (ExpectedFlags) {0};
+    flags_out->promotion_piece = TYPE_NONE;
+
+    if (strcmp(text, "none") == 0 || text[0] == '\0') return true;
+
+    // copy field before tokenising
+    char buffer[MAX_LINE_LEN];
+    strncpy(buffer, text, sizeof buffer);
+    buffer[sizeof buffer - 1] = '\0';
+
+    // tokenise
+    char *token = strtok(buffer, ",");
+
+    // consume all tokens and update expected flags accordingly
+    while (token)
+    {
+        if (strcmp(token, "capture") == 0)
+        {
+            flags_out->capture = true;
+        }
+        else if (strcmp(token, "castle_kingside") == 0)
+        {
+            flags_out->castle_kingside = true;
+        }
+        else if (strcmp(token, "castle_queenside") == 0)
+        {
+            flags_out->castle_queenside = true;
+        }
+        else if(strcmp(token, "promotion=") == 0)
+        {
+            flags_out->promotion = true;
+
+            // reject mismatched length of "promotion=X"
+            if (strlen(token) != 11) return false;
+
+            // parse promotion piece
+            if (!parse_promotion_piece(token[10], &flags_out->promotion_piece)) return false;
+        }
+        else
+        {
+            return false;
+        }
+        
+        // consume token and move onto the next
+        token = strtok(NULL, ",");
+    }
 
     return true;
 }
