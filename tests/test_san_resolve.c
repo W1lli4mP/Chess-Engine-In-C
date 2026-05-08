@@ -132,6 +132,8 @@ static void print_san_resolve_result(
     }
     else
         printf("Result: FAIL (reason = %s)\n", reason);
+    
+    puts("------------------------");
 }
 
 static bool run_san_resolve_case(
@@ -232,7 +234,7 @@ static bool run_san_resolve_case(
     }
 
     // resolve SAN
-    Move move;
+    Move move = {0};
     ResolveStatus actual_status = resolve_san(game, *san, &move);
 
     // fail mismatched resolve status'
@@ -248,6 +250,15 @@ static bool run_san_resolve_case(
     //? this is because the status aligns with the expected status, meaning no further validation is required
     if (expected_status != RESOLVE_OK)
     {
+        // reject malformed test cases that still fill in expected from and to
+        if (strcmp(expected_from_text, "-") != 0 || strcmp(expected_to_text, "-") != 0)
+        {
+            destroy_san(san);
+            destroy_game_state(game);
+            print_san_resolve_result(test_id, false, "non-OK case should use '-' for from/to");
+            return false;
+        }
+
         destroy_san(san);
         destroy_game_state(game);
         print_san_resolve_result(test_id, true, "PASS");
