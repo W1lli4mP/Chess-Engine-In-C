@@ -9,6 +9,8 @@
 #include "position.h"
 #include "parser.h"
 #include "test_utils.h"
+#include "move.h"
+#include "piece.h"
 
 #define SAN_RESOLVE_CASES_FILE "tests/data/san_resolve_cases.txt"
 #define MAX_LINE_LEN 256
@@ -45,6 +47,8 @@ static bool parse_square(const char *text, Position *position_out);
 static bool parse_promotion_piece(char c, PieceType *promotion_out);
 
 static bool parse_flags(const char *text, ExpectedFlags *flags_out);
+
+static const char *status_to_string(ResolveStatus status);
 
 int main()
 {
@@ -177,7 +181,7 @@ static bool run_san_resolve_case(
     }
 
     // parse expected flags
-    ExpectedFlags expected_flags;
+    ExpectedFlags expected_flags = {0};
     if (!parse_flags(expected_flags_text, &expected_flags))
     {
         print_san_resolve_result(test_id, false, "invalid expected flags");
@@ -199,7 +203,7 @@ static bool run_san_resolve_case(
     if (!game->board)
     {
         destroy_game_state(game);
-        print_san_resolve_result(test_id, false, "generated moves did not match expected moves");
+        print_san_resolve_result(test_id, false, "failed to create board");
         return false;
     }
 
@@ -240,9 +244,19 @@ static bool run_san_resolve_case(
     // fail mismatched resolve status'
     if (actual_status != expected_status)
     {
+        // print expected and actual status
+        char reason[128];
+        snprintf(
+            reason,
+            sizeof reason,
+            "resolved status mismatch: expected %s, got %s",
+            status_to_string(expected_status),
+            status_to_string(actual_status)
+        );
+
         destroy_san(san);
         destroy_game_state(game);
-        print_san_resolve_result(test_id, false, "resolved status did not match expected status");
+        print_san_resolve_result(test_id, false, reason);
         return false;
     }
 
@@ -251,11 +265,15 @@ static bool run_san_resolve_case(
     if (expected_status != RESOLVE_OK)
     {
         // reject malformed test cases that still fill in expected from and to
-        if (strcmp(expected_from_text, "-") != 0 || strcmp(expected_to_text, "-") != 0)
+        if (
+            strcmp(expected_from_text, "-") != 0 ||
+            strcmp(expected_to_text, "-") != 0 ||
+            strcmp(expected_flags_text, "none") != 0
+        )
         {
             destroy_san(san);
             destroy_game_state(game);
-            print_san_resolve_result(test_id, false, "non-OK case should use '-' for from/to");
+            print_san_resolve_result(test_id, false, "non-OK case should use '-' for from/to and 'none' for flags");
             return false;
         }
 
@@ -426,7 +444,7 @@ static bool parse_flags(const char *text, ExpectedFlags *flags_out)
         {
             flags_out->castle_queenside = true;
         }
-        else if(strncmp(token, "promotion=", 10) == 0)
+        else if (strncmp(token, "promotion=", 10) == 0)
         {
             flags_out->promotion = true;
 
@@ -445,5 +463,21 @@ static bool parse_flags(const char *text, ExpectedFlags *flags_out)
         token = strtok(NULL, ",");
     }
 
+    // reject impossible flag combinations
+    if (flags_out->castle_kingside && flags_out->castle_queenside) return false;
+    if (flags_out->promotion && flags_out->promotion_piece == TYPE_NONE) return false;
+    if (!flags_out->promotion && flags_out->promotion_piece != TYPE_NONE) return false;
+
     return true;
+}
+
+static const char *status_to_string(ResolveStatus status)
+{
+    switch (status)
+    {
+        case RESOLVE_OK: return "OK";
+        case RESOLVE_ILLEGAL: return "ILLEGAL";
+        case RESOLVE_AMBIGUOUS: return "AMBIGUOUS";
+        default: return "UNKNOWN";
+    }
 }
