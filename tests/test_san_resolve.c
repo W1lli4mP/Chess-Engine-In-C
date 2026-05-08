@@ -255,8 +255,67 @@ static bool run_san_resolve_case(
     }
 
     // validate OK moves
+    // from and to validation
+    if (move.from.row != expected_from.row || move.from.col != expected_from.col)
+    {
+        destroy_san(san);
+        destroy_game_state(game);
+        print_san_resolve_result(test_id, false, "resolved from square did not match");
+        return false;
+    }
 
+    if (move.to.row != expected_to.row || move.to.col != expected_to.col)
+    {
+        destroy_san(san);
+        destroy_game_state(game);
+        print_san_resolve_result(test_id, false, "resolved to square did not match");
+        return false;
+    }
+
+    // flag validation
+    if (move.is_capture != expected_flags.capture)
+    {
+        destroy_san(san);
+        destroy_game_state(game);
+        print_san_resolve_result(test_id, false, "resolved capture flag did not match");
+        return false;
+    }
+
+    if (move.is_promotion != expected_flags.promotion)
+    {
+        destroy_san(san);
+        destroy_game_state(game);
+        print_san_resolve_result(test_id, false, "resolved promotion flag did not match");
+        return false;
+    }
+
+    if (move.is_promotion && move.promotion != expected_flags.promotion_piece)
+    {
+        destroy_san(san);
+        destroy_game_state(game);
+        print_san_resolve_result(test_id, false, "resolved promotion piece did not match");
+        return false;
+    }
+
+    if (move.is_castle_kingside != expected_flags.castle_kingside)
+    {
+        destroy_san(san);
+        destroy_game_state(game);
+        print_san_resolve_result(test_id, false, "resolved kingside castle flag did not match");
+        return false;
+    }
+
+    if (move.is_castle_queenside != expected_flags.castle_queenside)
+    {
+        destroy_san(san);
+        destroy_game_state(game);
+        print_san_resolve_result(test_id, false, "resolved queenside castle flag did not match");
+        return false;
+    }
+
+    destroy_san(san);
     destroy_game_state(game);
+    print_san_resolve_result(test_id, true, "PASS");
     return true;
 }
 
