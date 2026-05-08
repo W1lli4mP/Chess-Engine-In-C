@@ -6,6 +6,7 @@
 #include "game_state.h"
 #include "fen_parser.h"
 #include "move_gen.h"
+#include "test_utils.h"
 
 #define MOVE_GEN_CASES_FILE "tests/data/move_gen_cases.txt"
 #define MAX_LINE_LEN 256
@@ -87,64 +88,27 @@ int main()
         // skip blank lines and comments
         if (line[0] == '\0' || line[0] == '#') continue;
 
-        char *test_id = line;
-
         // keep the original line for debug outputs of malformed lines
         char original[MAX_LINE_LEN] ;
         strncpy(original, line, sizeof original);
         original[sizeof original - 1] = '\0';
 
-        // 1st separator
-        char *sep1 = strchr(line, '|');
+        char *fields[5];
+        const char *split_error = NULL;
 
-        if (!sep1)
+        // partition the fields into fields[]
+        if (!split_test_line(line, fields, 5, &split_error))
         {
-            printf("Malformed test line: %s\n", original);
+            printf("Malformed test line (%s): %s\n", split_error, original);
             continue;
         }
 
-        *sep1 = '\0';
-
-        char *fen = sep1 + 1;
-
-        // 2nd separator
-        char *sep2 = strchr(fen, '|');
-
-        if (!sep2)
-        {
-            printf("Malformed test line: %s\n", original);
-            continue;
-        }
-
-        *sep2 = '\0';
-
-        char *from = sep2 + 1;
-
-        // 3rd separator
-        char *sep3 = strchr(from, '|');
-
-        if (!sep3)
-        {
-            printf("Malformed test line: %s\n", original);
-            continue;
-        }
-
-        *sep3 = '\0';
-
-        char *expected_count = sep3 + 1;
-
-        // 4th separator
-        char *sep4 = strchr(expected_count, '|');
-
-        if (!sep4)
-        {
-            printf("Malformed test line: %s\n", original);
-            continue;
-        }
-
-        *sep4 = '\0';
-
-        char *expected_moves = sep4 + 1;
+        // extract fields
+        char *test_id = fields[0];
+        char *fen = fields[1];
+        char *from = fields[2];
+        char *expected_count = fields[3];
+        char *expected_moves = fields[4];
         
         // process test case
         total++;
