@@ -6,6 +6,12 @@
 #include "move_apply.h"
 #include "rules.h"
 
+#ifdef ENGINE_DEBUG
+#include <stdio.h>
+
+#include "debug_print.h"
+#endif
+
 #define CHECKMATE_SCORE 1000000
 
 static int side_multiplier(Colour colour);
@@ -111,6 +117,10 @@ bool engine_find_best_move(GameState *game, int depth, Move *best_move_out)
     int best_score = INT_MIN + 1;
     Move best_move = moves.moves[0];
 
+#ifdef ENGINE_DEBUG
+    printf("[ENGINE] searching depth %d, legal moves: %d\n", depth, moves.count);
+#endif
+
     // evaluate every position after a move is played
     for (int i = 0; i < moves.count; i++)
     {
@@ -126,6 +136,10 @@ bool engine_find_best_move(GameState *game, int depth, Move *best_move_out)
         if (!unmake_move(game, move, &undo)) return false;
         if (!ok) return false;
 
+#ifdef ENGINE_DEBUG
+    debug_print_engine_move_score(best_move, best_score);
+#endif
+
         // supersede better score + move
         if (score > best_score)
         {
@@ -138,6 +152,10 @@ bool engine_find_best_move(GameState *game, int depth, Move *best_move_out)
             alpha = score;
         }
     }
+
+#ifdef ENGINE_DEBUG
+    debug_print_engine_best_move(best_move, best_score);
+#endif
 
     *best_move_out = best_move;
     return true;
