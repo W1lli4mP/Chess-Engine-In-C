@@ -34,7 +34,7 @@ typedef struct
     SanSuffix suffix;
 } San;
 
-San *create_san();
+San *create_san(void);
 bool destroy_san(San *san);
 
 #endif

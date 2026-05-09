@@ -1,8 +1,10 @@
 #include "san.h"
 
-San *create_san()
+San *create_san(void)
 {
     San *san = malloc(sizeof *san);
+    if (!san) return NULL;
+
     san->piece = TYPE_NONE;
     Position to = { .col = -1, .row = -1 };
     san->to = to;
