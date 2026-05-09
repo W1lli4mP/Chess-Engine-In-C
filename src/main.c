@@ -14,6 +14,8 @@
 #include "move_apply.h"
 #include "debug_print.h"
 #include "engine.h"
+#include "draw_rules.h"
+#include "game_play.h"
 
 #define WHITE_VIEW 1
 #define BLACK_VIEW 0
@@ -54,6 +56,11 @@ static bool is_game_over(const GameState *game)
     else if (is_checkmate(game, COLOUR_BLACK))
     {
         puts("[GAME] White wins!");
+        return true;
+    }
+    else if (is_draw(game))
+    {
+        puts("[GAME] Draw!");
         return true;
     }
     return false;
@@ -121,10 +128,8 @@ int main()
             // MOVE DEBUG PRINT
             debug_print_move(move);
 
-            UndoInfo undo;
-
-            // replace apply_move() with new make_move() system
-            if (!make_move(game, move, &undo))
+            // replace make_move() with new play_move() wrapper
+            if (!play_move(game, move))
             {
                 puts("Move failed!");
                 continue;
@@ -136,10 +141,14 @@ int main()
             int search_depth = 6;
 
             Move ai_move = {0};
-            engine_find_best_move(game, search_depth, &ai_move);
 
-            UndoInfo undo;
-            if (!make_move(game, ai_move, &undo))
+            if (!engine_find_best_move(game, search_depth, &ai_move))
+            {
+                puts("Engine failed to find a move!");
+                continue;
+            }
+
+            if (!play_move(game, ai_move))
             {
                 puts("Move failed!");
                 continue;
