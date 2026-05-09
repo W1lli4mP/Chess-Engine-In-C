@@ -4,8 +4,8 @@
 #include "piece.h"
 
 // helpers for validating attribute inputs
-static int valid_type(PieceType type);
-static int valid_colour(Colour colour);
+static bool valid_type(PieceType type);
+static bool valid_colour(Colour colour);
 
 // initialise existing memory
 bool init_piece(Piece *piece, PieceType type, Colour colour)
@@ -14,7 +14,7 @@ bool init_piece(Piece *piece, PieceType type, Colour colour)
 
     // validate type and colour before finding sprite
     if (!valid_type(type)) return false;
-    if (!valid_colour(type)) return false;
+    if (!valid_colour(colour)) return false;
 
     const char *sprite = find_sprite(type, colour);
     if (strcmp(sprite, SPRITE_NONE) == 0) return false;
@@ -49,12 +49,12 @@ void destroy_piece(Piece *piece)
 }
 
 // helpers for validating piece attributes
-static int valid_type(PieceType type)
+static bool valid_type(PieceType type)
 {
     return type >= TYPE_NONE && type <= TYPE_KING;
 }
 
-static int valid_colour(Colour colour)
+static bool valid_colour(Colour colour)
 {
     return colour >= COLOUR_NONE && colour <= COLOUR_BLACK;
 }
