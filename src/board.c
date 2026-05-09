@@ -68,21 +68,16 @@ Board *create_empty_board(void)
 
 Piece *get_piece_at(const Board *board, Position pos)
 {
-    if (!board) return NULL;
+    if (!is_position_on_board(board, pos)) return NULL;
 
-    if (pos.row < 0 || pos.row >= board->height || pos.col < 0 || pos.col >= board->width) return NULL;
-
-    Piece *piece = board->grid[pos.row][pos.col];
-    return piece;
+    return board->grid[pos.row][pos.col];
 }
 
 // does not destroy any existing piece
 // caller is responsible for ensuring no leak/overwrite happens
 bool set_piece_at(Board *board, Position pos, Piece *piece)
 {
-    if (!board) return false;
-
-    if (pos.row < 0 || pos.row >= board->height || pos.col < 0 || pos.col >= board->width) return false;
+    if (!is_position_on_board(board, pos)) return false;
 
     board->grid[pos.row][pos.col] = piece;
     return true;
@@ -92,7 +87,7 @@ bool set_piece_at(Board *board, Position pos, Piece *piece)
 // Board takes ownership of piece
 bool replace_piece_at(Board *board, Position pos, Piece *piece)
 {
-    if (!board || !in_bounds(board, pos.row, pos.col)) return false;
+    if (!is_position_on_board(board, pos)) return false;
 
     if (board->grid[pos.row][pos.col])
     {
@@ -108,11 +103,10 @@ bool destroy_piece_at(Board *board, Position pos)
 {
     // retrieve piece before removing it from the board
     Piece *piece = get_piece_at(board, pos);
-    
     if (!piece) return false;
 
-    // set board position to NULL to "remove" the old piece
-    if (!set_piece_at(board, pos, NULL)) return false;
+    // set square to NULL (does not require set_piece_at())
+    board->grid[pos.row][pos.col] = NULL;
 
     // free the piece from memory
     destroy_piece(piece);
@@ -129,21 +123,26 @@ bool destroy_board(Board *board)
     return true;
 }
 
-bool is_move_on_board(const Board *board, Move move)
+// wrapper for in_bounds()
+bool is_position_on_board(const Board *board, Position pos)
 {
-    if (!board) return false;
+    return in_bounds(board, pos.row, pos.col);
+}
 
-    // board boundaries
-    if (!in_bounds(board, move.from.row, move.from.col)) return false;
-    if (!in_bounds(board, move.to.row, move.to.col)) return false;
-
-    return get_piece_at(board, move.from) != NULL;
+bool has_piece_at(const Board *board, Position pos)
+{
+    return get_piece_at(board, pos) != NULL;
 }
 
 bool in_bounds(const Board *board, int row, int col)
 {
     if (!board) return false;
-    return col >= 0 && col < board->width && row >= 0 && row < board->height;
+    return (
+        row >= 0 &&
+        row < board->height &&
+        col >= 0 &&
+        col < board->width
+    );
 }
 
 bool clear_board(Board *board)

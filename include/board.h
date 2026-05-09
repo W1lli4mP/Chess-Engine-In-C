@@ -5,7 +5,6 @@
 
 #include "piece.h"
 #include "position.h"
-#include "move.h"
 
 #define BOARD_SIZE 8
 
@@ -26,7 +25,8 @@ bool destroy_piece_at(Board *board, Position piece_pos); // handles logic for re
 
 bool destroy_board(Board *board);
 
-bool is_move_on_board(const Board *board, Move move);
+bool is_position_on_board(const Board *board, Position pos);
+bool has_piece_at(const Board *board, Position pos);
 bool in_bounds(const Board *board, int row, int col);
 
 bool clear_board(Board *board);
