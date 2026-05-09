@@ -197,16 +197,6 @@ static bool run_san_resolve_case(
         return false;
     }
 
-    // setup empty board state
-    game->board = initialise_empty_board();
-
-    if (!game->board)
-    {
-        destroy_game_state(game);
-        print_san_resolve_result(test_id, false, "failed to create board");
-        return false;
-    }
-
     // load FEN
     int fen_err_pos = -1;
     

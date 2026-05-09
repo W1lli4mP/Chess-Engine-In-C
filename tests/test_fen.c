@@ -34,16 +34,6 @@ static bool test_valid_fen(const char *test_id, const char *fen)
         return false;
     }
 
-    // make the game state's board empty
-    game->board = initialise_empty_board();
-
-    if (!game->board)
-    {
-        puts("Failed to allocate board");
-        destroy_game_state(game);
-        return false;
-    }
-
     // set error position
     int err_pos = -1;
 

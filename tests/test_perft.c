@@ -144,15 +144,6 @@ static bool run_perft_case(
         return false;
     }
 
-    game->board = initialise_empty_board();
-    
-    if (!game->board)
-    {
-        destroy_game_state(game);
-        print_perft_result(test_id, false, "failed to create board");
-        return false;
-    }
-
     int err_pos = -1;
 
     // load FEN
