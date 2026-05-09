@@ -5,7 +5,7 @@ GameState *create_game_state()
     GameState *game = malloc(sizeof *game);
     if (!game) return NULL;
     
-    game->board = initialise_board();
+    game->board = create_starting_board();
     if (!game->board)
     {
         free(game);
@@ -54,7 +54,7 @@ bool reset_game_state(GameState *game)
 {
     if (!game) return false;
 
-    Board *new_board = initialise_board();
+    Board *new_board = create_starting_board();
     if (!new_board) return false;
 
     destroy_board(game->board);

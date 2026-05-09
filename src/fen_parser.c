@@ -308,7 +308,7 @@ bool load_fen(GameState *game, const char *fen, int *err_pos)
     }
 
     // make temporary empty board instead of overwriting the actual board straight away
-    Board *temp = initialise_empty_board();
+    Board *temp = create_empty_board();
 
     if (!temp)
     {
