@@ -25,6 +25,13 @@ static bool append_promotion_moves(
     MoveList *moves_out
 );
 
+static bool append_en_passant_move(
+    const Board *board,
+    Position from,
+    Position to,
+    MoveList *moves_out
+);
+
 static bool generate_pawn_moves(
     GameState *game,
     Position piece_location,
@@ -307,7 +314,28 @@ static bool append_promotion_moves(
     return true;
 }
 
-// TODO: add en passant
+static bool append_en_passant_move(
+    const Board *board,
+    Position from,
+    Position to,
+    MoveList *moves_out
+)
+{
+    if (!board || !moves_out) return false;
+
+    // get the pawn
+    Piece *piece = get_piece_at(board, from);
+    if (!piece || piece->type != TYPE_PAWN) return false;
+
+    Move move = create_move(TYPE_PAWN, from, to);
+
+    // apply en passant flags
+    move.is_capture = true;
+    move.is_en_passant = true;
+
+    return move_list_append(moves_out, move);
+}
+
 static bool generate_pawn_moves(
     GameState *game,
     Position piece_location,
@@ -364,6 +392,42 @@ static bool generate_pawn_moves(
         if (target && target->colour != selected_piece->colour)
         {
             if (!append_pawn_move(board, piece_location, to, moves_out)) return false;
+        }
+    }
+
+    //* en passant
+    if (game->has_en_passant_target)
+    {
+        Position target = game->en_passant_target;
+
+        // get en passant target squares
+        bool target_is_left_capture = (
+            target.row == row + d &&
+            target.col == col - 1
+        );
+
+        bool target_is_right_capture = (
+            target.row == row + d &&
+            target.col == col + 1
+        );
+
+        if (target_is_left_capture || target_is_right_capture)
+        {
+            // target square must be empty, captured piece must be a pawn and present too
+            Position captured_position = { .row = row, .col = target.col };
+
+            Piece *captured_piece = get_piece_at(board, captured_position);
+            Piece *target_square_piece = get_piece_at(board, target);
+
+            if (
+                !target_square_piece &&
+                captured_piece &&
+                captured_piece->type == TYPE_PAWN &&
+                captured_piece->colour != selected_piece->colour
+            )
+            {
+                if (!append_en_passant_move(board, piece_location, target, moves_out)) return false;
+            }
         }
     }
 
