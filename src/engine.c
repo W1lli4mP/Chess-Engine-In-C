@@ -6,6 +6,8 @@
 #include "move_apply.h"
 #include "rules.h"
 
+#define CHECKMATE_SCORE 1000000
+
 static int side_multiplier(Colour colour);
 
 static int negamax(GameState *game, int depth, int alpha, int beta, bool *ok_out);
@@ -31,7 +33,60 @@ static int negamax(GameState *game, int depth, int alpha, int beta, bool *ok_out
         return side_multiplier(game->side_to_move) * evaluate_position(game);
     }
 
-    //! CONTINUE
+    MoveList moves = {0};
+    if (!generate_all_legal_moves(game, &moves))
+    {
+        *ok_out = false;
+        return 0;
+    }
+
+    //* edge cases for stalemate/checkmate
+    if (moves.count == 0)
+    {
+        if (is_in_check(game, game->side_to_move))
+        {
+            return -CHECKMATE_SCORE - depth;
+        }
+
+        // stalemate
+    }
+
+    int best_score = INT_MIN + 1;
+
+    // simulate all moves
+    for (int i = 0; i < moves.count; i++)
+    {
+        Move move = moves.moves[i];
+        UndoInfo undo;
+
+        //* make the move, calculate the score, unmake the move
+        if (!make_move(game, move, &undo))
+        {
+            *ok_out = false;
+            return 0;
+        }
+
+        int score = -negamax(game, depth - 1, alpha, beta, ok_out);
+
+        if (!unmake_move(game, move, &undo))
+        {
+            *ok_out = false;
+            return 0;
+        }
+
+        //! do not continue further if failure happened in a previous recursive call
+        if (!*ok_out) return 0;
+
+        // update score
+        if (score > best_score) best_score = score;
+
+        // alpha-beta pruning
+        if (score > alpha) alpha = score;
+
+        if (alpha >= beta) break;
+    }
+
+    return best_score;
 }
 
 bool engine_find_best_move(GameState *game, int depth, Move *best_move_out)
