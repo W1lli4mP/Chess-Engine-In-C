@@ -1,9 +1,15 @@
 #include "linked_list.h"
+#include <stdlib.h>
 
 Node *create_node(void)
 {
-    Node *node = (Node *) malloc(sizeof(Node));
-    node->data = node->next = node->prev = NULL;
+    Node *node = malloc(sizeof *node);
+    if (!node) return NULL;
+
+    node->data = NULL;
+    node->next = NULL;
+    node->prev = NULL;
+
     return node;
 }
 
@@ -13,15 +19,21 @@ void free_node(Node *node)
     free(node);
 }
 
-LinkedList *create_linked_list()
+LinkedList *create_linked_list(void)
 {
     LinkedList *list = malloc(sizeof *list);
-    list->head = list->tail = NULL;
+    if (!list) return NULL;
+
+    list->head = NULL;
+    list->tail = NULL;
+
     return list;
 }
 
 void free_linked_list(LinkedList *list)
 {
+    if (!list) return;
+
     Node *curr = list->head;
 
     while (curr)
@@ -30,42 +42,52 @@ void free_linked_list(LinkedList *list)
         free_node(curr);
         curr = next;
     }
+
     free(list);
 }
 
-void append_linked_list(LinkedList *list, void *data)
+bool append_linked_list(LinkedList *list, void *data)
 {
+    if (!list) return false;
+
     Node *node = create_node();
+    if (!node) return false;
+
     node->data = data;
     node->prev = list->tail;
-    if (list->tail) list->tail->next = node;
+
+    if (list->tail)
+        list->tail->next = node;
+    else
+        list->head = node;
+
     list->tail = node;
-    if (!list->head) list->head = node;
+
+    return true;
 }
 
-void remove_head_linked_list(LinkedList *list)
+// now returns data pointer
+void *pop_head_linked_list(LinkedList *list)
 {
-    if (!list->head) return;
-    Node *head = list->head->next;
-    free(list->head);
-    list->head = head;
+    if (!list || !list->head) return NULL;
+
+    Node *old_head = list->head;
+    void *data = old_head->data;
+
+    list->head = old_head->next;
+
     if (list->head)
         list->head->prev = NULL;
     else
         list->tail = NULL;
+
+    free_node(old_head);
+
+    return data;
 }
 
-void print_char(void *ptr)
+void *peek_head_linked_list(const LinkedList *list)
 {
-    printf("%c\n", *((char *) ptr));
-}
-
-void print_int(void *ptr)
-{
-    printf("%d\n", *((int *) ptr));
-}
-
-void print_string(void *ptr)
-{
-    printf("%s\n", ((char *) ptr));
+    if (!list || !list->head) return NULL;
+    return list->head->data;
 }

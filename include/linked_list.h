@@ -1,8 +1,7 @@
 #ifndef LINKED_LIST_H
 #define LINKED_LIST_H
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <stdbool.h>
 
 typedef struct Node
 {
@@ -17,14 +16,14 @@ typedef struct
     Node *tail;
 } LinkedList;
 
-Node *create_node();
+Node *create_node(void);
 void free_node(Node *node);
-LinkedList *create_linked_list();
+
+LinkedList *create_linked_list(void);
 void free_linked_list(LinkedList *list);
-void append_linked_list(LinkedList *list, void *data);
-void remove_head_linked_list(LinkedList *list);
-void print_char(void *ptr);
-void print_int(void *ptr);
-void print_string(void *ptr);
+
+bool append_linked_list(LinkedList *list, void *data);
+void *pop_head_linked_list(LinkedList *list);
+void *peek_head_linked_list(const LinkedList *list);
 
 #endif
