@@ -7,6 +7,12 @@ static void update_castling_rights_after_move(
     Piece *captured
 );
 
+static void update_en_passant_target_after_move(
+    GameState *game,
+    Move move,
+    Piece *piece
+);
+
 static void update_castling_rights_after_move(
     GameState *game,
     Move move,
@@ -56,6 +62,32 @@ static void update_castling_rights_after_move(
         else if (move.to.row == 7 && move.to.col == 7)
             game->castling_rights.black_can_castle_kingside = false;
     }
+}
+
+static void update_en_passant_target_after_move(
+    GameState *game,
+    Move move,
+    Piece *piece
+)
+{
+    if (!game || !game->board || !piece) return;
+
+    // update en passant for pawn moves only
+    if (piece->type != TYPE_PAWN) return;
+
+    // check for double-forward
+    bool double_forward = 
+        (piece->colour == COLOUR_WHITE && move.from.row == 1 && move.to.row == 3) ||
+        (piece->colour == COLOUR_BLACK && move.from.row == 6 && move.to.row == 4);
+    
+    if (!double_forward) return;
+
+    // set en passant target
+    // en passant target's row will always be the midpoint of the previous and current location
+    int target_row = (move.from.row + move.to.row) / 2;
+
+    game->has_en_passant_target = true;
+    game->en_passant_target = (Position) { .row = target_row, .col = move.from.col };
 }
 
 bool make_move(GameState *game, Move move, UndoInfo *undo_out)
@@ -108,12 +140,12 @@ bool make_move(GameState *game, Move move, UndoInfo *undo_out)
         int row = move.from.row;
 
         Position rook_from = move.is_castle_kingside
-            ? (Position) { .row = row, .col = 7}
-            : (Position) { .row = row, .col = 0};
+            ? (Position) { .row = row, .col = 7 }
+            : (Position) { .row = row, .col = 0 };
         
         Position rook_to = move.is_castle_kingside
             ? (Position) { .row = row, .col = 5 }
-            : (Position) { .row = row, .col = 3};
+            : (Position) { .row = row, .col = 3 };
 
         Piece *rook = get_piece_at(board, rook_from);
 
@@ -130,9 +162,48 @@ bool make_move(GameState *game, Move move, UndoInfo *undo_out)
         undo_out->castling_rook_to = (Position) { .row = -1, .col = -1 };
     }
 
+    //* en passant validation
+    // reject invalid/impossible en passant states
+    if (move.is_en_passant && !game->has_en_passant_target) return false;
+
+    if (
+        move.is_en_passant &&
+        (move.to.row != game->en_passant_target.row ||
+        move.to.col != game->en_passant_target.col)
+    ) return false;
+
+    if (move.is_en_passant)
+    {
+        int d = (piece->colour == COLOUR_WHITE) ? 1 : -1;
+
+        if (piece->type != TYPE_PAWN) return false;
+        if (!move.is_capture) return false;
+        if (move.to.row != move.from.row + d) return false;
+        if (move.to.col != move.from.col - 1 && move.to.col != move.from.col + 1) return false;
+    }
+
     // encapsulate relevant game state information into UndoInfo
-    undo_out->captured_piece = captured;
-    undo_out->captured_position = move.to;
+    //* if en passant, captured pawn is on a different square
+    if (move.is_en_passant)
+    {
+        Position captured_location = { .row = move.from.row, .col = move.to.col };
+
+        // reject if the destination is occupied
+        if (get_piece_at(board, move.to)) return false;
+
+        captured = get_piece_at(board, captured_location);
+
+        if (!captured || captured->type != TYPE_PAWN || captured->colour == piece->colour) return false;
+
+        undo_out->captured_piece = captured;
+        undo_out->captured_position = captured_location;
+    }
+    else
+    {
+        captured = get_piece_at(board, move.to);
+        undo_out->captured_piece = captured;
+        undo_out->captured_position = move.to;
+    }
 
     undo_out->previous_side_to_move = game->side_to_move;
     undo_out->previous_castling_rights = game->castling_rights;
@@ -160,16 +231,26 @@ bool make_move(GameState *game, Move move, UndoInfo *undo_out)
         if (!set_piece_at(board, undo_out->castling_rook_from, NULL)) return false;
     }
 
+    //* remove captured pawn if move is an en passant
+    if (move.is_en_passant)
+    {
+        if (!set_piece_at(board, undo_out->captured_position, NULL)) return false;
+    }
+
     // update castling rights
     update_castling_rights_after_move(game, move, piece, captured);
+
+    //* update en passant
+    // clear en passant before updating
+    game->has_en_passant_target = false;
+    game->en_passant_target = (Position) { .row = -1, .col = -1 };
+
+    update_en_passant_target_after_move(game, move, piece);
 
     // update game state
     game->side_to_move = (game->side_to_move == COLOUR_WHITE) ? COLOUR_BLACK : COLOUR_WHITE;
 
     if (game->side_to_move == COLOUR_WHITE) game->fullmove_number++;
-
-    game->has_en_passant_target = false;
-    game->en_passant_target = (Position) { .row = -1, .col = -1 };
 
     // use the saved previous piece type; pawn promotions may affect the current state
     if (undo_out->previous_moved_piece_type == TYPE_PAWN || captured)
@@ -203,7 +284,16 @@ bool unmake_move(GameState *game, Move move, const UndoInfo *undo)
 
     // undo board state
     if (!set_piece_at(board, move.from, piece)) return false;
-    if (!set_piece_at(board, move.to, undo->captured_piece)) return false;
+
+    if (move.is_en_passant)
+    {
+        if (!set_piece_at(board, move.to, NULL)) return false;
+        if (!set_piece_at(board, undo->captured_position, undo->captured_piece)) return false;
+    }
+    else
+    {
+        if (!set_piece_at(board, move.to, undo->captured_piece)) return false;
+    }
 
     // undo game state
     game->side_to_move = undo->previous_side_to_move;
