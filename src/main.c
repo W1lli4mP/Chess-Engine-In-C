@@ -133,7 +133,7 @@ int main()
         // AI input
         else if (game->side_to_move == COLOUR_BLACK)
         {
-            int search_depth = 2;
+            int search_depth = 6;
 
             Move ai_move = {0};
             engine_find_best_move(game, search_depth, &ai_move);
@@ -167,10 +167,23 @@ int main()
 
     /*
         TODO
-        - improve:
+        - improve engine:
             - searching
+                - quiescence
+                - iterative deepening
+                - zobrist hashing
+                - transposition table
             - evaluating
                 - import NNUE
         
-        IT WORKS
+        - game ending conditions:
+            - threefold repetition
+            - 50 move rule
+            - insufficient material
+        
+        - proper handling:
+            - player
+            - timer
+        
+        - GUI?
     */
