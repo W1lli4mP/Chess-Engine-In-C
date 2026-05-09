@@ -9,14 +9,37 @@
 #include "test_utils.h"
 
 #define MOVE_GEN_CASES_FILE "tests/data/move_gen_cases.txt"
-#define MAX_LINE_LEN 256
+#define MAX_LINE_LEN 512
 
-// TODO: extend to support castling
+/*
+    EXPECTED MOVE SYNTAX:
+        e4
+        e4[capture]
+        d6[en_passant]
+        g1[castle_kingside]
+        c1[castle_queenside]
+        e8=Q
+        d8=Q[capture]
+*/
 typedef struct
 {
     Position to;
+
+    bool expects_capture;
+    bool is_capture;
+
+    bool expects_promotion;
     bool is_promotion;
     PieceType promotion;
+
+    bool expects_en_passant;
+    bool is_en_passant;
+
+    bool expects_castle_kingside;
+    bool is_castle_kingside;
+
+    bool expects_castle_queenside;
+    bool is_castle_queenside;
 } ExpectedMove;
 
 static void print_move_gen_result(
@@ -42,6 +65,8 @@ static bool validate_generated_moves(
     int expected_count,
     const char *expected_moves_text
 );
+
+static bool parse_expected_flags(char *flags_text, ExpectedMove *expected_out);
 
 static bool parse_expected_move(const char *text, ExpectedMove *expected_out);
 
@@ -328,30 +353,112 @@ static bool validate_generated_moves(
     return seen_count == expected_count;
 }
 
+static bool parse_expected_flags(char *flags_text, ExpectedMove *expected_out)
+{
+    if (!flags_text || !expected_out) return false;
+
+    // tokenise
+    //! cannot use strtok() since the outer parser (in validate_generated_moves()) occupies it already
+    char *p = flags_text;
+
+    while (*p)
+    {
+        char *plus = strchr(p, '+');
+
+        if (plus)
+        {
+            *plus = '\0';
+        }
+
+        if (strcmp(p, "capture") == 0)
+        {
+            expected_out->expects_capture = true;
+            expected_out->is_capture = true;
+        }
+        else if (strcmp(p, "en_passant") == 0)
+        {
+            expected_out->expects_en_passant = true;
+            expected_out->is_en_passant = true;
+
+            expected_out->expects_capture = true;
+            expected_out->is_capture = true;
+        }
+        else if (strcmp(p, "castle_kingside") == 0)
+        {
+            expected_out->expects_castle_kingside = true;
+            expected_out->is_castle_kingside = true;
+        }
+        else if (strcmp(p, "castle_queenside") == 0)
+        {
+            expected_out->expects_castle_queenside = true;
+            expected_out->is_castle_queenside = true;
+        }
+        else
+        {
+            return false;
+        }
+
+        if (!plus) break;
+
+        // consume
+        p = plus + 1;
+
+        // not terminate immediately after a '+'
+        if (*p == '\0') return false;
+    }
+
+    return true;
+}
+
 static bool parse_expected_move(const char *text, ExpectedMove *expected_out)
 {
     if (!text || !expected_out) return false;
 
+    //* flag parsing
+    // memset() sets all attributes/flags to 0/false
+    memset(expected_out, 0, sizeof *expected_out);
+    expected_out->promotion = TYPE_NONE;
+
+    // copy text into buffer
+    char buffer[64];
+    strncpy(buffer, text, sizeof buffer);
+    buffer[sizeof buffer - 1] ='\0';
+
+    // strip buffer of [flags]
+    char *flags_start = strchr(buffer, '[');
+
+    if (flags_start)
+    {
+        char *flags_end = strchr(flags_start, ']');
+
+        // must be [..] and terminates
+        if (!flags_end) return false;
+        if (*(flags_end + 1) != '\0') return false;
+
+        *flags_start = '\0';
+        *flags_end = '\0';
+
+        if (!parse_expected_flags(flags_start + 1, expected_out)) return false;
+    }
+
     // verify text length
-    size_t len = strlen(text);
+    size_t len = strlen(buffer);
 
     if (len != 2 && len != 4) return false;
 
     // extract square from text then parse
-    char square_text[3] = { text[0], text[1], '\0' };
+    char square_text[3] = { buffer[0], buffer[1], '\0' };
 
     if (!parse_square(square_text, &expected_out->to)) return false;
 
-    expected_out->is_promotion = false;
-    expected_out->promotion = TYPE_NONE;
-
     if (len == 4)
     {
-        if (text[2] != '=') return false;
+        if (buffer[2] != '=') return false;
 
+        expected_out->expects_promotion = true;
         expected_out->is_promotion = true;
 
-        if (!parse_promotion_piece(text[3], &expected_out->promotion)) return false;
+        if (!parse_promotion_piece(buffer[3], &expected_out->promotion)) return false;
     }
 
     return true;
@@ -368,12 +475,26 @@ static bool expected_move_seen(
     // skip already observed moves
     for (int i = 0; i < seen_count; i++)
     {
-        if (
-            seen[i].to.row == expected.to.row &&
-            seen[i].to.col == expected.to.col &&
-            seen[i].is_promotion == expected.is_promotion &&
-            seen[i].promotion == expected.promotion
-        ) return true;
+        if (seen[i].to.row != expected.to.row) continue;
+        if (seen[i].to.col != expected.to.col) continue;
+
+        if (seen[i].expects_promotion != expected.expects_promotion) continue;
+        if (seen[i].is_promotion != expected.is_promotion) continue;
+        if (seen[i].promotion != expected.promotion) continue;
+
+        if (seen[i].expects_capture != expected.expects_capture) continue;
+        if (seen[i].is_capture != expected.is_capture) continue;
+
+        if (seen[i].expects_en_passant != expected.expects_en_passant) continue;
+        if (seen[i].is_en_passant != expected.is_en_passant) continue;
+
+        if (seen[i].expects_castle_kingside != expected.expects_castle_kingside) continue;
+        if (seen[i].is_castle_kingside != expected.is_castle_kingside) continue;
+
+        if (seen[i].expects_castle_queenside != expected.expects_castle_queenside) continue;
+        if (seen[i].is_castle_queenside != expected.is_castle_queenside) continue;
+
+        return true;
     }
 
     return false;
@@ -393,9 +514,26 @@ static bool move_list_contains_expected_move(
         // skip mismatches
         if (move.to.row != expected.to.row || move.to.col != expected.to.col) continue;
         
-        if (move.is_promotion != expected.is_promotion) continue;
+        // promotion
+        if (expected.expects_promotion)
+        {
+            if (move.is_promotion != expected.is_promotion) continue;
+            if (move.is_promotion && move.promotion != expected.promotion) continue;
+        }
+        else
+        {
+            if (move.is_promotion) continue;
+        }
 
-        if (move.is_promotion && move.promotion != expected.promotion) continue;
+        // captures
+        if (expected.expects_capture && move.is_capture != expected.is_capture) continue;
+
+        // en passant
+        if (expected.expects_en_passant && move.is_en_passant != expected.is_en_passant) continue;
+
+        // castle
+        if (expected.expects_castle_kingside && move.is_castle_kingside != expected.is_castle_kingside) continue;
+        if (expected.expects_castle_queenside && move.is_castle_queenside != expected.is_castle_queenside) continue;
 
         return true;
     }
@@ -457,6 +595,49 @@ static void print_move_list_expected_format(const MoveList *moves)
             }
 
             printf("=%c", promotion);
+        }
+
+        //* flag printing
+        // tracks whether there is a preceding flag so proper formatting can be applied (+)
+        bool printed_flag = false;
+
+        if (
+            moves->moves[i].is_capture ||
+            moves->moves[i].is_en_passant ||
+            moves->moves[i].is_castle_kingside ||
+            moves->moves[i].is_castle_queenside
+        )
+        {
+            putchar('[');
+
+            // process en passant first
+            if (moves->moves[i].is_en_passant)
+            {
+                printf("en_passant");
+                printed_flag = true;
+            }
+            else if (moves->moves[i].is_capture)
+            {
+                printf("capture");
+                printed_flag = true;
+            }
+
+            // castle
+            if (moves->moves[i].is_castle_kingside)
+            {
+                if (printed_flag) putchar('+');
+                printf("castle_kingside");
+                printed_flag = true;
+            }
+            
+            if (moves->moves[i].is_castle_queenside)
+            {
+                if (printed_flag) putchar('+');
+                printf("castle_queenside");
+                printed_flag = true;
+            }
+
+            putchar(']');
         }
 
         // add commas if there is a subsequent move
