@@ -114,7 +114,7 @@ int main()
         if (line[0] == '\0' || line[0] == '#') continue;
 
         // keep the original line for debug outputs of malformed lines
-        char original[MAX_LINE_LEN] ;
+        char original[MAX_LINE_LEN];
         strncpy(original, line, sizeof original);
         original[sizeof original - 1] = '\0';
 
