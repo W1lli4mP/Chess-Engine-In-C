@@ -12,56 +12,10 @@
 #include "game_state.h"
 #include "rules.h"
 #include "move_apply.h"
+#include "debug_print.h"
 
 #define WHITE_VIEW 1
 #define BLACK_VIEW 0
-
-// helper for printing
-static char piece_type_to_char(PieceType p)
-{
-    switch (p)
-    {
-        case TYPE_ROOK: return 'R';
-        case TYPE_KNIGHT: return 'N';
-        case TYPE_BISHOP: return 'B';
-        case TYPE_QUEEN: return 'Q';
-        case TYPE_KING: return 'K';
-        case TYPE_PAWN: return 'P';
-        default: return '-';
-    }
-}
-
-static void san_debug(const San san)
-{
-    if (san.is_castle_kingside)
-    {
-        puts("[SAN] Attempting to castle kingside");
-        return;
-    }
-
-    if (san.is_castle_queenside)
-    {
-        puts("[SAN] Attempting to castle queenside");
-        return;
-    }
-
-    if (san.from_col != -1)
-        printf("[SAN] Attempting to move %c from %c file to %c%c\n", piece_type_to_char(san.piece), san.from_col + 'a', san.to.col + 'a', san.to.row + '1');
-    else
-        printf("[SAN] Attempting to move %c to %c%c\n", piece_type_to_char(san.piece), san.to.col + 'a', san.to.row + '1');
-}
-
-static void move_debug(const Move move)
-{
-    printf("[MOVE] Attempting to move %c from %c%c to %c%c\n", piece_type_to_char(move.piece), move.from.col + 'a', move.from.row + '1', move.to.col + 'a', move.to.row + '1');
-}
-
-static void san_resolver_debug(const ResolveStatus status)
-{
-    if (status == RESOLVE_OK) puts("[SAN RESOLVER] LEGAL MOVE!");
-    if (status == RESOLVE_AMBIGUOUS) puts("[SAN RESOLVER] AMBIGUOUS MOVE!");
-    if (status == RESOLVE_ILLEGAL) puts("[SAN RESOLVER] ILLEGAL MOVE!");
-}
 
 static bool ask_input(char *input_out, size_t input_size)
 {
@@ -121,7 +75,7 @@ int main()
         turn_debug(game->side_to_move);
 
         // 2) draw board
-        print_board(game->board, WHITE_VIEW); // 0 = black view, 1 = white view
+        debug_print_board(game->board, WHITE_VIEW); // 0 = black view, 1 = white view
 
         // 3) check game conditions
         if (is_game_over(game))
@@ -146,7 +100,7 @@ int main()
         }
 
         // SAN DEBUG PRINT
-        san_debug(*san);
+        debug_print_san(*san);
 
         // 6) resolve SAN (san -> move)
         Move move = {0};
@@ -155,13 +109,13 @@ int main()
         destroy_san(san);
 
         // SAN RESOLVER DEBUG PRINT
-        san_resolver_debug(status);
+        debug_print_resolve_status(status);
 
         // only allow OK moves to be played
         if (status != RESOLVE_OK) continue;
 
         // MOVE DEBUG PRINT
-        move_debug(move);
+        debug_print_move(move);
 
         UndoInfo undo;
 
