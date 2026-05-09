@@ -392,9 +392,9 @@ bool parser(Queue *token_queue, int *err_pos, San *san_out)
 // convert algebraic chess notation -> playable move
 San *algebraic_chess_parser(const char *user_input, int *err_pos)
 {
-    Queue *token_queue = initialise_queue();
+    Queue *token_queue = create_queue();
 
-    San *san = initialise_san();
+    San *san = create_san();
     
     // tokenise and store into a queue
     if (!lexer(user_input, err_pos, token_queue))

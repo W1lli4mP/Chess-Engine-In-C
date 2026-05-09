@@ -1,6 +1,6 @@
 #include "san.h"
 
-San *initialise_san()
+San *create_san()
 {
     San *san = malloc(sizeof *san);
     san->piece = TYPE_NONE;

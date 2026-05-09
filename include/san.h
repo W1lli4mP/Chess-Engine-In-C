@@ -1,10 +1,10 @@
 #ifndef SAN_H
 #define SAN_H
 
-#include "piece.h"
-#include "position.h"
 #include <stdlib.h>
 #include <stdbool.h>
+#include "piece.h"
+#include "position.h"
 
 typedef enum
 {
@@ -34,7 +34,7 @@ typedef struct
     SanSuffix suffix;
 } San;
 
-San *initialise_san();
+San *create_san();
 bool destroy_san(San *san);
 
 #endif

@@ -1,40 +1,48 @@
-#include "piece.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
+
+#include "piece.h"
 
 // helpers for validating attribute inputs
 static int valid_type(PieceType type);
 static int valid_colour(Colour colour);
 
-Piece *initialise_piece()
+// initialise existing memory
+Piece *init_piece(Piece *piece, PieceType type, Colour colour)
 {
-    Piece *new_piece = malloc(sizeof *new_piece);
-    if (!new_piece) return NULL;
+    if (!piece) return false;
 
-    new_piece->type = TYPE_NONE;
-    new_piece->colour = COLOUR_NONE;
-    new_piece->sprite = SPRITE_NONE;
-    return new_piece;
-}
-
-Piece *create_piece(PieceType type, Colour colour)
-{
     const char *sprite = find_sprite(type, colour);
 
-    if (!valid_type(type) || !valid_colour(colour) || strcmp(sprite, SPRITE_NONE) == 0) return NULL;
+    if (!valid_type(type)) return false;
+    if (!valid_colour(colour)) return false;
+    if (strcmp(sprite, SPRITE_NONE) == 0) return false;
 
-    Piece *new_piece = initialise_piece();
-    if (!new_piece)
-    {
-        destroy_piece(new_piece);
-        return NULL;
-    }
-    new_piece->type = type;
-    new_piece->colour = colour;
-    new_piece->sprite = sprite;
-    return new_piece;
+    piece->type = type;
+    piece->colour = colour;
+    piece->sprite = sprite;
+
+    return true;
 }
 
+// allocate + initialise
+Piece *create_piece(PieceType type, Colour colour)
+{
+
+    Piece *piece = malloc(sizeof *piece);
+    if (!piece) return NULL;
+
+    if (!init_piece(piece, type, colour))
+    {
+        free(piece);
+        return NULL;
+    }
+
+    return piece;
+}
+
+// free piece
 void destroy_piece(Piece *piece)
 {
     free(piece);

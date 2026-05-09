@@ -1,8 +1,8 @@
 #include "queue.h"
 
-Queue *initialise_queue()
+Queue *create_queue()
 {
-    return initialise_linked_list();
+    return create_linked_list();
 }
 
 void push_queue(Queue *queue, void *data, size_t data_size)

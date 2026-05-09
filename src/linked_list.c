@@ -1,6 +1,6 @@
 #include "linked_list.h"
 
-Node *initialise_node(void)
+Node *create_node(void)
 {
     Node *node = (Node *) malloc(sizeof(Node));
     node->data = node->next = node->prev = NULL;
@@ -13,7 +13,7 @@ void free_node(Node *node)
     free(node);
 }
 
-LinkedList *initialise_linked_list()
+LinkedList *create_linked_list()
 {
     LinkedList *list = malloc(sizeof *list);
     list->head = list->tail = NULL;
@@ -35,7 +35,7 @@ void free_linked_list(LinkedList *list)
 
 void append_linked_list(LinkedList *list, void *data)
 {
-    Node *node = initialise_node();
+    Node *node = create_node();
     node->data = data;
     node->prev = list->tail;
     if (list->tail) list->tail->next = node;

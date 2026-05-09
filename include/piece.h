@@ -1,5 +1,6 @@
 #ifndef PIECE_H
 #define PIECE_H
+
 #include <string.h>
 
 // sprite types
@@ -50,10 +51,11 @@ typedef struct
     const char *sprite;
 } Piece;
 
-Piece *initialise_piece(); // initialises a default piece and allocates it to memory
-Piece *create_piece(PieceType type, Colour colour); // initialises a piece and assigns given attributes if valid
-void destroy_piece(Piece *piece); // frees the piece
+Piece *init_piece();
+Piece *create_piece(PieceType type, Colour colour);
+void destroy_piece(Piece *piece);
 
-const char *find_sprite(PieceType type, Colour colour); // helper
+// helper
+const char *find_sprite(PieceType type, Colour colour);
 
 #endif
