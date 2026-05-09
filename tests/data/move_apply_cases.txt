@@ -1,6 +1,11 @@
 # id|fen|from|to|note
+
+# Quiet moves
 moveapply.quiet_white_pawn|8/8/8/8/8/8/4P3/8 w - - 0 1|e2|e3|quiet
 moveapply.quiet_black_pawn|8/8/8/8/8/8/4p3/8 b - - 0 7|e2|e1|quiet
+moveapply.knight_quiet|8/8/8/8/3N4/8/8/8 w - - 4 2|d4|f5|quiet
+
+# Captures
 moveapply.white_rook_capture|8/8/8/8/3Rp3/8/8/8 w - - 12 3|d4|e4|capture
 moveapply.black_rook_capture|8/8/8/8/3rP3/8/8/8 b - - 5 9|d4|e4|capture
 moveapply.knight_quiet|8/8/8/8/3N4/8/8/8 w - - 4 2|d4|f5|quiet
@@ -9,10 +14,55 @@ moveapply.black_promotion_queen|8/8/8/8/8/8/4p3/8 b - - 0 1|e2|e1|promotion=Q
 moveapply.white_promotion_rook|8/4P3/8/8/8/8/8/8 w - - 0 1|e7|e8|promotion=R
 moveapply.white_promotion_bishop|8/4P3/8/8/8/8/8/8 w - - 0 1|e7|e8|promotion=B
 moveapply.white_promotion_knight|8/4P3/8/8/8/8/8/8 w - - 0 1|e7|e8|promotion=N
+moveapply.black_promotion_queen|8/8/8/8/8/8/4p3/8 b - - 0 1|e2|e1|promotion=Q
 moveapply.black_promotion_rook|8/8/8/8/8/8/4p3/8 b - - 0 1|e2|e1|promotion=R
 moveapply.black_promotion_bishop|8/8/8/8/8/8/4p3/8 b - - 0 1|e2|e1|promotion=B
 moveapply.black_promotion_knight|8/8/8/8/8/8/4p3/8 b - - 0 1|e2|e1|promotion=N
+
+# Castling
 moveapply.white_castle_kingside|r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1|e1|g1|castle_kingside
 moveapply.white_castle_queenside|r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1|e1|c1|castle_queenside
 moveapply.black_castle_kingside|r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1|e8|g8|castle_kingside
 moveapply.black_castle_queenside|r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1|e8|c8|castle_queenside
+
+# Castling rights after king moves
+moveapply.castling_rights.white_king_moves|r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1|e1|e2|expected_castling=kq
+moveapply.castling_rights.black_king_moves|r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1|e8|e7|expected_castling=KQ
+
+# Castling rights after rook moves
+moveapply.castling_rights.white_h_rook_moves|r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1|h1|h2|expected_castling=Qkq
+moveapply.castling_rights.white_a_rook_moves|r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1|a1|a2|expected_castling=Kkq
+moveapply.castling_rights.black_h_rook_moves|r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1|h8|h7|expected_castling=KQq
+moveapply.castling_rights.black_a_rook_moves|r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1|a8|a7|expected_castling=KQk
+
+# Castling rights after rook captures
+moveapply.castling_rights.white_captures_black_h_rook|r3k2r/8/8/8/8/8/7Q/R3K2R w KQkq - 0 1|h2|h8|expected_castling=KQq
+moveapply.castling_rights.white_captures_black_a_rook|r3k2r/8/8/8/8/8/Q7/R3K2R w KQkq - 0 1|a2|a8|expected_castling=KQk
+moveapply.castling_rights.black_captures_white_h_rook|r3k2r/7q/8/8/8/8/8/R3K2R b KQkq - 0 1|h7|h1|expected_castling=Qkq
+moveapply.castling_rights.black_captures_white_a_rook|r3k2r/q7/8/8/8/8/8/R3K2R b KQkq - 0 1|a7|a1|expected_castling=Kkq
+
+# En passant target creation
+moveapply.enpassant.white_double_sets_target|8/8/8/8/8/8/4P3/8 w - - 0 1|e2|e4|expected_ep=e3
+moveapply.enpassant.black_double_sets_target|8/4p3/8/8/8/8/8/8 b - - 0 1|e7|e5|expected_ep=e6
+
+# En passant target clearing
+moveapply.enpassant.white_quiet_clears_target|8/8/8/8/3pP3/8/8/8 w - d6 0 1|e4|e5|expected_no_ep
+moveapply.enpassant.black_quiet_clears_target|8/8/8/8/3Pp3/8/8/8 b - d3 0 1|e4|e3|expected_no_ep
+
+# En passant capture
+moveapply.enpassant.white_capture|8/8/8/3pP3/8/8/8/8 w - d6 0 1|e5|d6|en_passant
+moveapply.enpassant.black_capture|8/8/8/8/3Pp3/8/8/8 b - d3 0 1|e4|d3|en_passant
+
+# Halfmove clock
+moveapply.clock.pawn_resets_halfmove|8/8/8/8/8/8/4P3/8 w - - 7 1|e2|e3|expected_halfmove=0
+moveapply.clock.capture_resets_halfmove|8/8/8/8/3Rp3/8/8/8 w - - 7 1|d4|e4|expected_halfmove=0
+moveapply.clock.quiet_piece_increments_halfmove|8/8/8/8/3N4/8/8/8 w - - 7 1|d4|f5|expected_halfmove=8
+
+# Fullmove number
+moveapply.clock.white_move_does_not_increment_fullmove|8/8/8/8/3N4/8/8/8 w - - 0 12|d4|f5|expected_fullmove=12
+moveapply.clock.black_move_increments_fullmove|8/8/8/8/3n4/8/8/8 b - - 0 12|d4|f5|expected_fullmove=13
+
+# Invalid en passant application
+moveapply.enpassant.invalid_no_target|8/8/8/3pP3/8/8/8/8 w - - 0 1|e5|d6|expected_fail_en_passant
+moveapply.enpassant.invalid_wrong_target|8/8/8/3pP3/8/8/8/8 w - e6 0 1|e5|d6|expected_fail_en_passant
+moveapply.enpassant.invalid_destination_occupied|8/8/3N4/3pP3/8/8/8/8 w - d6 0 1|e5|d6|expected_fail_en_passant
