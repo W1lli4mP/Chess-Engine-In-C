@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <inttypes.h>
 #include "test_utils.h"
 #include "board.h"
 #include "game_state.h"
@@ -10,7 +11,7 @@
 #include "fen_parser.h"
 #include "move_gen.h"
 
-#define PERFT_CASES_FILE "tests/data/test_perft.txt"
+#define PERFT_CASES_FILE "tests/data/perft_cases.txt"
 #define MAX_LINE_LEN 256
 
 static void print_perft_result(
@@ -19,16 +20,18 @@ static void print_perft_result(
     const char *reason
 );
 
-static bool parse_depth(const char *text, int *depth_out);
-
-static bool parse_expected_nodes(const char *text, uint64_t *nodes_out);
-
 static bool run_perft_case(
     const char *test_id,
     const char *fen,
     const char *depth,
     const char *expected_nodes
 );
+
+static bool parse_depth(const char *text, int *depth_out);
+
+static bool parse_expected_nodes(const char *text, uint64_t *nodes_out);
+
+static uint64_t perft(GameState *game, int depth, bool *ok_out);
 
 int main()
 {
@@ -131,7 +134,6 @@ static bool run_perft_case(
 
     if (!game)
     {
-        destroy_game_state(game);
         print_perft_result(test_id, false, "failed to create game state");
         return false;
     }
@@ -159,9 +161,29 @@ static bool run_perft_case(
         return false;
     }
 
-    //! COMPLETE
-    // add validation
-    // add actual perft logic
+    bool ok = true;
+    uint64_t actual_nodes = perft(game, depth, &ok);
+
+    if (!ok)
+    {
+        destroy_game_state(game);
+        print_perft_result(test_id, false, "perft failed internally");
+        return false;
+    }
+
+    if (actual_nodes != expected_nodes)
+    {
+        printf("Expected nodes: %" PRIu64 "\n", expected_nodes);
+        printf("Actual nodes: %" PRIu64 "\n", actual_nodes);
+
+        destroy_game_state(game);
+        print_perft_result(test_id, false, "node count mismatch");
+        return false;
+    }
+
+    destroy_game_state(game);
+    print_perft_result(test_id, true, "PASS");
+    return true;
 }
 
 static bool parse_depth(const char *text, int *depth_out)
@@ -196,4 +218,59 @@ static bool parse_expected_nodes(const char *text, uint64_t *nodes_out)
 
     *nodes_out = (uint64_t) value;
     return true;
+}
+
+static uint64_t perft(GameState *game, int depth, bool *ok_out)
+{
+    if (!game || !ok_out)
+    {
+        if (ok_out) *ok_out = false;
+        return 0;
+    }
+
+    // base case
+    if (depth == 0) return 1;
+
+    MoveList moves = {0};
+
+    if (!generate_all_legal_moves(game, &moves))
+    {
+        *ok_out = false;
+        return 0;
+    }
+
+    uint64_t nodes = 0;
+
+    // simulate all moves
+    for (int i = 0; i < moves.count; i++)
+    {
+        Move move = moves.moves[i];
+        UndoInfo undo;
+
+        // play the move
+        if (!make_move(game, move, &undo))
+        {
+            *ok_out = false;
+            return 0;
+        }
+
+        // update count of nodes
+        nodes += perft(game, depth - 1, ok_out);
+
+        // restore move to prevent corrupted game states
+        if (!*ok_out)
+        {
+            unmake_move(game, move, &undo);
+            return 0;
+        }
+
+        // restore the move
+        if (!unmake_move(game, move, &undo))
+        {
+            *ok_out = false;
+            return 0;
+        }
+    }
+
+    return nodes;
 }
