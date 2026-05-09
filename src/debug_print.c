@@ -137,6 +137,34 @@ void debug_print_resolve_status(ResolveStatus status)
     }
 }
 
+static void debug_move_to_text(Move move, char out[8])
+{
+    out[0] = (char)('a' + move.from.col);
+    out[1] = (char)('1' + move.from.row);
+    out[2] = (char)('a' + move.to.col);
+    out[3] = (char)('1' + move.to.row);
+    out[4] = '\0';
+
+    if (move.is_promotion)
+    {
+        char promotion = '?';
+
+        switch (move.promotion)
+        {
+            case TYPE_QUEEN:  promotion = 'q'; break;
+            case TYPE_ROOK:   promotion = 'r'; break;
+            case TYPE_BISHOP: promotion = 'b'; break;
+            case TYPE_KNIGHT: promotion = 'n'; break;
+            default: break;
+        }
+
+        out[4] = promotion;
+        out[5] = '\0';
+    }
+}
+
+#ifdef ENGINE_DEBUG
+
 void debug_print_engine_move_score(Move move, int score)
 {
     char text[8];
@@ -152,3 +180,5 @@ void debug_print_engine_best_move(Move move, int score)
 
     printf("[ENGINE] best %s score %d\n", text, score);
 }
+
+#endif
