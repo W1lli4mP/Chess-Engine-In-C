@@ -14,7 +14,9 @@ static int negamax(GameState *game, int depth, int alpha, int beta, bool *ok_out
 
 static int side_multiplier(Colour colour)
 {
-    return (colour == COLOUR_WHITE) ? 1 : -1;
+    if (colour == COLOUR_WHITE) return 1; 
+    if (colour == COLOUR_BLACK) return -1;
+    return 0;
 }
 
 // basically minimax but programmatically easier
@@ -50,6 +52,7 @@ static int negamax(GameState *game, int depth, int alpha, int beta, bool *ok_out
         }
 
         // stalemate
+        return 0;
     }
 
     int best_score = INT_MIN + 1;
@@ -67,7 +70,8 @@ static int negamax(GameState *game, int depth, int alpha, int beta, bool *ok_out
             return 0;
         }
 
-        int score = -negamax(game, depth - 1, alpha, beta, ok_out);
+        // invert alpha and beta when switching sides for negamax
+        int score = -negamax(game, depth - 1, -beta, -alpha, ok_out);
 
         if (!unmake_move(game, move, &undo))
         {
@@ -94,13 +98,16 @@ bool engine_find_best_move(GameState *game, int depth, Move *best_move_out)
 {
     if (!game || !best_move_out || depth < 1) return false;
 
-    // generate all legal movess
+    // generate all legal moves
     MoveList moves = {0};
 
     if (!generate_all_legal_moves(game, &moves)) return false;
     if (moves.count == 0) return false;
 
     bool ok = true;
+    int alpha = INT_MIN + 1;
+    int beta = INT_MAX;
+
     int best_score = INT_MIN + 1;
     Move best_move = moves.moves[0];
 
@@ -114,7 +121,7 @@ bool engine_find_best_move(GameState *game, int depth, Move *best_move_out)
         // then restore the game state to before the move is played
         if (!make_move(game, move, &undo)) return false;
 
-        int score = -negamax(game, depth - 1, INT_MIN + 1, INT_MAX, &ok);
+        int score = -negamax(game, depth - 1, -beta, -alpha, &ok);
 
         if (!unmake_move(game, move, &undo)) return false;
         if (!ok) return false;
@@ -124,6 +131,11 @@ bool engine_find_best_move(GameState *game, int depth, Move *best_move_out)
         {
             best_score = score;
             best_move = move;
+        }
+
+        if (score > alpha)
+        {
+            alpha = score;
         }
     }
 
