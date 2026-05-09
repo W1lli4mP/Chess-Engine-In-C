@@ -12,6 +12,7 @@ TEST_FEN_TARGET = $(BIN_DIR)/test_fen
 TEST_MOVE_GEN_TARGET = $(BIN_DIR)/test_move_gen
 TEST_MOVE_APPLY_TARGET = $(BIN_DIR)/test_move_apply
 TEST_SAN_RESOLVE_TARGET = $(BIN_DIR)/test_san_resolve
+TEST_PERFT_TARGET = $(BIN_DIR)/test_perft
 
 # source files
 SRCS = $(wildcard src/*.c)
@@ -22,6 +23,7 @@ TEST_FEN_SRC = tests/test_fen.c
 TEST_MOVE_GEN_SRC = tests/test_move_gen.c
 TEST_MOVE_APPLY_SRC = tests/test_move_apply.c
 TEST_SAN_RESOLVE_SRC = tests/test_san_resolve.c
+TEST_PERFT_SRC = tests/test_perft.c
 
 # object files
 OBJS = $(patsubst src/%.c,$(BUILD_DIR)/%.o,$(SRCS))
@@ -32,6 +34,7 @@ TEST_FEN_OBJ = $(BUILD_DIR)/test_fen.o
 TEST_MOVE_GEN_OBJ = $(BUILD_DIR)/test_move_gen.o
 TEST_MOVE_APPLY_OBJ = $(BUILD_DIR)/test_move_apply.o
 TEST_SAN_RESOLVE_OBJ = $(BUILD_DIR)/test_san_resolve.o
+TEST_PERFT_OBJ = $(BUILD_DIR)/test_perft.o
 
 # default target
 all: $(TARGET)
@@ -56,6 +59,10 @@ $(TEST_MOVE_APPLY_TARGET): $(COMMON_OBJS) $(TEST_UTILS_OBJ) $(TEST_MOVE_APPLY_OB
 $(TEST_SAN_RESOLVE_TARGET): $(COMMON_OBJS) $(TEST_UTILS_OBJ) $(TEST_SAN_RESOLVE_OBJ) | $(BIN_DIR)
 	$(CC) $(CFLAGS) -o $(TEST_SAN_RESOLVE_TARGET) $(COMMON_OBJS) $(TEST_UTILS_OBJ) $(TEST_SAN_RESOLVE_OBJ)
 
+# perft test executable
+$(TEST_PERFT_TARGET): $(COMMON_OBJS) $(TEST_UTILS_OBJ) $(TEST_PERFT_OBJ) | $(BIN_DIR)
+	$(CC) $(CFLAGS) -o $(TEST_PERFT_TARGET) $(COMMON_OBJS) $(TEST_UTILS_OBJ) $(TEST_PERFT_OBJ)
+
 # compile source objects
 $(BUILD_DIR)/%.o: src/%.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -74,6 +81,9 @@ $(BUILD_DIR)/test_move_apply.o: $(TEST_MOVE_APPLY_SRC) | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/test_san_resolve.o: $(TEST_SAN_RESOLVE_SRC) | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/test_perft.o: $(TEST_PERFT_SRC) | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR):
@@ -106,8 +116,12 @@ run_move_apply: $(TEST_MOVE_APPLY_TARGET)
 run_san_resolve: $(TEST_SAN_RESOLVE_TARGET)
 	./$(TEST_SAN_RESOLVE_TARGET)
 
+# run perft tests
+run_perft: $(TEST_PERFT_TARGET)
+	./$(TEST_PERFT_TARGET)
+
 # run all tests
-test: run_fen run_move_gen run_move_apply run_san_resolve
+test: run_fen run_move_gen run_move_apply run_san_resolve run_perft
 
 # valgrind main program
 valgrind: $(TARGET)
@@ -129,4 +143,8 @@ valgrind_move_apply: $(TEST_MOVE_APPLY_TARGET)
 valgrind_san_resolve: $(TEST_SAN_RESOLVE_TARGET)
 	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./$(TEST_SAN_RESOLVE_TARGET)
 
-.PHONY: all clean run run_fen run_move_gen run_move_apply run_san_resolve test valgrind valgrind_fen valgrind_move_gen valgrind_move_apply valgrind_san_resolve
+# valgrind perft tests
+valgrind_perft: $(TEST_PERFT_TARGET)
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./$(TEST_PERFT_TARGET)
+
+.PHONY: all clean run run_fen run_move_gen run_move_apply run_san_resolve run_perft test valgrind valgrind_fen valgrind_move_gen valgrind_move_apply valgrind_san_resolve valgrind_perft
