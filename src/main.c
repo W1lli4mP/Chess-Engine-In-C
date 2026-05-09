@@ -149,35 +149,28 @@ int main()
         san_debug(*san);
 
         // 6) resolve SAN (san -> move)
-        Move *move = initialise_move();
+        Move move = {0};
         
-        ResolveStatus status = resolve_san(game, *san, move);
+        ResolveStatus status = resolve_san(game, *san, &move);
         destroy_san(san);
 
         // SAN RESOLVER DEBUG PRINT
         san_resolver_debug(status);
 
         // only allow OK moves to be played
-        if (status != RESOLVE_OK)
-        {
-            destroy_move(move);
-            continue;
-        }
+        if (status != RESOLVE_OK) continue;
 
         // MOVE DEBUG PRINT
-        move_debug(*move);
+        move_debug(move);
 
         UndoInfo undo;
 
         // replace apply_move() with new make_move() system
-        if (!make_move(game, *move, &undo))
+        if (!make_move(game, move, &undo))
         {
             puts("Move failed!");
-            destroy_move(move);
             continue;
         }
-
-        destroy_move(move);
 
         puts("------------------------");
 
