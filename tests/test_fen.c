@@ -4,6 +4,7 @@
 #include <string.h>
 #include "board.h"
 #include "fen_parser.h"
+#include "debug_print.h"
 
 #define FEN_CASES_FILE "tests/data/fen_cases.txt"
 #define MAX_LINE_LEN 256
@@ -43,7 +44,7 @@ static bool test_valid_fen(const char *test_id, const char *fen)
 
     if (ok)
     {
-        print_board(game->board, 1);
+        debug_print_board(game->board, 1);
         printf("Side to move: %s\n", (game->side_to_move == COLOUR_WHITE) ? "white" : "black");
         printf("Castling: K=%d Q=%d k=%d q=%d\n",
             game->castling_rights.white_can_castle_kingside,
@@ -83,16 +84,6 @@ static bool test_invalid_fen(const char *test_id, const char *fen)
     if (!game)
     {
         puts("Failed to allocate game state");
-        destroy_game_state(game);
-        return false;
-    }
-
-    // make the game state's board empty
-    game->board = initialise_empty_board();
-
-    if (!game->board)
-    {
-        puts("Failed to allocate board");
         destroy_game_state(game);
         return false;
     }
