@@ -74,3 +74,18 @@ movegen.castle.white_missing_kingside_rook|r3k2r/8/8/8/8/8/8/R3K3 w KQkq - 0 1|e
 movegen.castle.white_missing_queenside_rook|r3k2r/8/8/8/8/8/8/4K2R w KQkq - 0 1|e1|6|d1,d2,e2,f2,f1,g1
 movegen.castle.black_missing_kingside_rook|r3k3/8/8/8/8/8/8/R3K2R b KQkq - 0 1|e8|6|d8,d7,e7,f7,f8,c8
 movegen.castle.black_missing_queenside_rook|4k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1|e8|6|d8,d7,e7,f7,f8,g8
+
+# En passant generation
+movegen.enpassant.white_left|8/8/8/3pP3/8/8/8/8 w - d6 0 1|e5|2|e6,d6
+movegen.enpassant.white_right|8/8/8/4Pp2/8/8/8/8 w - f6 0 1|e5|2|e6,f6
+movegen.enpassant.black_left|8/8/8/8/3Pp3/8/8/8 b - d3 0 1|e4|2|e3,d3
+movegen.enpassant.black_right|8/8/8/8/4pP2/8/8/8 b - f3 0 1|e4|2|e3,f3
+
+# No en passant without target
+movegen.enpassant.no_target|8/8/8/3pP3/8/8/8/8 w - - 0 1|e5|1|e6
+
+# No en passant if target wrong
+movegen.enpassant.wrong_target|8/8/8/3pP3/8/8/8/8 w - e6 0 1|e5|1|e6
+
+# En passant cannot expose own king
+movegen.enpassant.pinned_ep_illegal|4k3/8/8/r2pP2K/8/8/8/8 w - d6 0 1|e5|1|e6
