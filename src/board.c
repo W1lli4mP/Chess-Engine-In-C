@@ -3,6 +3,8 @@
 Board *initialise_board()
 {
     Board *new_board = malloc(sizeof *new_board);
+    if (!new_board) return NULL;
+
     new_board->height = 8;
     new_board->width = 8;
 
@@ -28,9 +30,21 @@ Board *initialise_board()
             // second row
             if (row == 1 || row == new_board->height - 2) type = TYPE_PAWN;
 
-            Piece *curr_piece = create_piece(type, colour);
-
-            new_board->grid[row][col] = curr_piece;
+            if (type == TYPE_NONE || colour == COLOUR_NONE)
+            {
+                new_board->grid[row][col] = NULL;
+            }
+            else
+            {
+                Piece *curr_piece = create_piece(type, colour);
+                if (!curr_piece)
+                {
+                    destroy_board(new_board);
+                    return NULL;
+                }
+                
+                new_board->grid[row][col] = curr_piece;
+            }
         }
     }
 
@@ -77,17 +91,9 @@ bool destroy_board(Board *board)
 {
     if (!board) return false;
 
-    for (int row = 0; row < 8; row++)
-    {
-        for (int col = 0; col < 8; col++)
-        {
-            // free IFF theres a piece in current square
-            Piece *piece = board->grid[row][col];
-            if (piece) destroy_piece(piece);
-        }
-    }
-
+    clear_board(board);
     free(board);
+
     return true;
 }
 
@@ -217,6 +223,7 @@ void print_board(const Board *board, int white_pov)
 
 bool in_bounds(const Board *board, int row, int col)
 {
+    if (!board) return false;
     return col >= 0 && col < board->width && row >= 0 && row < board->height;
 }
 
