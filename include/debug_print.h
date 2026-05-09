@@ -1,6 +1,8 @@
 #ifndef DEBUG_PRINT_H
 #define DEBUG_PRINT_H
 
+#include <stdio.h>
+
 #include "board.h"
 #include "move.h"
 #include "san.h"
