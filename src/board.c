@@ -72,7 +72,7 @@ bool set_piece_at(Board *board, Position piece_pos, Piece *piece)
     return true;
 }
 
-bool remove_piece_at(Board *board, Position piece_pos)
+bool destroy_piece_at(Board *board, Position piece_pos)
 {
     // retrieve piece before removing it from the board
     Piece *piece = get_piece_at(board, piece_pos);
@@ -93,80 +93,6 @@ bool destroy_board(Board *board)
 
     clear_board(board);
     free(board);
-
-    return true;
-}
-
-bool apply_move(Board *board, Move move)
-{
-    if (!valid_move(board, move)) return false; // should handle legal moves in the future
-
-    Piece *piece = board->grid[move.from.row][move.from.col];
-    Piece *target = board->grid[move.to.row][move.to.col];
-
-    // handle pawn promotions
-    if (move.is_promotion)
-    {
-        piece->type = move.promotion;
-        piece->sprite = find_sprite(piece->type, piece->colour);
-    }
-
-    //* cannot test yet
-    // // handle castling
-    // if (move.is_castle_kingside)
-    // {
-    //     // // move king
-    //     // board->grid[move.to.row][move.to.col] = piece;
-    //     //? king is already moved in code below (change later to better clarity maybe)
-
-    //     // move rook
-    //     Piece *rook = board->grid[move.to.row][board->width];
-    //     board->grid[move.to.row][move.to.col - 1] = rook;
-    //     board->grid[move.to.row][board->width] = NULL;
-    // }
-
-    // move piece from original position to destination
-    board->grid[move.to.row][move.to.col] = piece;
-
-    //! can use is_capture from Move
-    //! captures should not happen if is_capture is false
-    // if there was a piece on the destination (aka a capture), destroy/free it
-    if (target) destroy_piece(target);
-
-    // clear original position
-    board->grid[move.from.row][move.from.col] = NULL;
-
-    return true;
-}
-
-// apply_move() but not destructive (no freeing)
-bool simulate_move(Board *board, Move move)
-{
-    if (!valid_move(board, move)) return false;
-
-    Piece *piece = board->grid[move.from.row][move.from.col];
-
-    // move piece from original position to destination
-    board->grid[move.to.row][move.to.col] = piece;
-
-    // clear original position
-    board->grid[move.from.row][move.from.col] = NULL;
-
-    return true;
-}
-
-// ! redundant for now
-bool undo_move(Board *board, Move move)
-{
-    Piece *piece = board->grid[move.to.row][move.to.col];
-    // TODO: handle captures later
-
-    // move piece from destination to original position
-    board->grid[move.from.row][move.from.col] = piece;
-
-    // clear original position
-    // TODO: restore captured pieces here
-    board->grid[move.to.row][move.to.col] = NULL;
 
     return true;
 }
