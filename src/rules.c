@@ -82,21 +82,29 @@ static bool attacked_by_king(const Board *board, Position square, Colour friendl
 
 static bool attacked_by_pawn(const Board *board, Position square, Colour friendly_colour)
 {
-    // establish directions
-    int d = (friendly_colour == COLOUR_WHITE) ? -1 : 1;
+    int row = (friendly_colour == COLOUR_WHITE)
+        ? square.row + 1 // enemy black pawns attack downward
+        : square.row - 1; // enemy white pawns attack upward
 
-    int l_col = square.col - 1, r_col = square.col + 1;
-    int row = square.row + d;
-
-    Position left = { .col = l_col, .row = row };
-    Position right = { .col = r_col, .row = row };
+    Position left = { .row = row, .col = square.col - 1 };
+    Position right = { .row = row, .col = square.col + 1 };
 
     // verify diagonal pieces
     Piece *left_piece = get_piece_at(board, left);
     Piece *right_piece = get_piece_at(board, right);
 
-    return ((left_piece && left_piece->type == TYPE_PAWN && left_piece->colour != friendly_colour) ||
-            (right_piece && right_piece->type == TYPE_PAWN && right_piece->colour != friendly_colour));
+    return (
+        (
+            left_piece &&
+            left_piece->type == TYPE_PAWN &&
+            left_piece->colour != friendly_colour
+        ) ||
+        (
+            right_piece &&
+            right_piece->type == TYPE_PAWN &&
+            right_piece->colour != friendly_colour
+        )
+    );
 }
 
 static bool attacked_by_sliding_piece(const Board *board, Position square, Colour friendly_colour, const int d[4][2], PieceType target_type)
