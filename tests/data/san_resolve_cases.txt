@@ -41,3 +41,14 @@ san.castle.blocked_kingside|r3k2r/8/8/8/8/8/8/R3KB1R w KQkq - 0 1|O-O|ILLEGAL|-|
 san.castle.blocked_queenside|r3k2r/8/8/8/8/8/8/R2QK2R w KQkq - 0 1|O-O-O|ILLEGAL|-|-|none
 san.castle.in_check|4r3/8/8/8/8/8/8/R3K2R w KQ - 0 1|O-O|ILLEGAL|-|-|none
 san.castle.crosses_check|5r2/8/8/8/8/8/8/R3K2R w KQ - 0 1|O-O|ILLEGAL|-|-|none
+
+# En passant
+san.enpassant.white_left|8/8/8/3pP3/8/8/8/8 w - d6 0 1|exd6|OK|e5|d6|capture
+san.enpassant.white_right|8/8/8/4Pp2/8/8/8/8 w - f6 0 1|exf6|OK|e5|f6|capture
+san.enpassant.black_left|8/8/8/8/3Pp3/8/8/8 b - d3 0 1|exd3|OK|e4|d3|capture
+san.enpassant.black_right|8/8/8/8/4pP2/8/8/8 b - f3 0 1|exf3|OK|e4|f3|capture
+
+# En passant illegal cases
+san.enpassant.no_target|8/8/8/3pP3/8/8/8/8 w - - 0 1|exd6|ILLEGAL|-|-|none
+san.enpassant.wrong_target|8/8/8/3pP3/8/8/8/8 w - e6 0 1|exd6|ILLEGAL|-|-|none
+san.enpassant.pinned_ep_illegal|4k3/8/8/r2pP2K/8/8/8/8 w - d6 0 1|exd6|ILLEGAL|-|-|none
