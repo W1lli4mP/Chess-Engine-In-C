@@ -5,6 +5,7 @@
 #include "move_gen.h"
 #include "move_apply.h"
 #include "rules.h"
+#include "draw_rules.h"
 
 #ifdef ENGINE_DEBUG
 #include <stdio.h>
@@ -32,6 +33,12 @@ static int negamax(GameState *game, int depth, int alpha, int beta, bool *ok_out
     if (!game || !ok_out)
     {
         if (ok_out) *ok_out = false;
+        return 0;
+    }
+
+    // drawn positions are neutral
+    if (is_draw(game))
+    {
         return 0;
     }
 
@@ -137,7 +144,7 @@ bool engine_find_best_move(GameState *game, int depth, Move *best_move_out)
         if (!ok) return false;
 
 #ifdef ENGINE_DEBUG
-    debug_print_engine_move_score(best_move, best_score);
+        debug_print_engine_move_score(move, score);
 #endif
 
         // supersede better score + move
