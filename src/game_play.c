@@ -3,6 +3,8 @@
 
 bool play_move(GameState *game, Move move)
 {
+    if (!game) return false;
+
     UndoInfo undo;
     if (!make_move(game, move, &undo))
         return false;
