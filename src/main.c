@@ -13,6 +13,7 @@
 #include "rules.h"
 #include "move_apply.h"
 #include "debug_print.h"
+#include "engine.h"
 
 #define WHITE_VIEW 1
 #define BLACK_VIEW 0
@@ -85,49 +86,67 @@ int main()
         }
 
         // 4) ask for input
-        char input[8];
-        if (!ask_input(input, sizeof input)) return 1;
-
-        // 5) convert input to SAN (string -> san)
-        int err_pos = -1;
-        San *san = algebraic_chess_parser(input, &err_pos);
-
-        // error handling
-        if (!san)
+        //* human input
+        if (game->side_to_move == COLOUR_WHITE)
         {
-            fprintf(stderr, "Parsing failed at %d\n", err_pos);
-            return 1;
+            char input[8];
+            if (!ask_input(input, sizeof input)) return 1;
+
+            // 5) convert input to SAN (string -> san)
+            int err_pos = -1;
+            San *san = algebraic_chess_parser(input, &err_pos);
+
+            // error handling
+            if (!san)
+            {
+                fprintf(stderr, "Parsing failed at %d\n", err_pos);
+                return 1;
+            }
+
+            // SAN DEBUG PRINT
+            debug_print_san(*san);
+
+            // 6) resolve SAN (san -> move)
+            Move move = {0};
+            
+            ResolveStatus status = resolve_san(game, *san, &move);
+            destroy_san(san);
+
+            // SAN RESOLVER DEBUG PRINT
+            debug_print_resolve_status(status);
+
+            // only allow OK moves to be played
+            if (status != RESOLVE_OK) continue;
+
+            // MOVE DEBUG PRINT
+            debug_print_move(move);
+
+            UndoInfo undo;
+
+            // replace apply_move() with new make_move() system
+            if (!make_move(game, move, &undo))
+            {
+                puts("Move failed!");
+                continue;
+            }
         }
-
-        // SAN DEBUG PRINT
-        debug_print_san(*san);
-
-        // 6) resolve SAN (san -> move)
-        Move move = {0};
-        
-        ResolveStatus status = resolve_san(game, *san, &move);
-        destroy_san(san);
-
-        // SAN RESOLVER DEBUG PRINT
-        debug_print_resolve_status(status);
-
-        // only allow OK moves to be played
-        if (status != RESOLVE_OK) continue;
-
-        // MOVE DEBUG PRINT
-        debug_print_move(move);
-
-        UndoInfo undo;
-
-        // replace apply_move() with new make_move() system
-        if (!make_move(game, move, &undo))
+        // AI input
+        else if (game->side_to_move == COLOUR_BLACK)
         {
-            puts("Move failed!");
-            continue;
+            int search_depth = 2;
+
+            Move ai_move = {0};
+            engine_find_best_move(game, search_depth, &ai_move);
+
+            UndoInfo undo;
+            if (!make_move(game, ai_move, &undo))
+            {
+                puts("Move failed!");
+                continue;
+            }
         }
 
         puts("------------------------");
-
     }
 
     destroy_game_state(game);
@@ -136,24 +155,22 @@ int main()
 }
 
     /*
-    game loop structure
-    draw board
-    ask input
-    apply input
+        game loop structure
+        draw board
+        ask input (human or AI)
+        apply input
     
-    draw board if input valid
-    else retry input
+        draw board if input valid
+        else retry input
     
     */
 
     /*
         TODO
-        - create engine
-            - random
-            - minimax
-            - alpha beta pruning
-            - improve:
-                - searching
-                - evaluating
-                    - import NNUE
+        - improve:
+            - searching
+            - evaluating
+                - import NNUE
+        
+        IT WORKS
     */
