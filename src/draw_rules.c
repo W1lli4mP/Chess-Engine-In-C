@@ -2,7 +2,7 @@
 #include "board.h"
 #include "piece.h"
 
-static is_light_square(Position pos)
+static bool is_light_square(Position pos)
 {
     // light squares are always even, vice versa
     return ((pos.row + pos.col) % 2) == 0;
@@ -107,6 +107,7 @@ bool is_insufficient_material(const GameState *game)
 bool is_threefold_repetition(const GameState *game)
 {
     //! CONTINUE
+    (void) game;
     return false;
 }
 
