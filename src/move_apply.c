@@ -95,7 +95,9 @@ bool make_move(GameState *game, Move move, UndoInfo *undo_out)
     if (!game || !game->board || !undo_out) return false;
 
     Board *board = game->board;
-    if (!is_move_on_board(board, move)) return false;
+
+    if (!is_position_on_board(board, move.from)) return false;
+    if (!is_position_on_board(board, move.to)) return false;
 
     // find pieces on source and destination squares
     Piece *piece = get_piece_at(board, move.from);
