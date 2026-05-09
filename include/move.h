@@ -33,7 +33,4 @@ typedef struct
 Move create_move(PieceType piece, Position from, Position to);
 bool move_list_append(MoveList *move_list, Move move);
 
-Move *initialise_move();
-bool destroy_move(Move *move);
-
 #endif
