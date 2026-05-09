@@ -48,7 +48,8 @@ bool tokenisation(char c, Lex *l)
             l->character = c;
             break;
         // reject unknown chars
-        return false;
+        default:
+            return false;
     }
     return true;
 }
@@ -97,7 +98,11 @@ bool lexer(const char *user_input, int *err_pos, Queue *queue_out)
         }
 
         l.pos = i;
-        push_queue(queue_out, &l, sizeof(Lex));
+        if (!push_queue(queue_out, &l, sizeof(Lex)))
+        {
+            if (err_pos) *err_pos = i;
+            return false;
+        }
     }
     return true;
 }
@@ -395,6 +400,11 @@ San *algebraic_chess_parser(const char *user_input, int *err_pos)
     Queue *token_queue = create_queue();
 
     San *san = create_san();
+    if (!san)
+    {
+        free_queue(token_queue);
+        return NULL;
+    }
     
     // tokenise and store into a queue
     if (!lexer(user_input, err_pos, token_queue))
