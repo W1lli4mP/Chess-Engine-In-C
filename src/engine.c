@@ -14,7 +14,7 @@ static int negamax(GameState *game, int depth, int alpha, int beta, bool *ok_out
 
 static int side_multiplier(Colour colour)
 {
-    return (colour == COLOUR_WHITE) ? 1 : 1;
+    return (colour == COLOUR_WHITE) ? 1 : -1;
 }
 
 // basically minimax but programmatically easier
