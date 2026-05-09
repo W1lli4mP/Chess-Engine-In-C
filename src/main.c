@@ -194,12 +194,6 @@ int main()
 
     /*
         TODO
-        - extend game mechanics
-            - stalemate
-            - en passant
-        - finalise san resolver
-            - use all san attributes
-        - perft test the move generator (after all game mechanics established)
         - create engine
             - random
             - minimax
