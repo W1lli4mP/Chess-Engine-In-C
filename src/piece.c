@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 
 #include "piece.h"
 
@@ -9,14 +8,15 @@ static int valid_type(PieceType type);
 static int valid_colour(Colour colour);
 
 // initialise existing memory
-Piece *init_piece(Piece *piece, PieceType type, Colour colour)
+bool init_piece(Piece *piece, PieceType type, Colour colour)
 {
     if (!piece) return false;
 
-    const char *sprite = find_sprite(type, colour);
-
+    // validate type and colour before finding sprite
     if (!valid_type(type)) return false;
-    if (!valid_colour(colour)) return false;
+    if (!valid_colour(type)) return false;
+
+    const char *sprite = find_sprite(type, colour);
     if (strcmp(sprite, SPRITE_NONE) == 0) return false;
 
     piece->type = type;

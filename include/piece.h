@@ -2,6 +2,7 @@
 #define PIECE_H
 
 #include <string.h>
+#include <stdbool.h>
 
 // sprite types
 #define SPRITE_NONE " "
@@ -51,7 +52,7 @@ typedef struct
     const char *sprite;
 } Piece;
 
-Piece *init_piece();
+bool init_piece(Piece *piece, PieceType type, Colour colour);
 Piece *create_piece(PieceType type, Colour colour);
 void destroy_piece(Piece *piece);
 
