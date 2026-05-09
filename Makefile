@@ -100,6 +100,10 @@ clean:
 run: $(TARGET)
 	./$(TARGET)
 
+# run main program with engine debug logging
+run_engine_debug: clean
+	$(MAKE) CFLAGS="$(CFLAGS) -DENGINE_DEBUG" run
+
 # run FEN tests
 run_fen: $(TEST_FEN_TARGET)
 	./$(TEST_FEN_TARGET)
@@ -147,4 +151,4 @@ valgrind_san_resolve: $(TEST_SAN_RESOLVE_TARGET)
 valgrind_perft: $(TEST_PERFT_TARGET)
 	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./$(TEST_PERFT_TARGET)
 
-.PHONY: all clean run run_fen run_move_gen run_move_apply run_san_resolve run_perft test valgrind valgrind_fen valgrind_move_gen valgrind_move_apply valgrind_san_resolve valgrind_perft
+.PHONY: all clean run run_engine_debug run_fen run_move_gen run_move_apply run_san_resolve run_perft test valgrind valgrind_fen valgrind_move_gen valgrind_move_apply valgrind_san_resolve valgrind_perft
