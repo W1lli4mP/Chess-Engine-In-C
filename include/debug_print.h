@@ -16,5 +16,7 @@ void debug_print_board(const Board *board, int white_pov);
 void debug_print_move(Move move);
 void debug_print_san(San san);
 void debug_print_resolve_status(ResolveStatus status);
+void debug_print_engine_move_score(Move move, int score);
+void debug_print_engine_best_move(Move move, int score);
 
 #endif

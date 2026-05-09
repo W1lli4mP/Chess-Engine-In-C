@@ -136,3 +136,19 @@ void debug_print_resolve_status(ResolveStatus status)
             break;
     }
 }
+
+void debug_print_engine_move_score(Move move, int score)
+{
+    char text[8];
+    debug_move_to_text(move, text);
+
+    printf("[ENGINE] %s score %d\n", text, score);
+}
+
+void debug_print_engine_best_move(Move move, int score)
+{
+    char text[8];
+    debug_move_to_text(move, text);
+
+    printf("[ENGINE] best %s score %d\n", text, score);
+}
