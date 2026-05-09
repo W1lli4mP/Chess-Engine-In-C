@@ -45,7 +45,8 @@ static int negamax(GameState *game, int depth, int alpha, int beta, bool *ok_out
     {
         if (is_in_check(game, game->side_to_move))
         {
-            return -CHECKMATE_SCORE - depth;
+            // encourages faster checkmates
+            return -CHECKMATE_SCORE + depth;
         }
 
         // stalemate
