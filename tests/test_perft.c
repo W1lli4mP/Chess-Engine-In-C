@@ -33,6 +33,12 @@ static bool parse_expected_nodes(const char *text, uint64_t *nodes_out);
 
 static uint64_t perft(GameState *game, int depth, bool *ok_out);
 
+static void print_perft_divide(GameState *game, int depth);
+
+static void move_to_text(Move move, char out[16]);
+
+static char promotion_piece_to_char(PieceType type);
+
 int main()
 {
     puts("------------------------");
@@ -176,6 +182,11 @@ static bool run_perft_case(
         printf("Expected nodes: %" PRIu64 "\n", expected_nodes);
         printf("Actual nodes: %" PRIu64 "\n", actual_nodes);
 
+        if (depth > 0)
+        {
+            print_perft_divide(game, depth);
+        }
+
         destroy_game_state(game);
         print_perft_result(test_id, false, "node count mismatch");
         return false;
@@ -273,4 +284,84 @@ static uint64_t perft(GameState *game, int depth, bool *ok_out)
     }
 
     return nodes;
+}
+
+static void print_perft_divide(GameState *game, int depth)
+{
+    if (!game || depth <= 0) return;
+
+    MoveList moves = {0};
+
+    if (!generate_all_legal_moves(game, &moves))
+    {
+        puts("Failed to generate divide moves");
+        return;
+    }
+
+    uint64_t total = 0;
+
+    puts("Perft divide:");
+
+    for (int i = 0; i < moves.count; i++)
+    {
+        Move move = moves.moves[i];
+        UndoInfo undo;
+
+        if (!make_move(game, move, &undo))
+        {
+            puts("make_move failed during divide");
+            return;
+        }
+
+        bool ok = true;
+        uint64_t nodes = perft(game, depth - 1, &ok);
+
+        if (!unmake_move(game, move, &undo))
+        {
+            puts("unmake_move failed during divide");
+            return;
+        }
+
+        if (!ok)
+        {
+            puts("perft failed during divide");
+            return;
+        }
+
+        char move_text[16];
+        move_to_text(move, move_text);
+
+        printf("%s: %" PRIu64 "\n", move_text, nodes);
+
+        total += nodes;
+    }
+
+    printf("Divide total: %" PRIu64 "\n", total);
+}
+
+static void move_to_text(Move move, char out[16])
+{
+    out[0] = (char)('a' + move.from.col);
+    out[1] = (char)('1' + move.from.row);
+    out[2] = (char)('a' + move.to.col);
+    out[3] = (char)('1' + move.to.row);
+    out[4] = '\0';
+
+    if (move.is_promotion)
+    {
+        out[4] = promotion_piece_to_char(move.promotion);
+        out[5] = '\0';
+    }
+}
+
+static char promotion_piece_to_char(PieceType type)
+{
+    switch (type)
+    {
+        case TYPE_QUEEN: return 'q';
+        case TYPE_ROOK: return 'r';
+        case TYPE_BISHOP: return 'b';
+        case TYPE_KNIGHT: return 'n';
+        default: return '?';
+    }
 }
