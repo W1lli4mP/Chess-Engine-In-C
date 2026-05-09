@@ -10,23 +10,26 @@ movegen.knight.friendly_occupied.excluded|8/8/2P1P3/1P3P2/3N4/1P3P2/2P1P3/8 w - 
 movegen.pawn.initial_double.white|8/8/8/8/8/8/4P3/8 w - - 0 1|e2|2|e3,e4
 movegen.pawn.initial_double.black|8/4p3/8/8/8/8/8/8 b - - 0 1|e7|2|e6,e5
 movegen.pawn.blocked.white|8/8/8/8/8/4p3/4P3/8 w - - 0 1|e2|0|
-movegen.pawn.capture_both.white|8/8/8/8/8/3p1p2/4P3/8 w - - 0 1|e2|4|d3,e3,e4,f3
-movegen.pawn.capture_both.black|8/4p3/3P1P2/8/8/8/8/8 b - - 0 1|e7|4|d6,e6,e5,f6
+movegen.pawn.blocked.black|8/8/8/8/8/4p3/4P3/8 b - - 0 1|e3|0|
+movegen.pawn.capture_both.white|8/8/8/8/8/3p1p2/4P3/8 w - - 0 1|e2|4|d3[capture],e3,e4,f3[capture]
+movegen.pawn.capture_both.black|8/4p3/3P1P2/8/8/8/8/8 b - - 0 1|e7|4|d6[capture],e6,e5,f6[capture]
+movegen.pawn.no_capture_empty_diagonals.white|8/8/8/8/8/8/4P3/8 w - - 0 1|e2|2|e3,e4
+movegen.pawn.no_capture_empty_diagonals.black|8/4p3/8/8/8/8/8/8 b - - 0 1|e7|2|e6,e5
 
 # Rooks
 movegen.rook.center.empty|8/8/8/8/3R4/8/8/8 w - - 0 1|d4|14|d1,d2,d3,d5,d6,d7,d8,a4,b4,c4,e4,f4,g4,h4
 movegen.rook.blocked_by_friendly|8/8/3P4/8/1P1R2P1/8/3P4/8 w - - 0 1|d4|5|d3,c4,d5,e4,f4
-movegen.rook.capture_enemies|8/8/3p4/8/1p1R2p1/8/3p4/8 w - - 0 1|d4|9|d2,d3,d5,d6,b4,c4,e4,f4,g4
+movegen.rook.capture_enemies|8/8/3p4/8/1p1R2p1/8/3p4/8 w - - 0 1|d4|9|d2[capture],d3,d5,d6[capture],b4[capture],c4,e4,f4,g4[capture]
 
 # Bishops
 movegen.bishop.center.empty|8/8/8/8/3B4/8/8/8 w - - 0 1|d4|13|a1,b2,c3,e5,f6,g7,h8,a7,b6,c5,e3,f2,g1
 movegen.bishop.blocked_by_friendly|8/8/1P3P2/8/3B4/2P1P3/8/8 w - - 0 1|d4|2|c5,e5
-movegen.bishop.capture_enemies|8/8/1p3p2/8/3B4/2p1p3/8/8 w - - 0 1|d4|6|b6,c5,e5,f6,c3,e3
+movegen.bishop.capture_enemies|8/8/1p3p2/8/3B4/2p1p3/8/8 w - - 0 1|d4|6|b6[capture],c5,e5,f6[capture],c3[capture],e3[capture]
 
 # Queens
 movegen.queen.center.empty|8/8/8/8/3Q4/8/8/8 w - - 0 1|d4|27|d1,d2,d3,d5,d6,d7,d8,a4,b4,c4,e4,f4,g4,h4,a1,b2,c3,e5,f6,g7,h8,a7,b6,c5,e3,f2,g1
 movegen.queen.blocked_by_friendly|8/8/1P1P1P2/8/1P1Q2P1/2P1P3/8/8 w - - 0 1|d4|9|e5,c5,e4,f4,d3,d2,d1,c4,d5
-movegen.queen.capture_enemies|8/8/1p1p1p2/8/1p1Q2p1/2p1p3/8/8 w - - 0 1|d4|16|e5,f6,e3,c3,c5,b6,e4,f4,g4,d3,d2,d1,c4,b4,d5,d6
+movegen.queen.capture_enemies|8/8/1p1p1p2/8/1p1Q2p1/2p1p3/8/8 w - - 0 1|d4|16|e5,f6[capture],e3[capture],c3[capture],c5,b6[capture],e4,f4,g4[capture],d3,d2,d1,c4,b4[capture],d5,d6[capture]
 
 # Kings
 movegen.king.center.empty|8/8/8/8/3K4/8/8/8 w - - 0 1|d4|8|c3,d3,e3,c4,e4,c5,d5,e5
@@ -34,58 +37,56 @@ movegen.king.corner.empty|8/8/8/8/8/8/8/K7 w - - 0 1|a1|3|a2,b1,b2
 movegen.king.friendly_occupied.excluded|8/8/8/8/2PPP3/2PKP3/2PPP3/8 w - - 0 1|d3|0|
 
 # Legal move filtering / checks
-movegen.king.capture_enemies|8/8/8/8/2ppp3/2pKp3/2ppp3/8 w - - 0 1|d3|5|e4,e2,d2,c2,c4
+movegen.king.capture_enemies|8/8/8/8/2ppp3/2pKp3/2ppp3/8 w - - 0 1|d3|5|e4[capture],e2[capture],d2[capture],c2[capture],c4[capture]
 movegen.king.cannot_move_into_rook_check|4r3/8/8/8/3K4/8/8/8 w - - 0 1|d4|5|d5,d3,c3,c4,c5
-movegen.pinned_rook.cannot_leave_king_exposed|4r3/8/8/8/4R3/8/8/4K3 w - - 0 1|e4|6|e2,e3,e5,e6,e7,e8
+movegen.pinned_rook.cannot_leave_king_exposed|4r3/8/8/8/4R3/8/8/4K3 w - - 0 1|e4|6|e2,e3,e5,e6,e7,e8[capture]
 movegen.king.in_check.must_escape|4r3/8/8/8/4K3/8/8/8 w - - 0 1|e4|6|f5,f4,f3,d3,d4,d5
 
 # Promotions
 movegen.pawn.white_quiet_promotion|8/4P3/8/8/8/8/8/8 w - - 0 1|e7|4|e8=Q,e8=R,e8=B,e8=N
 movegen.pawn.black_quiet_promotion|8/8/8/8/8/8/4p3/8 b - - 0 1|e2|4|e1=Q,e1=R,e1=B,e1=N
-movegen.pawn.white_capture_promotion|3r1n2/4P3/8/8/8/8/8/8 w - - 0 1|e7|12|e8=Q,e8=R,e8=B,e8=N,d8=Q,d8=R,d8=B,d8=N,f8=Q,f8=R,f8=B,f8=N
-movegen.pawn.black_capture_promotion|8/8/8/8/8/8/4p3/3R1N2 b - - 0 1|e2|12|e1=Q,e1=R,e1=B,e1=N,d1=Q,d1=R,d1=B,d1=N,f1=Q,f1=R,f1=B,f1=N
+movegen.pawn.white_capture_promotion|3r1n2/4P3/8/8/8/8/8/8 w - - 0 1|e7|12|e8=Q,e8=R,e8=B,e8=N,d8=Q[capture],d8=R[capture],d8=B[capture],d8=N[capture],f8=Q[capture],f8=R[capture],f8=B[capture],f8=N[capture]
+movegen.pawn.black_capture_promotion|8/8/8/8/8/8/4p3/3R1N2 b - - 0 1|e2|12|e1=Q,e1=R,e1=B,e1=N,d1=Q[capture],d1=R[capture],d1=B[capture],d1=N[capture],f1=Q[capture],f1=R[capture],f1=B[capture],f1=N[capture]
 
 # Castling
-movegen.castle.white_both_available|r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1|e1|7|d1,d2,e2,f2,f1,g1,c1
-movegen.castle.black_both_available|r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1|e8|7|d8,d7,e7,f7,f8,g8,c8
+movegen.castle.white_both_available|r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1|e1|7|d1,d2,e2,f2,f1,g1[castle_kingside],c1[castle_queenside]
+movegen.castle.black_both_available|r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1|e8|7|d8,d7,e7,f7,f8,g8[castle_kingside],c8[castle_queenside]
 
 movegen.castle.white_no_rights|r3k2r/8/8/8/8/8/8/R3K2R w - - 0 1|e1|5|d1,d2,e2,f2,f1
 movegen.castle.black_no_rights|r3k2r/8/8/8/8/8/8/R3K2R b - - 0 1|e8|5|d8,d7,e7,f7,f8
 
-movegen.castle.white_only_kingside_right|r3k2r/8/8/8/8/8/8/R3K2R w K - 0 1|e1|6|d1,d2,e2,f2,f1,g1
-movegen.castle.white_only_queenside_right|r3k2r/8/8/8/8/8/8/R3K2R w Q - 0 1|e1|6|d1,d2,e2,f2,f1,c1
-movegen.castle.black_only_kingside_right|r3k2r/8/8/8/8/8/8/R3K2R b k - 0 1|e8|6|d8,d7,e7,f7,f8,g8
-movegen.castle.black_only_queenside_right|r3k2r/8/8/8/8/8/8/R3K2R b q - 0 1|e8|6|d8,d7,e7,f7,f8,c8
+movegen.castle.white_only_kingside_right|r3k2r/8/8/8/8/8/8/R3K2R w K - 0 1|e1|6|d1,d2,e2,f2,f1,g1[castle_kingside]
+movegen.castle.white_only_queenside_right|r3k2r/8/8/8/8/8/8/R3K2R w Q - 0 1|e1|6|d1,d2,e2,f2,f1,c1[castle_queenside]
+movegen.castle.black_only_kingside_right|r3k2r/8/8/8/8/8/8/R3K2R b k - 0 1|e8|6|d8,d7,e7,f7,f8,g8[castle_kingside]
+movegen.castle.black_only_queenside_right|r3k2r/8/8/8/8/8/8/R3K2R b q - 0 1|e8|6|d8,d7,e7,f7,f8,c8[castle_queenside]
 
-movegen.castle.white_blocked_kingside|r3k2r/8/8/8/8/8/8/R3KB1R w KQkq - 0 1|e1|5|d1,d2,e2,f2,c1
-movegen.castle.white_blocked_queenside|r3k2r/8/8/8/8/8/8/R2QK2R w KQkq - 0 1|e1|5|e2,f2,f1,g1,d2
-movegen.castle.black_blocked_kingside|r3kb1r/8/8/8/8/8/8/R3K2R b KQkq - 0 1|e8|5|d8,d7,e7,f7,c8
-movegen.castle.black_blocked_queenside|r2qk2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1|e8|5|e7,f7,f8,g8,d7
+movegen.castle.white_blocked_kingside|r3k2r/8/8/8/8/8/8/R3KB1R w KQkq - 0 1|e1|5|d1,d2,e2,f2,c1[castle_queenside]
+movegen.castle.white_blocked_queenside|r3k2r/8/8/8/8/8/8/R2QK2R w KQkq - 0 1|e1|5|e2,f2,f1,g1[castle_kingside],d2
+movegen.castle.black_blocked_kingside|r3kb1r/8/8/8/8/8/8/R3K2R b KQkq - 0 1|e8|5|d8,d7,e7,f7,c8[castle_queenside]
+movegen.castle.black_blocked_queenside|r2qk2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1|e8|5|e7,f7,f8,g8[castle_kingside],d7
 
 movegen.castle.white_in_check_no_castle|4r3/8/8/8/8/8/8/R3K2R w KQ - 0 1|e1|4|d1,d2,f2,f1
 movegen.castle.black_in_check_no_castle|r3k2r/8/8/8/8/8/8/4R3 b kq - 0 1|e8|4|d8,d7,f7,f8
 
-movegen.castle.white_kingside_cross_square_attacked|5r2/8/8/8/8/8/8/R3K2R w KQ - 0 1|e1|4|d1,d2,e2,c1
-movegen.castle.white_queenside_cross_square_attacked|3r4/8/8/8/8/8/8/R3K2R w KQ - 0 1|e1|4|e2,f2,f1,g1
-movegen.castle.black_kingside_cross_square_attacked|r3k2r/8/8/8/8/8/8/5R2 b kq - 0 1|e8|4|d8,d7,e7,c8
-movegen.castle.black_queenside_cross_square_attacked|r3k2r/8/8/8/8/8/8/3R4 b kq - 0 1|e8|4|e7,f7,f8,g8
+movegen.castle.white_kingside_cross_square_attacked|5r2/8/8/8/8/8/8/R3K2R w KQ - 0 1|e1|4|d1,d2,e2,c1[castle_queenside]
+movegen.castle.white_queenside_cross_square_attacked|3r4/8/8/8/8/8/8/R3K2R w KQ - 0 1|e1|4|e2,f2,f1,g1[castle_kingside]
+movegen.castle.black_kingside_cross_square_attacked|r3k2r/8/8/8/8/8/8/5R2 b kq - 0 1|e8|4|d8,d7,e7,c8[castle_queenside]
+movegen.castle.black_queenside_cross_square_attacked|r3k2r/8/8/8/8/8/8/3R4 b kq - 0 1|e8|4|e7,f7,f8,g8[castle_kingside]
 
-movegen.castle.white_missing_kingside_rook|r3k2r/8/8/8/8/8/8/R3K3 w KQkq - 0 1|e1|6|d1,d2,e2,f2,f1,c1
-movegen.castle.white_missing_queenside_rook|r3k2r/8/8/8/8/8/8/4K2R w KQkq - 0 1|e1|6|d1,d2,e2,f2,f1,g1
-movegen.castle.black_missing_kingside_rook|r3k3/8/8/8/8/8/8/R3K2R b KQkq - 0 1|e8|6|d8,d7,e7,f7,f8,c8
-movegen.castle.black_missing_queenside_rook|4k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1|e8|6|d8,d7,e7,f7,f8,g8
+movegen.castle.white_missing_kingside_rook|r3k2r/8/8/8/8/8/8/R3K3 w KQkq - 0 1|e1|6|d1,d2,e2,f2,f1,c1[castle_queenside]
+movegen.castle.white_missing_queenside_rook|r3k2r/8/8/8/8/8/8/4K2R w KQkq - 0 1|e1|6|d1,d2,e2,f2,f1,g1[castle_kingside]
+movegen.castle.black_missing_kingside_rook|r3k3/8/8/8/8/8/8/R3K2R b KQkq - 0 1|e8|6|d8,d7,e7,f7,f8,c8[castle_queenside]
+movegen.castle.black_missing_queenside_rook|4k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1|e8|6|d8,d7,e7,f7,f8,g8[castle_kingside]
 
-# En passant generation
-movegen.enpassant.white_left|8/8/8/3pP3/8/8/8/8 w - d6 0 1|e5|2|e6,d6
-movegen.enpassant.white_right|8/8/8/4Pp2/8/8/8/8 w - f6 0 1|e5|2|e6,f6
-movegen.enpassant.black_left|8/8/8/8/3Pp3/8/8/8 b - d3 0 1|e4|2|e3,d3
-movegen.enpassant.black_right|8/8/8/8/4pP2/8/8/8 b - f3 0 1|e4|2|e3,f3
+# En passant
+movegen.enpassant.white_left|8/8/8/3pP3/8/8/8/8 w - d6 0 1|e5|2|e6,d6[en_passant]
+movegen.enpassant.white_right|8/8/8/4Pp2/8/8/8/8 w - f6 0 1|e5|2|e6,f6[en_passant]
+movegen.enpassant.black_left|8/8/8/8/3Pp3/8/8/8 b - d3 0 1|e4|2|e3,d3[en_passant]
+movegen.enpassant.black_right|8/8/8/8/4pP2/8/8/8 b - f3 0 1|e4|2|e3,f3[en_passant]
 
-# No en passant without target
+# En passant illegal / unavailable cases
 movegen.enpassant.no_target|8/8/8/3pP3/8/8/8/8 w - - 0 1|e5|1|e6
-
-# No en passant if target wrong
 movegen.enpassant.wrong_target|8/8/8/3pP3/8/8/8/8 w - e6 0 1|e5|1|e6
-
-# En passant cannot expose own king
+movegen.enpassant.destination_occupied|8/8/3N4/3pP3/8/8/8/8 w - d6 0 1|e5|1|e6
+movegen.enpassant.captured_piece_not_pawn|8/8/8/3rP3/8/8/8/8 w - d6 0 1|e5|1|e6
 movegen.enpassant.pinned_ep_illegal|4k3/8/8/r2pP2K/8/8/8/8 w - d6 0 1|e5|1|e6
