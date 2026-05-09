@@ -1,4 +1,5 @@
 #include "rules.h"
+#include "move_gen.h"
 
 static bool find_king_position(const Board *board, Colour king_colour, Position *king_position_out);
 
