@@ -51,7 +51,6 @@ typedef struct
 } Piece;
 
 Piece *initialise_piece(); // initialises a default piece and allocates it to memory
-void print_piece(Piece *p); // prints a singular piece (no newline)
 Piece *create_piece(PieceType type, Colour colour); // initialises a piece and assigns given attributes if valid
 void destroy_piece(Piece *piece); // frees the piece
 

@@ -114,39 +114,6 @@ bool valid_move(Board *board, Move move)
     return true;
 }
 
-void print_board(const Board *board, int white_pov)
-{
-    int row_start, row_end, row_step;
-    int col_start, col_end, col_step;
-
-    // setup for loop conditions based on inverted pov
-    if (white_pov)
-    {
-        row_start = board->height - 1; row_end = -1; row_step = -1;
-        col_start = 0; col_end = board->width; col_step = 1;
-    }
-    else
-    {
-        row_start = 0; row_end = board->height; row_step = 1;
-        col_start = 0; col_end = board->width; col_step = 1;
-    }
-
-    // print using new conditions
-    for (int row = row_start; row != row_end; row += row_step)
-    {
-        for (int col = col_start; col != col_end; col += col_step)
-        {
-            // make sure theres a piece on the square before using print_piece
-            if (!board->grid[row][col])
-                printf(" ");
-            else
-                print_piece(board->grid[row][col]);
-            printf(" ");
-        }
-        putchar('\n'); // faster than printf()
-    }
-}
-
 bool in_bounds(const Board *board, int row, int col)
 {
     if (!board) return false;

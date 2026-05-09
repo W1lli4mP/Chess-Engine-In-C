@@ -68,8 +68,3 @@ const char *find_sprite(PieceType type, Colour colour)
     }
     else return SPRITE_NONE;
 }
-
-void print_piece(Piece *p)
-{
-    printf("%s", p->sprite);
-}

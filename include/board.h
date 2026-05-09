@@ -21,7 +21,6 @@ bool destroy_piece_at(Board *board, Position piece_pos); // handles logic for re
 bool destroy_board(Board *board);
 
 bool valid_move(Board *board, Move move);
-void print_board(const Board *board, int white_pov);
 bool in_bounds(const Board *board, int row, int col);
 
 Board *initialise_empty_board();
