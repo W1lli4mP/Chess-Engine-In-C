@@ -137,6 +137,8 @@ void debug_print_resolve_status(ResolveStatus status)
     }
 }
 
+#ifdef ENGINE_DEBUG
+
 static void debug_move_to_text(Move move, char out[8])
 {
     out[0] = (char)('a' + move.from.col);
@@ -162,8 +164,6 @@ static void debug_move_to_text(Move move, char out[8])
         out[5] = '\0';
     }
 }
-
-#ifdef ENGINE_DEBUG
 
 void debug_print_engine_move_score(Move move, int score)
 {
