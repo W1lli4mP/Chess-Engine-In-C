@@ -6,9 +6,12 @@
 #include "game_state.h"
 #include "fen_parser.h"
 #include "move_apply.h"
+#include "test_utils.h"
 
 #define MOVE_APPLY_CASES_FILE "tests/data/move_apply_cases.txt"
 #define MAX_LINE_LEN 256
+
+// TODO: REFACTOR CODE; VERY MESSY
 
 static bool run_move_apply_case(
     const char *test_id,
@@ -27,6 +30,8 @@ static void print_move_apply_result(
 static bool parse_square(const char *text, Position *position_out);
 
 static bool positions_equal(Position a, Position b);
+
+static bool castling_rights_match_text(CastlingRights rights, const char *text);
 
 static bool verify_after_make(
     const GameState *game,
@@ -74,64 +79,27 @@ int main()
         // skip blank lines and comments
         if (line[0] == '\0' || line[0] == '#') continue;
 
-        char *test_id = line;
-
         // keep the original line for debug outputs of malformed lines
         char original[MAX_LINE_LEN] ;
         strncpy(original, line, sizeof original);
         original[sizeof original - 1] = '\0';
 
-        // 1st separator
-        char *sep1 = strchr(line, '|');
+        char *fields[5];
+        const char *split_error = NULL;
 
-        if (!sep1)
+        // partition fields
+        if (!split_test_line(line, fields, 5, &split_error))
         {
-            printf("Malformed test line: %s\n", original);
+            printf("Malformed test line (%s): %s\n", split_error, original);
             continue;
         }
 
-        *sep1 = '\0';
-
-        char *fen = sep1 + 1;
-
-        // 2nd separator
-        char *sep2 = strchr(fen, '|');
-
-        if (!sep2)
-        {
-            printf("Malformed test line: %s\n", original);
-            continue;
-        }
-
-        *sep2 = '\0';
-
-        char *from = sep2 + 1;
-
-        // 3rd separator
-        char *sep3 = strchr(from, '|');
-
-        if (!sep3)
-        {
-            printf("Malformed test line: %s\n", original);
-            continue;
-        }
-
-        *sep3 = '\0';
-
-        char *to = sep3 + 1;
-
-        // 4th separator
-        char *sep4 = strchr(to, '|');
-
-        if (!sep4)
-        {
-            printf("Malformed test line: %s\n", original);
-            continue;
-        }
-
-        *sep4 = '\0';
-
-        char *note = sep4 + 1;
+        // extract fields
+        char *test_id = fields[0];
+        char *fen = fields[1];
+        char *from = fields[2];
+        char *to = fields[3];
+        char *note = fields[4];
         
         // process test case
         total++;
@@ -219,6 +187,33 @@ static bool run_move_apply_case(
 
     // store original game state
     Piece *captured_piece = get_piece_at(game->board, to);
+    Position expected_captured_position = to;
+
+    // en passant captures a pawn from a different square
+    if (
+        strcmp(note_text, "en_passant") == 0 ||
+        strcmp(note_text, "expected_fail_en_passant") == 0
+    )
+    {
+        expected_captured_position = (Position) { .row = from.row, .col = to.col };
+        captured_piece = get_piece_at(game->board, expected_captured_position);
+    }
+
+    // expected en passant target after a double pawn move
+    bool expects_ep_target = false;
+    Position expected_ep_target = { .row = -1, .col = -1 };
+
+    if (strncmp(note_text, "expected_ep=", 12) == 0)
+    {
+        expects_ep_target = true;
+
+        if (!parse_square(note_text + 12, &expected_ep_target))
+        {
+            destroy_game_state(game);
+            print_move_apply_result(test_id, false, "invalid expected en passant target");
+            return false;
+        }
+    }
 
     Colour original_side_to_move = game->side_to_move;
     CastlingRights original_castling_rights = game->castling_rights;
@@ -265,15 +260,118 @@ static bool run_move_apply_case(
         move.is_castle_queenside = true;
     }
 
+    // update move with en passant flag
+    if (
+        strcmp(note_text, "en_passant") == 0 ||
+        strcmp(note_text, "expected_fail_en_passant") == 0
+    )
+    {
+        move.is_capture = true;
+        move.is_en_passant = true;
+    }
+
     // populate UndoInfo object to unmake the move afterwards
     UndoInfo undo;
 
+    bool expects_fail = (
+        strcmp(note_text, "expected_fail") == 0 ||
+        strcmp(note_text, "expected_fail_en_passant") == 0
+    );
+
     // simulate the move and the verify correct game states
-    if (!make_move(game, move, &undo))
+    bool made = make_move(game, move, &undo);
+
+    // for invalid tests
+    if (expects_fail)
+    {
+        if (made)
+        {
+            destroy_game_state(game);
+            print_move_apply_result(test_id, false, "make_move succeeded but failure was expected");
+            return false;
+        }
+
+        destroy_game_state(game);
+        print_move_apply_result(test_id, true, "PASS");
+        return true;
+    }
+
+    // for valid tests
+    if (!made)
     {
         destroy_game_state(game);
         print_move_apply_result(test_id, false, "make_move failed");
         return false;
+    }
+
+    //* validate halfmove and fullmove
+    if (strncmp(note_text, "expected_halfmove=", 18) == 0)
+    {
+        int expected_halfmove = atoi(note_text + 18);
+
+        if (game->halfmove_clock != expected_halfmove)
+        {
+            destroy_game_state(game);
+            print_move_apply_result(test_id, false, "halfmove clock did not match expected value");
+            return false;
+        }
+    }
+
+    if (strncmp(note_text, "expected_fullmove=", 18) == 0)
+    {
+        int expected_fullmove = atoi(note_text + 18);
+
+        if (game->fullmove_number != expected_fullmove)
+        {
+            destroy_game_state(game);
+            print_move_apply_result(test_id, false, "fullmove number did not match expected value");
+            return false;
+        }
+    }
+
+    //* validate castling rights
+    if (strncmp(note_text, "expected_castling=", 18) == 0)
+    {
+        const char *expected = note_text + 18;
+
+        if (!castling_rights_match_text(game->castling_rights, expected))
+        {
+            destroy_game_state(game);
+            print_move_apply_result(test_id, false, "castling rights did not match expected value");
+            return false;
+        }
+    }
+
+    //* validate en passant target state after make_move
+    if (expects_ep_target)
+    {
+        if (
+            !game->has_en_passant_target ||
+            !positions_equal(game->en_passant_target, expected_ep_target)
+        )
+        {
+            destroy_game_state(game);
+            print_move_apply_result(test_id, false, "en passant target was not set correctly");
+            return false;
+        }
+    }
+
+    if (strcmp(note_text, "expected_no_ep") == 0)
+    {
+        if (game->has_en_passant_target)
+        {
+            destroy_game_state(game);
+            print_move_apply_result(test_id, false, "en passant target was not cleared");
+            return false;
+        }
+
+        Position none = { .row = -1, .col = -1 };
+        if (!positions_equal(game->en_passant_target, none))
+        {
+            destroy_game_state(game);
+            print_move_apply_result(test_id, false, "en passant target square was not reset");
+            return false;
+        }
     }
 
     if (!verify_after_make(
@@ -298,7 +396,7 @@ static bool run_move_apply_case(
         return false;
     }
 
-    if (!positions_equal(undo.captured_position, to))
+    if (!positions_equal(undo.captured_position, expected_captured_position))
     {
         destroy_game_state(game);
         print_move_apply_result(test_id, false, "undo captured position is incorrect");
@@ -323,6 +421,34 @@ static bool run_move_apply_case(
     {
         destroy_game_state(game);
         print_move_apply_result(test_id, false, "undo fullmove number is incorrect");
+        return false;
+    }
+
+    //* castling rights
+    if (
+        undo.previous_castling_rights.white_can_castle_kingside != original_castling_rights.white_can_castle_kingside ||
+        undo.previous_castling_rights.white_can_castle_queenside != original_castling_rights.white_can_castle_queenside ||
+        undo.previous_castling_rights.black_can_castle_kingside != original_castling_rights.black_can_castle_kingside ||
+        undo.previous_castling_rights.black_can_castle_queenside != original_castling_rights.black_can_castle_queenside
+    )
+    {
+        destroy_game_state(game);
+        print_move_apply_result(test_id, false, "undo castling rights are incorrect");
+        return false;
+    }
+
+    //* en passant
+    if (undo.previous_has_en_passant_target != original_has_en_passant_target)
+    {
+        destroy_game_state(game);
+        print_move_apply_result(test_id, false, "undo en passant target flag is incorrect");
+        return false;
+    }
+
+    if (!positions_equal(undo.previous_en_passant_target, original_en_passant_target))
+    {
+        destroy_game_state(game);
+        print_move_apply_result(test_id, false, "undo en passant target square is incorrect");
         return false;
     }
 
@@ -399,6 +525,46 @@ static bool positions_equal(Position a, Position b)
     return a.col == b.col && a.row == b.row;
 }
 
+static bool castling_rights_match_text(CastlingRights rights, const char *text)
+{
+    // FEN notation for castling rights
+    bool K = false;
+    bool Q = false;
+    bool k = false;
+    bool q = false;
+
+    if (!text) return false;
+
+    // all castling flags must be blank if "-" is detected
+    if (strcmp(text, "-") == 0)
+    {
+        return (
+            !rights.white_can_castle_kingside &&
+            !rights.white_can_castle_queenside &&
+            !rights.black_can_castle_kingside &&
+            !rights.black_can_castle_queenside
+        );
+    }
+
+    // iterate through all chars and update flags
+    for (const char *p = text; *p; p++)
+    {
+        if (*p == 'K') K = true;
+        else if (*p == 'Q') Q = true;
+        else if (*p == 'k') k = true;
+        else if (*p == 'q') q = true;
+        else return false;
+    }
+
+    // all castling flags must align with the expected
+    return (
+        rights.white_can_castle_kingside == K &&
+        rights.white_can_castle_queenside == Q &&
+        rights.black_can_castle_kingside == k &&
+        rights.black_can_castle_queenside == q
+    );
+}
+
 static bool verify_after_make(
     const GameState *game,
     Move move,
@@ -447,6 +613,16 @@ static bool verify_after_make(
         
         // there should not be a rook that has just moved away from the source
         if (get_piece_at(game->board, rook_from) != NULL) return false;
+    }
+
+    // verify en passant
+    if (move.is_en_passant)
+    {
+        Position ep_captured_position = { .row = move.from.row, .col = move.to.col };
+
+        // moved pawn should be on the destination; already checked above
+        // captured pawn should also be removed from its original square
+        if (get_piece_at(game->board, ep_captured_position) != NULL) return false;
     }
 
     //* NORMAL GAME STATE ATTRIBUTES
@@ -523,7 +699,21 @@ static bool verify_after_unmake(
         if (get_piece_at(game->board, rook_to) != NULL) return false;
     }
 
-    if (to_piece != captured_piece) return false;
+    // en passant
+    if (move.is_en_passant)
+    {
+        Position ep_captured_position = { .row = move.from.row, .col = move.to.col };
+
+        // destination square should be empty again
+        if (to_piece != NULL) return false;
+
+        // captured pawn should be restored to its original square
+        if (get_piece_at(game->board, ep_captured_position) != captured_piece) return false;
+    }
+    else
+    {
+        if (to_piece != captured_piece) return false;
+    }
 
     if (game->side_to_move != original_side_to_move) return false;
 
