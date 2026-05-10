@@ -4,7 +4,7 @@
 #include "evaluation.h"
 #include "move_gen.h"
 #include "move_apply.h"
-#include "rules.h"
+#include "check_rules.h"
 #include "draw_rules.h"
 #include "position_key.h"
 

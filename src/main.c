@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
+
 #include "piece.h"
 #include "board.h"
 #include "square.h"
@@ -10,7 +11,6 @@
 #include "san_resolve.h"
 #include "fen_parser.h"
 #include "game_state.h"
-#include "rules.h"
 #include "move_apply.h"
 #include "debug_print.h"
 #include "engine.h"

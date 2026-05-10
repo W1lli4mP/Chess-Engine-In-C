@@ -1,5 +1,5 @@
 #include "move_gen.h"
-#include "rules.h"
+#include "check_rules.h"
 #include "move_apply.h"
 
 static bool append_normal_move(
