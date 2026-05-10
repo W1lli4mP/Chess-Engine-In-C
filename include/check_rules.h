@@ -1,9 +1,9 @@
-#ifndef RULES_H
-#define RULES_H
+#ifndef CHECK_RULES_H
+#define CHECK_RULES_H
 
 #include <stdbool.h>
-#include "game_state.h"
 
+#include "game_state.h"
 #include "square.h"
 
 bool is_square_attacked(const GameState *game, Square square, Colour friendly_colour);

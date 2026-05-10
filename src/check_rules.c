@@ -1,4 +1,4 @@
-#include "rules.h"
+#include "check_rules.h"
 #include "move_gen.h"
 
 static bool find_king_square(const Board *board, Colour king_colour, Square *king_square_out);
