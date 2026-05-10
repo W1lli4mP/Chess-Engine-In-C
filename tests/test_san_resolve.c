@@ -8,7 +8,7 @@
 #include "fen_parser.h"
 #include "san_resolve.h"
 #include "square.h"
-#include "parser.h"
+#include "san_parser.h"
 #include "test_utils.h"
 #include "move.h"
 #include "piece.h"
@@ -215,7 +215,7 @@ static bool run_san_resolve_case(
     // parse SAN
     int san_err_pos = -1;
 
-    San *san = algebraic_chess_parser(san_text, &san_err_pos);
+    San *san = parse_san(san_text, &san_err_pos);
 
     if (!san)
     {

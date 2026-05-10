@@ -3,7 +3,7 @@
 #include "piece.h"
 #include "board.h"
 #include "square.h"
-#include "parser.h"
+#include "san_parser.h"
 #include "move.h"
 #include "san.h"
 #include "move_gen.h"
@@ -109,7 +109,7 @@ int main()
 
             // 5) convert input to SAN (string -> san)
             int err_pos = -1;
-            San *san = algebraic_chess_parser(input, &err_pos);
+            San *san = parse_san(input, &err_pos);
 
             // error handling
             if (!san)
