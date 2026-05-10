@@ -7,5 +7,6 @@
 #include "move.h"
 
 bool play_move(GameState *game, Move move);
+bool push_current_position(GameState *game);
 
 #endif
