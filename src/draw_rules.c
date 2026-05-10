@@ -1,6 +1,7 @@
 #include "draw_rules.h"
 #include "board.h"
 #include "piece.h"
+#include "position_key.h"
 
 static bool is_light_square(Position pos)
 {
@@ -106,9 +107,18 @@ bool is_insufficient_material(const GameState *game)
 
 bool is_threefold_repetition(const GameState *game)
 {
-    //! CONTINUE
-    (void) game;
-    return false;
+    if (!game || game->position_history_count <= 0) return false;
+
+    const PositionKey *current = &game->position_history[game->position_history_count - 1];
+
+    int count = 0;
+
+    for (int i = 0; i < game->position_history_count; i++)
+    {
+        if (position_keys_equal(&game->position_history[i], current)) count++;
+    }
+
+    return count >= 3;
 }
 
 bool is_draw(const GameState *game)
