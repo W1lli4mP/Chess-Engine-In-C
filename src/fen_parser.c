@@ -398,6 +398,9 @@ bool load_fen(GameState *game, const char *fen, int *err_pos)
     game->halfmove_clock = halfmove_clock;
     game->fullmove_number = fullmove_number;
 
+    // loaded fen starts a fresh position history context
+    game->position_history_count = 0;
+
     destroy_board(temp);
     return true;
 
