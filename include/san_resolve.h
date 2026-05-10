@@ -1,5 +1,6 @@
 #ifndef SAN_RESOLVE_H
 #define SAN_RESOLVE_H
+
 #include "san.h"
 #include "move.h"
 #include "game_state.h"

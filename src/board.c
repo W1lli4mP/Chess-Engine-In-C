@@ -66,47 +66,47 @@ Board *create_empty_board(void)
     return new_board;
 }
 
-Piece *get_piece_at(const Board *board, Position pos)
+Piece *get_piece_at(const Board *board, Square square)
 {
-    if (!is_position_on_board(board, pos)) return NULL;
+    if (!is_square_on_board(board, square)) return NULL;
 
-    return board->grid[pos.row][pos.col];
+    return board->grid[square.row][square.col];
 }
 
 // does not destroy any existing piece
 // caller is responsible for ensuring no leak/overwrite happens
-bool set_piece_at(Board *board, Position pos, Piece *piece)
+bool set_piece_at(Board *board, Square square, Piece *piece)
 {
-    if (!is_position_on_board(board, pos)) return false;
+    if (!is_square_on_board(board, square)) return false;
 
-    board->grid[pos.row][pos.col] = piece;
+    board->grid[square.row][square.col] = piece;
     return true;
 }
 
 // replaces any existing piece at a square, destroying the old one
 // Board takes ownership of piece
-bool replace_piece_at(Board *board, Position pos, Piece *piece)
+bool replace_piece_at(Board *board, Square square, Piece *piece)
 {
-    if (!is_position_on_board(board, pos)) return false;
+    if (!is_square_on_board(board, square)) return false;
 
-    if (board->grid[pos.row][pos.col])
+    if (board->grid[square.row][square.col])
     {
-        destroy_piece(board->grid[pos.row][pos.col]);
+        destroy_piece(board->grid[square.row][square.col]);
     }
 
-    board->grid[pos.row][pos.col] = piece;
+    board->grid[square.row][square.col] = piece;
     return true;
 }
 
-// destroys and clears the piece at pos
-bool destroy_piece_at(Board *board, Position pos)
+// destroys and clears the piece at square
+bool destroy_piece_at(Board *board, Square square)
 {
     // retrieve piece before removing it from the board
-    Piece *piece = get_piece_at(board, pos);
+    Piece *piece = get_piece_at(board, square);
     if (!piece) return false;
 
     // set square to NULL (does not require set_piece_at())
-    board->grid[pos.row][pos.col] = NULL;
+    board->grid[square.row][square.col] = NULL;
 
     // free the piece from memory
     destroy_piece(piece);
@@ -124,14 +124,14 @@ bool destroy_board(Board *board)
 }
 
 // wrapper for in_bounds()
-bool is_position_on_board(const Board *board, Position pos)
+bool is_square_on_board(const Board *board, Square square)
 {
-    return in_bounds(board, pos.row, pos.col);
+    return in_bounds(board, square.row, square.col);
 }
 
-bool has_piece_at(const Board *board, Position pos)
+bool has_piece_at(const Board *board, Square square)
 {
-    return get_piece_at(board, pos) != NULL;
+    return get_piece_at(board, square) != NULL;
 }
 
 bool in_bounds(const Board *board, int row, int col)

@@ -29,8 +29,8 @@ int evaluate_position(const GameState *game)
     {
         for (int col = 0; col < game->board->width; col++)
         {
-            Position pos = { .row = row, .col = col };
-            Piece *piece = get_piece_at(game->board, pos);
+            Square from = { .row = row, .col = col };
+            Piece *piece = get_piece_at(game->board, from);
 
             if (!piece) continue;
 

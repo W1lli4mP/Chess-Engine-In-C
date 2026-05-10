@@ -1,15 +1,20 @@
 #ifndef MOVE_H
 #define MOVE_H
-#include "position.h"
-#include "piece.h"
+
 #include <stdbool.h>
 #include <stdlib.h>
+
+#include "square.h"
+#include "piece.h"
+
+#define MAX_MOVES 256
+
 typedef struct
 {
     PieceType piece;
 
-    Position from;
-    Position to;
+    Square from;
+    Square to;
     
     bool is_capture;
 
@@ -30,7 +35,7 @@ typedef struct
     int count;
 } MoveList;
 
-Move create_move(PieceType piece, Position from, Position to);
+Move create_move(PieceType piece, Square from, Square to);
 bool move_list_append(MoveList *move_list, Move move);
 
 #endif

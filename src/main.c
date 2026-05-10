@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include "piece.h"
 #include "board.h"
-#include "position.h"
+#include "square.h"
 #include "parser.h"
 #include "move.h"
 #include "san.h"

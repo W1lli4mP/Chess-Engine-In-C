@@ -20,7 +20,7 @@ GameState *create_game_state()
     game->castling_rights.black_can_castle_queenside = true;
 
     game->has_en_passant_target = false;
-    game->en_passant_target = (Position) { .row = -1, .col = -1 };
+    game->en_passant_target = (Square) { .row = -1, .col = -1 };
 
     game->halfmove_clock = 0;
     game->fullmove_number = 1;
@@ -70,7 +70,7 @@ bool reset_game_state(GameState *game)
     game->castling_rights.black_can_castle_queenside = true;
 
     game->has_en_passant_target = false;
-    game->en_passant_target = (Position) { .row = -1, .col = -1 };
+    game->en_passant_target = (Square) { .row = -1, .col = -1 };
 
     game->halfmove_clock = 0;
     game->fullmove_number = 1;

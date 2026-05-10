@@ -1,18 +1,18 @@
 #include "rules.h"
 #include "move_gen.h"
 
-static bool find_king_position(const Board *board, Colour king_colour, Position *king_position_out);
+static bool find_king_square(const Board *board, Colour king_colour, Square *king_square_out);
 
-static bool attacked_by_knight(const Board *board, Position square, Colour friendly_colour);
-static bool attacked_by_king(const Board *board, Position square, Colour friendly_colour);
-static bool attacked_by_pawn(const Board *board, Position square, Colour friendly_colour);
+static bool attacked_by_knight(const Board *board, Square square, Colour friendly_colour);
+static bool attacked_by_king(const Board *board, Square square, Colour friendly_colour);
+static bool attacked_by_pawn(const Board *board, Square square, Colour friendly_colour);
 
-static bool attacked_by_sliding_piece(const Board *board, Position square, Colour friendly_colour, const int d[4][2], PieceType target_type);
-static bool attacked_by_orthogonal_piece(const Board *board, Position square, Colour friendly_colour);
-static bool attacked_by_diagonal_piece(const Board *board, Position square, Colour friendly_colour);
+static bool attacked_by_sliding_piece(const Board *board, Square square, Colour friendly_colour, const int d[4][2], PieceType target_type);
+static bool attacked_by_orthogonal_piece(const Board *board, Square square, Colour friendly_colour);
+static bool attacked_by_diagonal_piece(const Board *board, Square square, Colour friendly_colour);
 
 // assumes one king exists per colour
-static bool find_king_position(const Board *board, Colour king_colour, Position *king_position_out)
+static bool find_king_square(const Board *board, Colour king_colour, Square *king_square_out)
 {
     // iterate through all squares
     for (int row = 0; row < board->height; row++)
@@ -20,14 +20,14 @@ static bool find_king_position(const Board *board, Colour king_colour, Position 
         for (int col = 0; col < board->width; col++)
         {
             // find king piece that matches the desired colour
-            Position current_position = { .col = col, .row = row };
-            Piece *selected_piece = get_piece_at(board, current_position);
+            Square from = { .col = col, .row = row };
+            Piece *selected_piece = get_piece_at(board, from);
 
             // skip pieces that do not exist/fit the description
             if (!selected_piece || selected_piece->type != TYPE_KING || selected_piece->colour != king_colour) continue;
     
-            king_position_out->col = col;
-            king_position_out->row = row;
+            king_square_out->col = col;
+            king_square_out->row = row;
             return true;
         }
     }
@@ -35,7 +35,7 @@ static bool find_king_position(const Board *board, Colour king_colour, Position 
 }
 
 // mini helpers for finding attackers
-static bool attacked_by_knight(const Board *board, Position square, Colour friendly_colour)
+static bool attacked_by_knight(const Board *board, Square square, Colour friendly_colour)
 {
     static const int d[8][2] = { {1, 2}, {2, 1}, {2, -1}, {1, -2},
                               {-1, -2}, {-2, -1}, {-2, 1}, {-1, 2} };
@@ -48,7 +48,7 @@ static bool attacked_by_knight(const Board *board, Position square, Colour frien
 
         if (!in_bounds(board, row, col)) continue;
 
-        Position to = { .col = col, .row = row };
+        Square to = { .col = col, .row = row };
 
         Piece *target = get_piece_at(board, to);
 
@@ -58,7 +58,7 @@ static bool attacked_by_knight(const Board *board, Position square, Colour frien
     return false;
 }
 
-static bool attacked_by_king(const Board *board, Position square, Colour friendly_colour)
+static bool attacked_by_king(const Board *board, Square square, Colour friendly_colour)
 {
     static const int d[8][2] = { {0, 1}, {1, 1}, {1, 0}, {1, -1},
                                 {0, -1}, {-1, -1}, {-1, 0}, {-1, 1} };
@@ -72,7 +72,7 @@ static bool attacked_by_king(const Board *board, Position square, Colour friendl
         if (!in_bounds(board, row, col)) continue;
 
         // find piece at target destination
-        Position to = { .row = row, .col = col };
+        Square to = { .row = row, .col = col };
 
         Piece *target = get_piece_at(board, to);
 
@@ -81,14 +81,14 @@ static bool attacked_by_king(const Board *board, Position square, Colour friendl
     return false;
 }
 
-static bool attacked_by_pawn(const Board *board, Position square, Colour friendly_colour)
+static bool attacked_by_pawn(const Board *board, Square square, Colour friendly_colour)
 {
     int row = (friendly_colour == COLOUR_WHITE)
         ? square.row + 1 // enemy black pawns attack downward
         : square.row - 1; // enemy white pawns attack upward
 
-    Position left = { .row = row, .col = square.col - 1 };
-    Position right = { .row = row, .col = square.col + 1 };
+    Square left = { .row = row, .col = square.col - 1 };
+    Square right = { .row = row, .col = square.col + 1 };
 
     // verify diagonal pieces
     Piece *left_piece = get_piece_at(board, left);
@@ -108,7 +108,7 @@ static bool attacked_by_pawn(const Board *board, Position square, Colour friendl
     );
 }
 
-static bool attacked_by_sliding_piece(const Board *board, Position square, Colour friendly_colour, const int d[4][2], PieceType target_type)
+static bool attacked_by_sliding_piece(const Board *board, Square square, Colour friendly_colour, const int d[4][2], PieceType target_type)
 {
     // iterate and "slide" through each direction possible
     for (int i = 0; i < 4; i++)
@@ -123,7 +123,7 @@ static bool attacked_by_sliding_piece(const Board *board, Position square, Colou
             int col = square.col + d[i][0] * dy;
             int row = square.row + d[i][1] * dx;
 
-            Position to = { .col = col, .row = row };
+            Square to = { .col = col, .row = row };
 
             // check if move is in bounds
             if (!in_bounds(board, row, col)) break;
@@ -149,7 +149,7 @@ static bool attacked_by_sliding_piece(const Board *board, Position square, Colou
     return false;
 }
 
-static bool attacked_by_orthogonal_piece(const Board *board, Position square, Colour friendly_colour)
+static bool attacked_by_orthogonal_piece(const Board *board, Square square, Colour friendly_colour)
 {
     // rooks + queens
     static const int d[4][2] = { {1, 0}, {0, -1}, {-1, 0}, {0, 1} };
@@ -157,7 +157,7 @@ static bool attacked_by_orthogonal_piece(const Board *board, Position square, Co
     return attacked_by_sliding_piece(board, square, friendly_colour, d, TYPE_ROOK);
 }
 
-static bool attacked_by_diagonal_piece(const Board *board, Position square, Colour friendly_colour)
+static bool attacked_by_diagonal_piece(const Board *board, Square square, Colour friendly_colour)
 {
     // bishops + queens
     static const int d[4][2] = { {1, 1}, {1, -1}, {-1, -1}, {-1, 1} };
@@ -169,7 +169,7 @@ static bool attacked_by_diagonal_piece(const Board *board, Position square, Colo
 static bool side_has_legal_move(const GameState *game, Colour colour);
 
 // helper for determining whether a square is attacked - much faster approach than generating moves for each piece
-bool is_square_attacked(const GameState *game, Position square, Colour friendly_colour)
+bool is_square_attacked(const GameState *game, Square square, Colour friendly_colour)
 {
     if (!game || !game->board) return false;
 
@@ -186,11 +186,11 @@ bool is_in_check(const GameState *game, Colour colour)
 {
     if (!game || !game->board) return false;
 
-    // retrieve king position and piece
-    Position king_position;
-    if (!find_king_position(game->board, colour, &king_position)) return false;
+    // retrieve king square and piece
+    Square king_square;
+    if (!find_king_square(game->board, colour, &king_square)) return false;
 
-    return is_square_attacked(game, king_position, colour);
+    return is_square_attacked(game, king_square, colour);
 }
 
 bool is_checkmate(const GameState *game, Colour colour)
@@ -217,7 +217,7 @@ static bool side_has_legal_move(const GameState *game, Colour colour)
     {
         for (int col = 0; col < board->width; col++)
         {
-            Position from = { .row = row, .col = col };
+            Square from = { .row = row, .col = col };
             Piece *piece = get_piece_at(board, from);
 
             if (!piece || piece->colour != colour) continue;

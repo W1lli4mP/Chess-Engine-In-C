@@ -6,7 +6,7 @@ static bool accept(Queue *queue, Token token, Lex *lex_out);
 
 
 static void parse_check(Queue *queue, San *san_out);
-static bool parse_square(Queue *queue, Position *pos_out, int *err_pos);
+static bool parse_square(Queue *queue, Square *pos_out, int *err_pos);
 static bool parse_promotion(Queue *queue, PieceType *piece_out, int *err_pos);
 static bool parse_castle(Queue *queue, San *san_out, int *err_pos);
 static bool parse_piece_move(Queue *queue, San *san_out, int *err_pos);
@@ -53,10 +53,10 @@ bool tokenisation(char c, Lex *l)
     }
     return true;
 }
-static void char_to_pos(char col, char row, Position *pos)
+static void char_to_square(char col, char row, Square *square)
 {
-    pos->col = col - 'a';
-    pos->row = row - '1';
+    square->col = col - 'a';
+    square->row = row - '1';
 }
 
 static PieceType char_to_piece_type(char piece)
@@ -151,7 +151,7 @@ static void parse_check(Queue *queue, San *san_out)
     }
 }
 
-static bool parse_square(Queue *queue, Position *pos_out, int *err_pos)
+static bool parse_square(Queue *queue, Square *pos_out, int *err_pos)
 {
     Lex temp;
     Lex *l = peek_queue(queue); // lookahead
@@ -173,7 +173,7 @@ static bool parse_square(Queue *queue, Position *pos_out, int *err_pos)
     char row = temp.character;
 
     // convert and populate pos_out
-    char_to_pos(col, row, pos_out);
+    char_to_square(col, row, pos_out);
     return true;
 }
 
@@ -267,7 +267,7 @@ static bool parse_piece_move(Queue *queue, San *san_out, int *err_pos)
     }
 
     // <square>
-    Position to;
+    Square to;
     if (!parse_square(queue, &to, err_pos)) return false;
 
     san_out->to = to;
@@ -301,7 +301,7 @@ static bool parse_pawn_move(Queue *queue, San *san_out, int *err_pos)
     if (b->token == TOKEN_ROW)
     {
         // <square>
-        Position to;
+        Square to;
         if (!parse_square(queue, &to, err_pos)) return false;
         san_out->to = to;
 
@@ -332,7 +332,7 @@ static bool parse_pawn_move(Queue *queue, San *san_out, int *err_pos)
         san_out->is_capture = true;
 
         // <square>
-        Position to;
+        Square to;
         if (!parse_square(queue, &to, err_pos)) return false;
         san_out->to = to;
 

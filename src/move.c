@@ -1,7 +1,7 @@
 #include "move.h"
 
 // creates a move without having to allocate to memory
-Move create_move(PieceType piece, Position from, Position to)
+Move create_move(PieceType piece, Square from, Square to)
 {
     Move move = {
         .piece = piece,

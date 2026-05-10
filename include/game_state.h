@@ -3,9 +3,10 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
+
 #include "board.h"
 #include "piece.h"
-#include "position.h"
+#include "square.h"
 #include "position_key_types.h"
 
 typedef struct
@@ -25,7 +26,7 @@ typedef struct
     CastlingRights castling_rights;
 
     bool has_en_passant_target;
-    Position en_passant_target;
+    Square en_passant_target;
 
     int halfmove_clock;
     int fullmove_number;

@@ -2,11 +2,12 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "board.h"
 #include "game_state.h"
 #include "fen_parser.h"
 #include "san_resolve.h"
-#include "position.h"
+#include "square.h"
 #include "parser.h"
 #include "test_utils.h"
 #include "move.h"
@@ -42,7 +43,7 @@ static bool run_san_resolve_case(
 
 static bool parse_status(const char *text, ResolveStatus *status_out);
 
-static bool parse_square(const char *text, Position *position_out);
+static bool parse_square(const char *text, Square *square_out);
 
 static bool parse_promotion_piece(char c, PieceType *promotion_out);
 
@@ -160,8 +161,8 @@ static bool run_san_resolve_case(
     }
 
     // parse squares IFF status is OK
-    Position expected_from = { .row = -1, .col = -1 };
-    Position expected_to = { .row = -1, .col = -1 };
+    Square expected_from = { .row = -1, .col = -1 };
+    Square expected_to = { .row = -1, .col = -1 };
 
     if (expected_status == RESOLVE_OK)
     {
@@ -367,9 +368,9 @@ static bool parse_status(const char *text, ResolveStatus *status_out)
     return false;
 }
 
-static bool parse_square(const char *text, Position *position_out)
+static bool parse_square(const char *text, Square *square_out)
 {
-    if (!text || !position_out) return false;
+    if (!text || !square_out) return false;
 
     // squares must always be denoted as two chars: <col> | <row>
     if (strlen(text) != 2) return false;
@@ -381,8 +382,8 @@ static bool parse_square(const char *text, Position *position_out)
 
     if (row < '1' || row > '8') return false;
 
-    position_out->col = col - 'a';
-    position_out->row = row - '1';
+    square_out->col = col - 'a';
+    square_out->row = row - '1';
 
     return true;
 }

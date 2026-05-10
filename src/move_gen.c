@@ -4,8 +4,8 @@
 
 static bool append_normal_move(
     const Board *board,
-    Position from,
-    Position to,
+    Square from,
+    Square to,
     MoveList *moves_out
 );
 
@@ -13,69 +13,69 @@ static bool is_pawn_promotion_rank(Colour colour, int row);
 
 static bool append_pawn_move(
     const Board *board,
-    Position from,
-    Position to,
+    Square from,
+    Square to,
     MoveList *moves_out
 );
 
 static bool append_promotion_moves(
     const Board *board,
-    Position from,
-    Position to,
+    Square from,
+    Square to,
     MoveList *moves_out
 );
 
 static bool append_en_passant_move(
     const Board *board,
-    Position from,
-    Position to,
+    Square from,
+    Square to,
     MoveList *moves_out
 );
 
 static bool generate_pawn_moves(
     GameState *game,
-    Position piece_location,
+    Square from,
     MoveList *moves_out
 );
 
 static bool castling_path_clear_and_safe(
     GameState *game,
     Colour colour,
-    Position empty_squares[],
+    Square empty_squares[],
     int empty_count,
-    Position safe_squares[],
+    Square safe_squares[],
     int safe_count
 );
 
 static bool append_castling_move(
     const Board *board,
-    Position from,
-    Position to,
+    Square from,
+    Square to,
     bool kingside,
     MoveList *moves_out
 );
 
 static bool append_castling_moves(
     GameState *game,
-    Position king_location,
+    Square king_square,
     MoveList *moves_out
 );
 
 static bool generate_king_moves(
     GameState *game,
-    Position piece_location,
+    Square from,
     MoveList *moves_out
 );
 
 static bool generate_knight_moves(
     GameState *game,
-    Position piece_location,
+    Square from,
     MoveList *moves_out
 );
 
 static bool generate_sliding_moves(
     GameState *game,
-    Position piece_location,
+    Square from,
     MoveList *moves_out,
     const int d[][2],
     int num_directions
@@ -83,30 +83,30 @@ static bool generate_sliding_moves(
 
 static bool generate_bishop_moves(
     GameState *game,
-    Position piece_location,
+    Square from,
     MoveList *moves_out
 );
 
 static bool generate_rook_moves(
     GameState *game,
-    Position piece_location,
+    Square from,
     MoveList *moves_out
 );
 
 static bool generate_queen_moves(
     GameState *game,
-    Position piece_location,
+    Square from,
     MoveList *moves_out
 );
 
-static bool is_empty_square(const Board *board, Position position);
+static bool is_empty_square(const Board *board, Square square);
 
 //* MAIN HELPER
-// constructs Move from two Position's and appends if possible
+// constructs Move from two Square's and appends if possible
 static bool append_normal_move(
     const Board *board,
-    Position from,
-    Position to,
+    Square from,
+    Square to,
     MoveList *moves_out
 )
 {
@@ -130,35 +130,35 @@ static bool append_normal_move(
 //* MAIN FUNCTIONS
 bool generate_pseudo_legal_moves(
     GameState *game,
-    Position piece_location,
+    Square from,
     MoveList *moves_out
 )
 {
     if (!game || !game->board || !moves_out) return false;
 
-    Piece *selected_piece = get_piece_at(game->board, piece_location);
+    Piece *selected_piece = get_piece_at(game->board, from);
     if (!selected_piece) return false;
 
     // generate moves based on the piece type
     switch (selected_piece->type)
     {
         case TYPE_PAWN:
-            return generate_pawn_moves(game, piece_location, moves_out);
+            return generate_pawn_moves(game, from, moves_out);
 
         case TYPE_KING:
-            return generate_king_moves(game, piece_location, moves_out);
+            return generate_king_moves(game, from, moves_out);
 
         case TYPE_KNIGHT:
-            return generate_knight_moves(game, piece_location, moves_out);
+            return generate_knight_moves(game, from, moves_out);
 
         case TYPE_BISHOP:
-            return generate_bishop_moves(game, piece_location, moves_out);
+            return generate_bishop_moves(game, from, moves_out);
 
         case TYPE_ROOK:
-            return generate_rook_moves(game, piece_location, moves_out);
+            return generate_rook_moves(game, from, moves_out);
 
         case TYPE_QUEEN:
-            return generate_queen_moves(game, piece_location, moves_out);
+            return generate_queen_moves(game, from, moves_out);
 
         default:
             return false;
@@ -167,7 +167,7 @@ bool generate_pseudo_legal_moves(
 
 bool generate_legal_moves(
     GameState *game,
-    Position piece_location,
+    Square from,
     MoveList *moves_out
 )
 {
@@ -176,7 +176,7 @@ bool generate_legal_moves(
     const Board *board = game->board;
 
     // find piece for information
-    Piece *selected_piece = get_piece_at(board, piece_location);
+    Piece *selected_piece = get_piece_at(board, from);
     if (!selected_piece) return false;
     
     // retrieve moving colour before applying move
@@ -185,7 +185,7 @@ bool generate_legal_moves(
     // calculate pseudo legal moves
     MoveList pseudo_moves = {0};
 
-    if (!generate_pseudo_legal_moves(game, piece_location, &pseudo_moves)) return false;
+    if (!generate_pseudo_legal_moves(game, from, &pseudo_moves)) return false;
 
     // simulate every move
     for (int i = 0; i < pseudo_moves.count; i++)
@@ -226,7 +226,7 @@ bool generate_all_legal_moves(
     {
         for (int col = 0; col < board->width; col++)
         {
-            Position from = { .row = row, .col = col };
+            Square from = { .row = row, .col = col };
 
             // retrieve pieces of the side's turn to move
             Piece *piece = get_piece_at(board, from);
@@ -260,8 +260,8 @@ static bool is_pawn_promotion_rank(Colour colour, int row)
 
 static bool append_pawn_move(
     const Board *board,
-    Position from,
-    Position to,
+    Square from,
+    Square to,
     MoveList *moves_out
 )
 {
@@ -278,8 +278,8 @@ static bool append_pawn_move(
 
 static bool append_promotion_moves(
     const Board *board,
-    Position from,
-    Position to,
+    Square from,
+    Square to,
     MoveList *moves_out
 )
 {
@@ -316,8 +316,8 @@ static bool append_promotion_moves(
 
 static bool append_en_passant_move(
     const Board *board,
-    Position from,
-    Position to,
+    Square from,
+    Square to,
     MoveList *moves_out
 )
 {
@@ -338,45 +338,45 @@ static bool append_en_passant_move(
 
 static bool generate_pawn_moves(
     GameState *game,
-    Position piece_location,
+    Square from,
     MoveList *moves_out
 )
 {
     const Board *board = game->board;
 
-    Piece *selected_piece = get_piece_at(board, piece_location);
+    Piece *selected_piece = get_piece_at(board, from);
     if (!selected_piece) return false;
 
     // determine pawn direction based on colour
     int d = (selected_piece->colour == COLOUR_WHITE) ? 1 : -1;
 
-    int col = piece_location.col;
-    int row = piece_location.row;
+    int col = from.col;
+    int row = from.row;
 
     // forward
-    Position f1 = { .row = row + d, .col = col };
+    Square f1 = { .row = row + d, .col = col };
 
     // can only move forward to empty squares
     if (is_empty_square(board, f1))
     {
-        if (!append_pawn_move(board, piece_location, f1, moves_out)) return false;
+        if (!append_pawn_move(board, from, f1, moves_out)) return false;
 
-        // double forward (iff original position was at a starting position)
-        if ((selected_piece->colour == COLOUR_WHITE && piece_location.row == 1) || (selected_piece->colour == COLOUR_BLACK && piece_location.row == board->height - 2))
+        // double forward (iff original square was at a starting square)
+        if ((selected_piece->colour == COLOUR_WHITE && from.row == 1) || (selected_piece->colour == COLOUR_BLACK && from.row == board->height - 2))
         {
             // repeat the same but for second forward move
-            Position f2 = { .row = row + 2 * d, .col = col };
+            Square f2 = { .row = row + 2 * d, .col = col };
 
             if (is_empty_square(board, f2))
             {
                 //* double moves can never promote so treat it as a normal move
-                if (!append_normal_move(board, piece_location, f2, moves_out)) return false;
+                if (!append_normal_move(board, from, f2, moves_out)) return false;
             }
         }
     }
 
     // check for diagonal captures
-    Position captures[2] = {
+    Square captures[2] = {
         { .row = row + d, .col = col - 1 },
         { .row = row + d, .col = col + 1 }
     };
@@ -384,21 +384,21 @@ static bool generate_pawn_moves(
     // check both left and right diagonal captures
     for (int i = 0; i < 2; i++)
     {
-        Position to = captures[i];
+        Square to = captures[i];
 
         Piece *target = get_piece_at(board, to);
 
         // append enemies if valid
         if (target && target->colour != selected_piece->colour)
         {
-            if (!append_pawn_move(board, piece_location, to, moves_out)) return false;
+            if (!append_pawn_move(board, from, to, moves_out)) return false;
         }
     }
 
     //* en passant
     if (game->has_en_passant_target)
     {
-        Position target = game->en_passant_target;
+        Square target = game->en_passant_target;
 
         // get en passant target squares
         bool target_is_left_capture = (
@@ -414,9 +414,9 @@ static bool generate_pawn_moves(
         if (target_is_left_capture || target_is_right_capture)
         {
             // target square must be empty, captured piece must be a pawn and present too
-            Position captured_position = { .row = row, .col = target.col };
+            Square captured_square = { .row = row, .col = target.col };
 
-            Piece *captured_piece = get_piece_at(board, captured_position);
+            Piece *captured_piece = get_piece_at(board, captured_square);
             Piece *target_square_piece = get_piece_at(board, target);
 
             if (
@@ -426,7 +426,7 @@ static bool generate_pawn_moves(
                 captured_piece->colour != selected_piece->colour
             )
             {
-                if (!append_en_passant_move(board, piece_location, target, moves_out)) return false;
+                if (!append_en_passant_move(board, from, target, moves_out)) return false;
             }
         }
     }
@@ -437,9 +437,9 @@ static bool generate_pawn_moves(
 static bool castling_path_clear_and_safe(
     GameState *game,
     Colour colour,
-    Position empty_squares[],
+    Square empty_squares[],
     int empty_count,
-    Position safe_squares[],
+    Square safe_squares[],
     int safe_count
 )
 {
@@ -462,8 +462,8 @@ static bool castling_path_clear_and_safe(
 
 static bool append_castling_move(
     const Board *board,
-    Position from,
-    Position to,
+    Square from,
+    Square to,
     bool kingside,
     MoveList *moves_out
 )
@@ -485,7 +485,7 @@ static bool append_castling_move(
 
 static bool append_castling_moves(
     GameState *game,
-    Position king_location,
+    Square king_square,
     MoveList *moves_out
 )
 {
@@ -493,7 +493,7 @@ static bool append_castling_moves(
 
     const Board *board = game->board;
 
-    Piece *king = get_piece_at(board, king_location);
+    Piece *king = get_piece_at(board, king_square);
     if (!king) return false;
 
     Colour colour = king->colour;
@@ -508,17 +508,17 @@ static bool append_castling_moves(
     else
         return true;
     
-    Position king_start = { .row = start_row, .col = 4 };
+    Square king_start = { .row = start_row, .col = 4 };
 
     // return true since nothing failed (like appending 0 moves successfully)
-    if (king_location.row != king_start.row || king_location.col != king_start.col) return true;
+    if (king_square.row != king_start.row || king_square.col != king_start.col) return true;
 
     // cannot castle when in check but not a fail
     if (is_in_check(game, colour)) return true;
 
     // castling logic:
     /*
-        subsequent squares cannot be attacked (+- 2 on the king's column position)
+        subsequent squares cannot be attacked (+- 2 on the king's column square)
         rook must be in the corner:
             -4 squares if queenside
             +3 squares if kingside
@@ -537,16 +537,16 @@ static bool append_castling_moves(
     
     if (can_kingside)
     {
-        Position rook_location = { .row = start_row, .col = 7 };
-        Piece *rook = get_piece_at(board, rook_location);
+        Square rook_square = { .row = start_row, .col = 7 };
+        Piece *rook = get_piece_at(board, rook_square);
         
         // check squares individually; more robust
-        Position empty_squares[2] = {
+        Square empty_squares[2] = {
             { .row = start_row, .col = 5},
             { .row = start_row, .col = 6}
         };
 
-        Position safe_squares[3] = {
+        Square safe_squares[3] = {
             { .row = start_row, .col = 4 },
             { .row = start_row, .col = 5 },
             { .row = start_row, .col = 6 }
@@ -560,9 +560,9 @@ static bool append_castling_moves(
             castling_path_clear_and_safe(game, colour, empty_squares, 2, safe_squares, 3)
         )
         {
-            Position to = { .row = start_row, .col = 6};
+            Square to = { .row = start_row, .col = 6};
 
-            if (!append_castling_move(board, king_location, to, true, moves_out)) return false;
+            if (!append_castling_move(board, king_square, to, true, moves_out)) return false;
         }
     }
 
@@ -573,16 +573,16 @@ static bool append_castling_moves(
     
     if (can_queenside)
     {
-        Position rook_location = { .row = start_row, .col = 0 };
-        Piece *rook = get_piece_at(board, rook_location);
+        Square rook_square = { .row = start_row, .col = 0 };
+        Piece *rook = get_piece_at(board, rook_square);
         
-        Position empty_squares[3] = {
+        Square empty_squares[3] = {
             { .row = start_row, .col = 3 },
             { .row = start_row, .col = 2 },
             { .row = start_row, .col = 1 }
         };
 
-        Position safe_squares[3] = {
+        Square safe_squares[3] = {
             { .row = start_row, .col = 4 },
             { .row = start_row, .col = 3 },
             { .row = start_row, .col = 2 }
@@ -595,9 +595,9 @@ static bool append_castling_moves(
             castling_path_clear_and_safe(game, colour, empty_squares, 3, safe_squares, 3)
         )
         {
-            Position to = { .row = start_row, .col = 2 };
+            Square to = { .row = start_row, .col = 2 };
 
-            if (!append_castling_move(board, king_location, to, false, moves_out)) return false;
+            if (!append_castling_move(board, king_square, to, false, moves_out)) return false;
         }
     }
 
@@ -606,7 +606,7 @@ static bool append_castling_moves(
 
 static bool generate_king_moves(
     GameState *game,
-    Position piece_location,
+    Square from,
     MoveList *moves_out
 )
 {
@@ -618,30 +618,30 @@ static bool generate_king_moves(
     };
 
     // select piece at piece location
-    Piece *selected_piece = get_piece_at(board, piece_location);
+    Piece *selected_piece = get_piece_at(board, from);
     if (!selected_piece) return false;
 
     for (int i = 0; i < 8; i++)
     {
-        int col = piece_location.col + d[i][0];
-        int row = piece_location.row + d[i][1];
+        int col = from.col + d[i][0];
+        int row = from.row + d[i][1];
 
         // skip if out of bounds
         if (!in_bounds(board, row, col)) continue;
 
         // find piece at target destination
-        Position to = { .row = row, .col = col };
+        Square to = { .row = row, .col = col };
         Piece *target = get_piece_at(board, to);
 
         // selected piece cannot capture friendly pieces - dont append
         if (target && selected_piece->colour == target->colour) continue;
 
         // attempt to append move, returning false if failing
-        if (!append_normal_move(board, piece_location, to, moves_out)) return false;
+        if (!append_normal_move(board, from, to, moves_out)) return false;
     }
 
     // calculate and add valid castling moves
-    if (!append_castling_moves(game, piece_location, moves_out)) return false;
+    if (!append_castling_moves(game, from, moves_out)) return false;
 
     // once all possible moves have been processed successfully, return true
     return true;
@@ -649,7 +649,7 @@ static bool generate_king_moves(
 
 static bool generate_knight_moves(
     GameState *game,
-    Position piece_location,
+    Square from,
     MoveList *moves_out
 )
 {
@@ -659,25 +659,25 @@ static bool generate_knight_moves(
                               {-1, -2}, {-2, -1}, {-2, 1}, {-1, 2} };
 
     // locate knight
-    Piece *selected_piece = get_piece_at(board, piece_location);
+    Piece *selected_piece = get_piece_at(board, from);
     if (!selected_piece) return false;
 
     for (int i = 0; i < 8; i++)
     {
         // apply directions
-        int col = piece_location.col + d[i][0];
-        int row = piece_location.row + d[i][1];
+        int col = from.col + d[i][0];
+        int row = from.row + d[i][1];
 
         if (!in_bounds(board, row, col)) continue;
 
-        Position to = { .col = col, .row = row };
+        Square to = { .col = col, .row = row };
 
         Piece *target = get_piece_at(board, to);
 
         // friendly piece check
         if (target && selected_piece->colour == target->colour) continue;
 
-        if (!append_normal_move(board, piece_location, to, moves_out)) return false;
+        if (!append_normal_move(board, from, to, moves_out)) return false;
     }
 
     return true;
@@ -686,7 +686,7 @@ static bool generate_knight_moves(
 // helper for sliding pieces: bishops, rooks and queens
 static bool generate_sliding_moves(
     GameState *game,
-    Position piece_location,
+    Square from,
     MoveList *moves_out,
     const int d[][2],
     const int num_directions
@@ -694,7 +694,7 @@ static bool generate_sliding_moves(
 {
     const Board *board = game->board;
 
-    Piece *selected_piece = get_piece_at(board, piece_location);
+    Piece *selected_piece = get_piece_at(board, from);
     if (!selected_piece) return false;
 
     // iterate and "slide" through each direction possible
@@ -707,13 +707,13 @@ static bool generate_sliding_moves(
         for (;;)
         {
             // apply direction + incrementer
-            int col = piece_location.col + d[i][0] * dy;
-            int row = piece_location.row + d[i][1] * dx;
+            int col = from.col + d[i][0] * dy;
+            int row = from.row + d[i][1] * dx;
 
             // check if move is in bounds
             if (!in_bounds(board, row, col)) break;
 
-            Position to = { .col = col, .row = row };
+            Square to = { .col = col, .row = row };
 
             // select piece on destination
             Piece *target = get_piece_at(board, to);
@@ -722,7 +722,7 @@ static bool generate_sliding_moves(
             if (target && selected_piece->colour == target->colour) break;
             
             // append (only options are empty square or enemy piece)
-            if (!append_normal_move(board, piece_location, to, moves_out)) return false;
+            if (!append_normal_move(board, from, to, moves_out)) return false;
 
             // check for enemy pieces (to break early)
             if (target && selected_piece->colour != target->colour) break;
@@ -739,29 +739,29 @@ static bool generate_sliding_moves(
 // sliding piece movement
 static bool generate_bishop_moves(
     GameState *game,
-    Position piece_location,
+    Square from,
     MoveList *moves_out
 )
 {
     static const int d[4][2] = { {1, 1}, {1, -1}, {-1, -1}, {-1, 1} };
     
-    return generate_sliding_moves(game, piece_location, moves_out, d, 4);
+    return generate_sliding_moves(game, from, moves_out, d, 4);
 }
 
 static bool generate_rook_moves(
     GameState *game,
-    Position piece_location,
+    Square from,
     MoveList *moves_out
 )
 {
     static const int d[4][2] = { {1, 0}, {0, -1}, {-1, 0}, {0, 1} };
 
-    return generate_sliding_moves(game, piece_location, moves_out, d, 4);
+    return generate_sliding_moves(game, from, moves_out, d, 4);
 }
 
 static bool generate_queen_moves(
     GameState *game,
-    Position piece_location,
+    Square from,
     MoveList *moves_out
 )
 {
@@ -771,11 +771,11 @@ static bool generate_queen_moves(
         {1, 0}, {0, -1}, {-1, 0}, {0, 1}
     };
 
-    return generate_sliding_moves(game, piece_location, moves_out, d, 8);
+    return generate_sliding_moves(game, from, moves_out, d, 8);
 }
 
 // avoids having to use in_bounds() and get_piece_at() afterwards
-static bool is_empty_square(const Board *board, Position position)
+static bool is_empty_square(const Board *board, Square square)
 {
-    return in_bounds(board, position.row, position.col) && get_piece_at(board, position) == NULL;
+    return in_bounds(board, square.row, square.col) && get_piece_at(board, square) == NULL;
 }

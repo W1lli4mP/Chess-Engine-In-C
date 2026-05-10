@@ -47,8 +47,8 @@ bool create_position_key(const GameState *game, PositionKey *key_out)
 
         for (int col = 0; col < BOARD_SIZE; col++)
         {
-            Position pos = { .row = row, .col = col };
-            Piece *piece = get_piece_at(game->board, pos);
+            Square from = { .row = row, .col = col };
+            Piece *piece = get_piece_at(game->board, from);
             
             if (!piece)
             {

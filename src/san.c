@@ -6,7 +6,7 @@ San *create_san(void)
     if (!san) return NULL;
 
     san->piece = TYPE_NONE;
-    Position to = { .col = -1, .row = -1 };
+    Square to = { .col = -1, .row = -1 };
     san->to = to;
     san->is_capture = false;
 

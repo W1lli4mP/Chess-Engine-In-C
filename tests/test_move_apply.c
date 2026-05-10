@@ -2,10 +2,12 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "board.h"
 #include "game_state.h"
 #include "fen_parser.h"
 #include "move_apply.h"
+#include "square.h"
 #include "test_utils.h"
 
 #define MOVE_APPLY_CASES_FILE "tests/data/move_apply_cases.txt"
@@ -27,9 +29,7 @@ static void print_move_apply_result(
     const char *reason
 );
 
-static bool parse_square(const char *text, Position *position_out);
-
-static bool positions_equal(Position a, Position b);
+static bool parse_square(const char *text, Square *square_out);
 
 static bool castling_rights_match_text(CastlingRights rights, const char *text);
 
@@ -52,7 +52,7 @@ static bool verify_after_unmake(
     int original_fullmove_number,
     CastlingRights original_castling_rights,
     bool original_has_en_passant_target,
-    Position original_en_passant_target
+    Square original_en_passant_target
 );
 
 int main()
@@ -124,7 +124,7 @@ static bool run_move_apply_case(
 )
 {
     // parse from square
-    Position from;
+    Square from;
 
     if (!parse_square(from_text, &from))
     {
@@ -133,7 +133,7 @@ static bool run_move_apply_case(
     }
 
     // parse to square
-    Position to;
+    Square to;
 
     if (!parse_square(to_text, &to))
     {
@@ -177,7 +177,7 @@ static bool run_move_apply_case(
 
     // store original game state
     Piece *captured_piece = get_piece_at(game->board, to);
-    Position expected_captured_position = to;
+    Square expected_captured_square = to;
 
     // en passant captures a pawn from a different square
     if (
@@ -185,13 +185,13 @@ static bool run_move_apply_case(
         strcmp(note_text, "expected_fail_en_passant") == 0
     )
     {
-        expected_captured_position = (Position) { .row = from.row, .col = to.col };
-        captured_piece = get_piece_at(game->board, expected_captured_position);
+        expected_captured_square = (Square) { .row = from.row, .col = to.col };
+        captured_piece = get_piece_at(game->board, expected_captured_square);
     }
 
     // expected en passant target after a double pawn move
     bool expects_ep_target = false;
-    Position expected_ep_target = { .row = -1, .col = -1 };
+    Square expected_ep_target = { .row = -1, .col = -1 };
 
     if (strncmp(note_text, "expected_ep=", 12) == 0)
     {
@@ -208,7 +208,7 @@ static bool run_move_apply_case(
     Colour original_side_to_move = game->side_to_move;
     CastlingRights original_castling_rights = game->castling_rights;
     bool original_has_en_passant_target = game->has_en_passant_target;
-    Position original_en_passant_target = game->en_passant_target;
+    Square original_en_passant_target = game->en_passant_target;
     int original_halfmove_clock = game->halfmove_clock;
     int original_fullmove_number = game->fullmove_number;
 
@@ -337,7 +337,7 @@ static bool run_move_apply_case(
     {
         if (
             !game->has_en_passant_target ||
-            !positions_equal(game->en_passant_target, expected_ep_target)
+            !squares_equal(game->en_passant_target, expected_ep_target)
         )
         {
             destroy_game_state(game);
@@ -355,8 +355,8 @@ static bool run_move_apply_case(
             return false;
         }
 
-        Position none = { .row = -1, .col = -1 };
-        if (!positions_equal(game->en_passant_target, none))
+        Square none = { .row = -1, .col = -1 };
+        if (!squares_equal(game->en_passant_target, none))
         {
             destroy_game_state(game);
             print_move_apply_result(test_id, false, "en passant target square was not reset");
@@ -386,10 +386,10 @@ static bool run_move_apply_case(
         return false;
     }
 
-    if (!positions_equal(undo.captured_position, expected_captured_position))
+    if (!squares_equal(undo.captured_square, expected_captured_square))
     {
         destroy_game_state(game);
-        print_move_apply_result(test_id, false, "undo captured position is incorrect");
+        print_move_apply_result(test_id, false, "undo captured square is incorrect");
         return false;
     }
 
@@ -435,7 +435,7 @@ static bool run_move_apply_case(
         return false;
     }
 
-    if (!positions_equal(undo.previous_en_passant_target, original_en_passant_target))
+    if (!squares_equal(undo.previous_en_passant_target, original_en_passant_target))
     {
         destroy_game_state(game);
         print_move_apply_result(test_id, false, "undo en passant target square is incorrect");
@@ -490,9 +490,9 @@ static void print_move_apply_result(
     puts("------------------------");
 }
 
-static bool parse_square(const char *text, Position *position_out)
+static bool parse_square(const char *text, Square *square_out)
 {
-    if (!text || !position_out) return false;
+    if (!text || !square_out) return false;
 
     // squares must always be denoted as two chars: <col> | <row>
     if (strlen(text) != 2) return false;
@@ -504,15 +504,10 @@ static bool parse_square(const char *text, Position *position_out)
 
     if (row < '1' || row > '8') return false;
 
-    position_out->col = col - 'a';
-    position_out->row = row - '1';
+    square_out->col = col - 'a';
+    square_out->row = row - '1';
 
     return true;
-}
-
-static bool positions_equal(Position a, Position b)
-{
-    return a.col == b.col && a.row == b.row;
 }
 
 static bool castling_rights_match_text(CastlingRights rights, const char *text)
@@ -582,8 +577,8 @@ static bool verify_after_make(
     // verify castling
     if (move.is_castle_kingside)
     {
-        Position rook_to = { .row = move.from.row, .col = 5 };
-        Position rook_from = { .row = move.from.row, .col = 7 };
+        Square rook_to = { .row = move.from.row, .col = 5 };
+        Square rook_from = { .row = move.from.row, .col = 7 };
 
         // there should be a rook that has moved to the destination
         Piece *rook = get_piece_at(game->board, rook_to);
@@ -594,8 +589,8 @@ static bool verify_after_make(
     }
     if (move.is_castle_queenside)
     {
-        Position rook_to = { .row = move.from.row, .col = 3 };
-        Position rook_from = { .row = move.from.row, .col = 0 };
+        Square rook_to = { .row = move.from.row, .col = 3 };
+        Square rook_from = { .row = move.from.row, .col = 0 };
 
         // there should be a rook that has moved to the destination
         Piece *rook = get_piece_at(game->board, rook_to);
@@ -608,11 +603,11 @@ static bool verify_after_make(
     // verify en passant
     if (move.is_en_passant)
     {
-        Position ep_captured_position = { .row = move.from.row, .col = move.to.col };
+        Square ep_captured_square = { .row = move.from.row, .col = move.to.col };
 
         // moved pawn should be on the destination; already checked above
         // captured pawn should also be removed from its original square
-        if (get_piece_at(game->board, ep_captured_position) != NULL) return false;
+        if (get_piece_at(game->board, ep_captured_square) != NULL) return false;
     }
 
     //* NORMAL GAME STATE ATTRIBUTES
@@ -647,7 +642,7 @@ static bool verify_after_unmake(
     int original_fullmove_number,
     CastlingRights original_castling_rights,
     bool original_has_en_passant_target,
-    Position original_en_passant_target
+    Square original_en_passant_target
 )
 {
     if (!game || !game->board || !moved_piece) return false;
@@ -665,8 +660,8 @@ static bool verify_after_unmake(
     // castling
     if (move.is_castle_kingside)
     {
-        Position rook_from = { .row = move.from.row, .col = 7 };
-        Position rook_to = { .row = move.from.row, .col = 5 };
+        Square rook_from = { .row = move.from.row, .col = 7 };
+        Square rook_to = { .row = move.from.row, .col = 5 };
 
         // after unmake, rook should be back on original square
         Piece *rook = get_piece_at(game->board, rook_from);
@@ -678,8 +673,8 @@ static bool verify_after_unmake(
 
     if (move.is_castle_queenside)
     {
-        Position rook_from = { .row = move.from.row, .col = 0 };
-        Position rook_to = { .row = move.from.row, .col = 3 };
+        Square rook_from = { .row = move.from.row, .col = 0 };
+        Square rook_to = { .row = move.from.row, .col = 3 };
 
         // after unmake, rook should be back on original square
         Piece *rook = get_piece_at(game->board, rook_from);
@@ -692,13 +687,13 @@ static bool verify_after_unmake(
     // en passant
     if (move.is_en_passant)
     {
-        Position ep_captured_position = { .row = move.from.row, .col = move.to.col };
+        Square ep_captured_square = { .row = move.from.row, .col = move.to.col };
 
         // destination square should be empty again
         if (to_piece != NULL) return false;
 
         // captured pawn should be restored to its original square
-        if (get_piece_at(game->board, ep_captured_position) != captured_piece) return false;
+        if (get_piece_at(game->board, ep_captured_square) != captured_piece) return false;
     }
     else
     {
@@ -718,7 +713,7 @@ static bool verify_after_unmake(
 
     if (game->has_en_passant_target != original_has_en_passant_target) return false;
 
-    if (!positions_equal(game->en_passant_target, original_en_passant_target)) return false;
+    if (!squares_equal(game->en_passant_target, original_en_passant_target)) return false;
 
     return true;
 }

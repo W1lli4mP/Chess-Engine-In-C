@@ -87,7 +87,7 @@ static void update_en_passant_target_after_move(
     int target_row = (move.from.row + move.to.row) / 2;
 
     game->has_en_passant_target = true;
-    game->en_passant_target = (Position) { .row = target_row, .col = move.from.col };
+    game->en_passant_target = (Square) { .row = target_row, .col = move.from.col };
 }
 
 bool make_move(GameState *game, Move move, UndoInfo *undo_out)
@@ -96,8 +96,8 @@ bool make_move(GameState *game, Move move, UndoInfo *undo_out)
 
     Board *board = game->board;
 
-    if (!is_position_on_board(board, move.from)) return false;
-    if (!is_position_on_board(board, move.to)) return false;
+    if (!is_square_on_board(board, move.from)) return false;
+    if (!is_square_on_board(board, move.to)) return false;
 
     // find pieces on source and destination squares
     Piece *piece = get_piece_at(board, move.from);
@@ -141,13 +141,13 @@ bool make_move(GameState *game, Move move, UndoInfo *undo_out)
         // actual logic
         int row = move.from.row;
 
-        Position rook_from = move.is_castle_kingside
-            ? (Position) { .row = row, .col = 7 }
-            : (Position) { .row = row, .col = 0 };
+        Square rook_from = move.is_castle_kingside
+            ? (Square) { .row = row, .col = 7 }
+            : (Square) { .row = row, .col = 0 };
         
-        Position rook_to = move.is_castle_kingside
-            ? (Position) { .row = row, .col = 5 }
-            : (Position) { .row = row, .col = 3 };
+        Square rook_to = move.is_castle_kingside
+            ? (Square) { .row = row, .col = 5 }
+            : (Square) { .row = row, .col = 3 };
 
         Piece *rook = get_piece_at(board, rook_from);
 
@@ -160,8 +160,8 @@ bool make_move(GameState *game, Move move, UndoInfo *undo_out)
     else
     {
         undo_out->castling_rook = NULL;
-        undo_out->castling_rook_from = (Position) { .row = -1, .col = -1 };
-        undo_out->castling_rook_to = (Position) { .row = -1, .col = -1 };
+        undo_out->castling_rook_from = (Square) { .row = -1, .col = -1 };
+        undo_out->castling_rook_to = (Square) { .row = -1, .col = -1 };
     }
 
     //* en passant validation
@@ -188,7 +188,7 @@ bool make_move(GameState *game, Move move, UndoInfo *undo_out)
     //* if en passant, captured pawn is on a different square
     if (move.is_en_passant)
     {
-        Position captured_location = { .row = move.from.row, .col = move.to.col };
+        Square captured_location = { .row = move.from.row, .col = move.to.col };
 
         // reject if the destination is occupied
         if (get_piece_at(board, move.to)) return false;
@@ -198,13 +198,13 @@ bool make_move(GameState *game, Move move, UndoInfo *undo_out)
         if (!captured || captured->type != TYPE_PAWN || captured->colour == piece->colour) return false;
 
         undo_out->captured_piece = captured;
-        undo_out->captured_position = captured_location;
+        undo_out->captured_square = captured_location;
     }
     else
     {
         captured = get_piece_at(board, move.to);
         undo_out->captured_piece = captured;
-        undo_out->captured_position = move.to;
+        undo_out->captured_square = move.to;
     }
 
     undo_out->previous_side_to_move = game->side_to_move;
@@ -236,7 +236,7 @@ bool make_move(GameState *game, Move move, UndoInfo *undo_out)
     //* remove captured pawn if move is an en passant
     if (move.is_en_passant)
     {
-        if (!set_piece_at(board, undo_out->captured_position, NULL)) return false;
+        if (!set_piece_at(board, undo_out->captured_square, NULL)) return false;
     }
 
     // update castling rights
@@ -245,7 +245,7 @@ bool make_move(GameState *game, Move move, UndoInfo *undo_out)
     //* update en passant
     // clear en passant before updating
     game->has_en_passant_target = false;
-    game->en_passant_target = (Position) { .row = -1, .col = -1 };
+    game->en_passant_target = (Square) { .row = -1, .col = -1 };
 
     update_en_passant_target_after_move(game, move, piece);
 
@@ -290,7 +290,7 @@ bool unmake_move(GameState *game, Move move, const UndoInfo *undo)
     if (move.is_en_passant)
     {
         if (!set_piece_at(board, move.to, NULL)) return false;
-        if (!set_piece_at(board, undo->captured_position, undo->captured_piece)) return false;
+        if (!set_piece_at(board, undo->captured_square, undo->captured_piece)) return false;
     }
     else
     {

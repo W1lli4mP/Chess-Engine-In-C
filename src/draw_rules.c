@@ -2,11 +2,12 @@
 #include "board.h"
 #include "piece.h"
 #include "position_key.h"
+#include "square.h"
 
-static bool is_light_square(Position pos)
+static bool is_light_square(Square square)
 {
     // light squares are always even, vice versa
-    return ((pos.row + pos.col) % 2) == 0;
+    return ((square.row + square.col) % 2) == 0;
 }
 
 bool is_fifty_move_draw(const GameState *game)
@@ -36,8 +37,8 @@ bool is_insufficient_material(const GameState *game)
     {
         for (int col = 0; col < game->board->width; col++)
         {
-            Position pos = { .row = row, .col = col };
-            Piece *piece = get_piece_at(game->board, pos);
+            Square square = { .row = row, .col = col };
+            Piece *piece = get_piece_at(game->board, square);
             
             if (!piece) continue;
 
@@ -51,13 +52,13 @@ bool is_insufficient_material(const GameState *game)
                     {
                         white_minor_count++;
                         white_bishop_count++;
-                        white_bishop_square_colour = is_light_square(pos);
+                        white_bishop_square_colour = is_light_square(square);
                     }
                     else if (piece->colour == COLOUR_BLACK)
                     {
                         black_minor_count++;
                         black_bishop_count++;
-                        black_bishop_square_colour = is_light_square(pos);
+                        black_bishop_square_colour = is_light_square(square);
                     }
                     break;
 

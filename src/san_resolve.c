@@ -1,17 +1,13 @@
 #include "san_resolve.h"
 #include "move_gen.h"
+#include "square.h"
 
-/*
-TODO:
-handle san suffix (checks/mates)
-handle en passant
-*/
-static bool is_pawn_promotion_rank(const Piece *piece, Position to);
+static bool is_pawn_promotion_rank(const Piece *piece, Square to);
 
 static bool verify_square(
     const Board *board,
     San san,
-    Position from,
+    Square from,
     Colour side_to_move,
     Piece **piece_out
 );
@@ -33,7 +29,7 @@ static ResolveStatus validate_move(
 static ResolveStatus resolve_castling_san(GameState *game, San san, Move *move_out);
 
 // helper for implicit pawn promotions
-static bool is_pawn_promotion_rank(const Piece *piece, Position to)
+static bool is_pawn_promotion_rank(const Piece *piece, Square to)
 {
     if (!piece || piece->type != TYPE_PAWN) return false;
     if (piece->colour == COLOUR_WHITE && to.row == 7) return true;
@@ -46,7 +42,7 @@ static bool is_pawn_promotion_rank(const Piece *piece, Position to)
 static bool verify_square(
     const Board *board,
     San san,
-    Position from,
+    Square from,
     Colour side_to_move,
     Piece **piece_out
 )
@@ -149,10 +145,10 @@ static ResolveStatus resolve_castling_san(GameState *game, San san, Move *move_o
     else
         return RESOLVE_ILLEGAL;
     
-    Position king_from = { .row = row, .col = 4 };
-    Position king_to = san.is_castle_kingside
-        ? (Position) { .row = row, .col = 6 }
-        : (Position) { .row = row, .col = 2 };
+    Square king_from = { .row = row, .col = 4 };
+    Square king_to = san.is_castle_kingside
+        ? (Square) { .row = row, .col = 6 }
+        : (Square) { .row = row, .col = 2 };
     
     Piece *king = get_piece_at(game->board, king_from);
 
@@ -208,7 +204,7 @@ ResolveStatus resolve_san(GameState *game, San san, Move *move_out)
             //? finds source pieces whose legal moves match the SAN
             //? more than one match means the SAN is ambiguous
             // verify square and extract piece if valid
-            Position from = { .col = col, .row = row };
+            Square from = { .col = col, .row = row };
 
             Piece *current_piece = NULL;
             if (!verify_square(board, san, from, side_to_move, &current_piece)) continue;

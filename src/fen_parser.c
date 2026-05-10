@@ -8,7 +8,7 @@ static bool expect_space(const char *fen, int *i, int *err_pos);
 static bool parse_piece_placement(Board *board, const char *fen, int *i, int *err_pos);
 static bool parse_side_to_move(const char *fen, int *i, Colour *side_to_move_out, int *err_pos);
 static bool parse_castling(CastlingRights *rights, const char *fen, int *i, int *err_pos);
-static bool parse_en_passant(const char *fen, int *i, bool *has_en_passant_target_out, Position *en_passant_target_out, int *err_pos);
+static bool parse_en_passant(const char *fen, int *i, bool *has_en_passant_target_out, Square *en_passant_target_out, int *err_pos);
 
 // side helpers
 static bool fen_char_to_piece(char c, PieceType *type_out, Colour *colour_out)
@@ -111,14 +111,14 @@ static bool parse_piece_placement(Board *board, const char *fen, int *i, int *er
 
                 // create piece and add to board
                 Piece *piece = create_piece(type, colour);
-                Position piece_position = { .col = col, .row = board_row };
+                Square from = { .col = col, .row = board_row };
                 if (!piece)
                 {
                     if (err_pos) *err_pos = *i;
                     return false;
                 }
 
-                if (!set_piece_at(board, piece_position, piece))
+                if (!set_piece_at(board, from, piece))
                 {
                     destroy_piece(piece);
                     if (err_pos) *err_pos = *i;
@@ -248,12 +248,12 @@ static bool parse_castling(CastlingRights *rights, const char *fen, int *i, int 
     return true;
 }
 
-static bool parse_en_passant(const char *fen, int *i, bool *has_en_passant_target_out, Position *en_passant_target_out, int *err_pos)
+static bool parse_en_passant(const char *fen, int *i, bool *has_en_passant_target_out, Square *en_passant_target_out, int *err_pos)
 {
     // default to no en passant target
     if (has_en_passant_target_out) *has_en_passant_target_out = false;
 
-    if (en_passant_target_out) *en_passant_target_out = (Position) { .row = -1, .col = -1 };
+    if (en_passant_target_out) *en_passant_target_out = (Square) { .row = -1, .col = -1 };
 
     // check if there is no en passant square
     if (fen[*i] == '-')
@@ -327,7 +327,7 @@ bool load_fen(GameState *game, const char *fen, int *err_pos)
     };
 
     bool has_en_passant_target = false;
-    Position en_passant_target = { .row = -1, .col = -1 };
+    Square en_passant_target = { .row = -1, .col = -1 };
 
     int halfmove_clock = 0;
     int fullmove_number = 1;

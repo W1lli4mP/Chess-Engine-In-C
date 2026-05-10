@@ -3,8 +3,9 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
+
 #include "piece.h"
-#include "position.h"
+#include "square.h"
 
 typedef enum
 {
@@ -16,7 +17,7 @@ typedef enum
 typedef struct
 {
     PieceType piece;
-    Position to;
+    Square to;
     bool is_capture;
 
     // castling intent

@@ -4,23 +4,23 @@
 #include <stdbool.h>
 #include "game_state.h"
 #include "move.h"
-#include "position.h"
+#include "square.h"
 
 typedef struct
 {
     Piece *captured_piece;
-    Position captured_position;
+    Square captured_square;
 
     Colour previous_side_to_move;
 
     CastlingRights previous_castling_rights;
 
     Piece *castling_rook;
-    Position castling_rook_from;
-    Position castling_rook_to;
+    Square castling_rook_from;
+    Square castling_rook_to;
 
     bool previous_has_en_passant_target;
-    Position previous_en_passant_target;
+    Square previous_en_passant_target;
 
     int previous_halfmove_clock;
     int previous_fullmove_number;

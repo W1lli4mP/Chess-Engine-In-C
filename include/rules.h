@@ -3,9 +3,10 @@
 
 #include <stdbool.h>
 #include "game_state.h"
-#include "position.h"
 
-bool is_square_attacked(const GameState *game, Position square, Colour friendly_colour);
+#include "square.h"
+
+bool is_square_attacked(const GameState *game, Square square, Colour friendly_colour);
 bool is_in_check(const GameState *game, Colour colour);
 
 bool is_checkmate(const GameState *game, Colour colour);

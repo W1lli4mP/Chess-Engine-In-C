@@ -2,11 +2,13 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "board.h"
 #include "game_state.h"
 #include "fen_parser.h"
 #include "move_gen.h"
 #include "test_utils.h"
+#include "move.h"
 
 #define MOVE_GEN_CASES_FILE "tests/data/move_gen_cases.txt"
 #define MAX_LINE_LEN 512
@@ -23,7 +25,7 @@
 */
 typedef struct
 {
-    Position to;
+    Square to;
 
     bool expects_capture;
     bool is_capture;
@@ -56,7 +58,7 @@ static bool run_move_gen_case(
     const char *expected_moves
 );
 
-static bool parse_square(const char *text, Position *position_out);
+static bool parse_square(const char *text, Square *square_out);
 
 static bool parse_expected_count(const char *text, int *count_out);
 
@@ -87,7 +89,7 @@ static void print_expected_moves(const char *expected_moves_text);
 
 static void print_move_list_expected_format(const MoveList *moves);
 
-static void position_to_square(Position position, char out[3]);
+static void square_to_text(Square square, char out[3]);
 
 int main()
 {
@@ -158,7 +160,7 @@ static bool run_move_gen_case(
 )
 {
     // parse square
-    Position from;
+    Square from;
 
     if (!parse_square(from_text, &from))
     {
@@ -253,9 +255,9 @@ static void print_move_gen_result(
         printf("Result: FAIL (reason = %s)\n", reason);
 }
 
-static bool parse_square(const char *text, Position *position_out)
+static bool parse_square(const char *text, Square *square_out)
 {
-    if (!text || !position_out) return false;
+    if (!text || !square_out) return false;
 
     // squares must always be denoted as two chars: <col> | <row>
     if (strlen(text) != 2) return false;
@@ -267,8 +269,8 @@ static bool parse_square(const char *text, Position *position_out)
 
     if (row < '1' || row > '8') return false;
 
-    position_out->col = col - 'a';
-    position_out->row = row - '1';
+    square_out->col = col - 'a';
+    square_out->row = row - '1';
 
     return true;
 }
@@ -565,7 +567,7 @@ static void print_move_list_expected_format(const MoveList *moves)
     for (int i = 0; i < moves->count; i++)
     {
         char square[3];
-        position_to_square(moves->moves[i].to, square);
+        square_to_text(moves->moves[i].to, square);
 
         printf("%s", square);
 
@@ -637,9 +639,9 @@ static void print_move_list_expected_format(const MoveList *moves)
     putchar('\n');
 }
 
-static void position_to_square(Position position, char out[3])
+static void square_to_text(Square square, char out[3])
 {
-    out[0] = (char) ('a' + position.col);
-    out[1] = (char) ('1' + position.row);
+    out[0] = (char) ('a' + square.col);
+    out[1] = (char) ('1' + square.row);
     out[2] = '\0';
 }

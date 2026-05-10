@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 #include "piece.h"
-#include "position.h"
+#include "square.h"
 
 #define BOARD_SIZE 8
 
@@ -18,15 +18,15 @@ typedef struct
 Board *create_starting_board(void);
 Board *create_empty_board(void);
 
-Piece *get_piece_at(const Board *board, Position piece_pos);
-bool set_piece_at(Board *board, Position piece_pos, Piece *piece);
-bool replace_piece_at(Board *board, Position piece_pos, Piece *piece);
-bool destroy_piece_at(Board *board, Position piece_pos); // handles logic for removing a piece safely and destroys/frees the piece
+Piece *get_piece_at(const Board *board, Square square);
+bool set_piece_at(Board *board, Square square, Piece *piece);
+bool replace_piece_at(Board *board, Square square, Piece *piece);
+bool destroy_piece_at(Board *board, Square square); // handles logic for removing a piece safely and destroys/frees the piece
 
 bool destroy_board(Board *board);
 
-bool is_position_on_board(const Board *board, Position pos);
-bool has_piece_at(const Board *board, Position pos);
+bool is_square_on_board(const Board *board, Square square);
+bool has_piece_at(const Board *board, Square square);
 bool in_bounds(const Board *board, int row, int col);
 
 bool clear_board(Board *board);

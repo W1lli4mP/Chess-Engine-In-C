@@ -1,11 +1,13 @@
 #ifndef PARSER_H
 #define PARSER_H
-#include "position.h"
-#include "queue.h"
-#include "san.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+
+#include "square.h"
+#include "queue.h"
+#include "san.h"
 
 typedef enum
 {
