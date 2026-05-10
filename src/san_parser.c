@@ -1,4 +1,4 @@
-#include "parser.h"
+#include "san_parser.h"
 
 // parser helpers
 static bool expect(Queue *queue, Token token, Lex *lex_out, int *err_pos);
@@ -395,7 +395,7 @@ bool parser(Queue *token_queue, int *err_pos, San *san_out)
 
 
 // convert algebraic chess notation -> playable move
-San *algebraic_chess_parser(const char *user_input, int *err_pos)
+San *parse_san(const char *user_input, int *err_pos)
 {
     Queue *token_queue = create_queue();
 

@@ -1,5 +1,5 @@
-#ifndef PARSER_H
-#define PARSER_H
+#ifndef SAN_PARSER_H
+#define SAN_PARSER_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,7 +29,7 @@ typedef struct
 } Lex;
 
 // err_pos to record the position of where the error occured if any
-San *algebraic_chess_parser(const char *user_input, int *err_pos);
+San *parse_san(const char *user_input, int *err_pos);
 
 bool lexer(const char *user_input, int *err_pos, Queue *queue_out);
 
