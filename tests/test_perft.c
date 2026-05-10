@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <inttypes.h>
+
 #include "test_utils.h"
 #include "board.h"
 #include "game_state.h"
