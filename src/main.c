@@ -76,6 +76,14 @@ int main()
 {
     GameState *game = create_starting_game_state();
 
+    // push initial position key after creating game
+    if (!game || !push_current_position(game))
+    {
+        puts("Failed to initialise game!");
+        destroy_game_state(game);
+        return 1;
+    }
+
     bool running = true;
     while (running)
     {
