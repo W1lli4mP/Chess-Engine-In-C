@@ -1,5 +1,6 @@
 #ifndef TEST_UTILS_H
 #define TEST_UTILS_H
+
 #include <stdbool.h>
 
 bool split_test_line(
