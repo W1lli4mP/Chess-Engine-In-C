@@ -6,6 +6,7 @@
 #include "board.h"
 #include "piece.h"
 #include "position.h"
+#include "position_key_types.h"
 
 typedef struct
 {
@@ -28,6 +29,9 @@ typedef struct
 
     int halfmove_clock;
     int fullmove_number;
+
+    PositionKey position_history[MAX_POSITION_HISTORY];
+    int position_history_count;
 } GameState;
 
 GameState *create_game_state(void);

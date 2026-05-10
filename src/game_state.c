@@ -25,6 +25,8 @@ GameState *create_game_state()
     game->halfmove_clock = 0;
     game->fullmove_number = 1;
 
+    game->position_history_count = 0;
+
     return game;
 }
 
@@ -72,6 +74,8 @@ bool reset_game_state(GameState *game)
 
     game->halfmove_clock = 0;
     game->fullmove_number = 1;
+
+    game->position_history_count = 0;
 
     return true;
 }
