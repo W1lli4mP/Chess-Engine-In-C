@@ -6,6 +6,7 @@
 #include "move_apply.h"
 #include "rules.h"
 #include "draw_rules.h"
+#include "position_key.h"
 
 #ifdef ENGINE_DEBUG
 #include <stdio.h>
@@ -14,10 +15,31 @@
 #endif
 
 #define CHECKMATE_SCORE 1000000
+#define MAX_SEARCH_HISTORY 256
 
 static int side_multiplier(Colour colour);
 
-static int negamax(GameState *game, int depth, int alpha, int beta, bool *ok_out);
+// counts the current analysed position against both
+//* - real positions already played in the game
+//* - temporary positions reached in the current search line/branch
+
+// lets the engine detect lines that reach threefold repetition
+// without polluting game->position_history during the search
+static bool key_repeats_threefold_in_search(
+    const GameState *game,
+    const PositionKey *search_history,
+    int search_history_count
+);
+
+static int negamax(
+    GameState *game,
+    int depth,
+    int alpha,
+    int beta,
+    PositionKey *search_history,
+    int search_history_count,
+    bool *ok_out
+);
 
 static int side_multiplier(Colour colour)
 {
@@ -26,9 +48,47 @@ static int side_multiplier(Colour colour)
     return 0;
 }
 
+static bool key_repeats_threefold_in_search(
+    const GameState *game,
+    const PositionKey *search_history,
+    int search_history_count
+)
+{
+    if (!game || !search_history || search_history_count <= 0)
+        return false;
+
+    const PositionKey *current = &search_history[search_history_count - 1];
+
+    int count = 0;
+
+    // real game history
+    for (int i = 0; i < game->position_history_count; i++)
+    {
+        if (position_keys_equal(&game->position_history[i], current))
+            count++;
+    }
+
+    // temporary search line history
+    for (int i = 0; i < search_history_count; i++)
+    {
+        if (position_keys_equal(&search_history[i], current))
+            count++;
+    }
+
+    return count >= 3;
+}
+
 // basically minimax but programmatically easier
 // ok_out is used to track errors, since the return value is the score
-static int negamax(GameState *game, int depth, int alpha, int beta, bool *ok_out)
+static int negamax(
+    GameState *game,
+    int depth,
+    int alpha,
+    int beta,
+    PositionKey *search_history,
+    int search_history_count,
+    bool *ok_out
+)
 {
     if (!game || !ok_out)
     {
@@ -37,7 +97,12 @@ static int negamax(GameState *game, int depth, int alpha, int beta, bool *ok_out
     }
 
     // drawn positions are neutral
-    if (is_draw(game))
+    if (key_repeats_threefold_in_search(game, search_history, search_history_count))
+    {
+        return 0;
+    }
+
+    if (is_fifty_move_draw(game) || is_insufficient_material(game))
     {
         return 0;
     }
@@ -60,8 +125,9 @@ static int negamax(GameState *game, int depth, int alpha, int beta, bool *ok_out
     {
         if (is_in_check(game, game->side_to_move))
         {
-            // encourages faster checkmates
-            return -CHECKMATE_SCORE + depth;
+            // current side to move is checkmated
+            // subtracting depth makes faster checkmates better after negamax negates the score
+            return -CHECKMATE_SCORE - depth;
         }
 
         // stalemate
@@ -83,8 +149,36 @@ static int negamax(GameState *game, int depth, int alpha, int beta, bool *ok_out
             return 0;
         }
 
+        PositionKey key;
+
+        if (search_history_count >= MAX_SEARCH_HISTORY)
+        {
+            *ok_out = false;
+            unmake_move(game, move, &undo);
+            return 0;
+        }
+
+        if (!create_position_key(game, &key))
+        {
+            *ok_out = false;
+            unmake_move(game, move, &undo);
+            return 0;
+        }
+
+        // track the future position as part of the current analysed line
+        search_history[search_history_count] = key;
+
         // invert alpha and beta when switching sides for negamax
-        int score = -negamax(game, depth - 1, -beta, -alpha, ok_out);
+        // and increment search history count
+        int score = -negamax(
+            game,
+            depth - 1,
+            -beta,
+            -alpha,
+            search_history,
+            search_history_count + 1,
+            ok_out
+        );
 
         if (!unmake_move(game, move, &undo))
         {
@@ -123,6 +217,11 @@ bool engine_find_best_move(GameState *game, int depth, Move *best_move_out)
 
     int best_score = INT_MIN + 1;
     Move best_move = moves.moves[0];
+    bool best_causes_threefold = false;
+
+    // store temporary positions in searches to detect threefold repetition
+    // allows future positions to be tracked within each branch/line in the search
+    PositionKey search_history[MAX_SEARCH_HISTORY];
 
 #ifdef ENGINE_DEBUG
     printf("[ENGINE] searching depth %d, legal moves: %d\n", depth, moves.count);
@@ -131,6 +230,8 @@ bool engine_find_best_move(GameState *game, int depth, Move *best_move_out)
     // evaluate every position after a move is played
     for (int i = 0; i < moves.count; i++)
     {
+        ok = true;
+
         Move move = moves.moves[i];
         UndoInfo undo;
 
@@ -138,20 +239,52 @@ bool engine_find_best_move(GameState *game, int depth, Move *best_move_out)
         // then restore the game state to before the move is played
         if (!make_move(game, move, &undo)) return false;
 
-        int score = -negamax(game, depth - 1, -beta, -alpha, &ok);
+        PositionKey key;
+
+        if (!create_position_key(game, &key))
+        {
+            unmake_move(game, move, &undo);
+            return false;
+        }
+
+        search_history[0] = key;
+
+        // check whether playing this move would immediately repeat the position for the third time
+        bool causes_threefold = key_repeats_threefold_in_search(game, search_history, 1);
+
+        int score;
+
+        if (causes_threefold)
+            score = 0;
+        else
+            score = -negamax(
+                game,
+                depth - 1,
+                -beta,
+                -alpha,
+                search_history,
+                1,
+                &ok
+            );
 
         if (!unmake_move(game, move, &undo)) return false;
         if (!ok) return false;
 
 #ifdef ENGINE_DEBUG
         debug_print_engine_move_score(move, score);
+        if (causes_threefold)
+            puts("[ENGINE] move causes threefold repetition");
 #endif
 
         // supersede better score + move
-        if (score > best_score)
+        if (
+            score > best_score ||
+            (score == best_score && best_causes_threefold && !causes_threefold)
+        )
         {
             best_score = score;
             best_move = move;
+            best_causes_threefold = causes_threefold;
         }
 
         if (score > alpha)
