@@ -1,13 +1,13 @@
 #include <string.h>
 
 #include "uci.h"
-#include "move_apply.h"
+#include "move_gen.h"
 
 static void square_to_text(Square square, char out[3]);
 
 static bool parse_square(const char *text, Square *square_out);
 
-static bool parse_promotion_piece(char c, PieceType *promotion_out);
+static bool parse_uci_promotion(char c, PieceType *promotion_out);
 
 static void square_to_text(Square square, char out[3])
 {
@@ -36,16 +36,17 @@ static bool parse_square(const char *text, Square *square_out)
     return true;
 }
 
-static bool parse_promotion_piece(char c, PieceType *promotion_out)
+static bool parse_uci_promotion(char c, PieceType *promotion_out)
 {
     if (!promotion_out) return false;
 
+    // UCI promotion is in lower case
     switch (c)
     {
-        case 'Q': *promotion_out = TYPE_QUEEN; return true;
-        case 'R': *promotion_out = TYPE_ROOK; return true;
-        case 'B': *promotion_out = TYPE_BISHOP; return true;
-        case 'N': *promotion_out = TYPE_KNIGHT; return true;
+        case 'q': *promotion_out = TYPE_QUEEN; return true;
+        case 'r': *promotion_out = TYPE_ROOK; return true;
+        case 'b': *promotion_out = TYPE_BISHOP; return true;
+        case 'n': *promotion_out = TYPE_KNIGHT; return true;
         default: return false;
     }
 }
@@ -54,14 +55,17 @@ bool parse_uci_move(GameState *game, const char *text, Move *move_out)
 {
     if (!game || !text || !move_out) return false;
 
-    if (strlen(text) < 4 || strlen(text) > 5) return false;
+    size_t len = strlen(text);
+    if (len != 4 && len != 5) return false;
 
     // partition text
     char from_text[3] = { text[0], text[1], '\0' };
 
     char to_text[3] = { text[2], text[3], '\0' };
 
-    char promotion_text = { text[4] ? (strlen(text) == 5) : '\0', '\0'};
+    char promotion_text = '\0';
+
+    if (len == 5) promotion_text = text[4];
 
     // parse text
     Square from;
@@ -70,15 +74,48 @@ bool parse_uci_move(GameState *game, const char *text, Move *move_out)
 
     Square to;
 
-    if (!parse_square(to_text + 2, &to)) return false;
+    if (!parse_square(to_text, &to)) return false;
 
     // parse promotion
-    PieceType promotion;
-    if (!parse_promotion_piece(promotion_text, &promotion)) return false;
+    // flag for validating when retrieving Move
+    bool has_promotion = false;
+    PieceType promotion = TYPE_NONE;
 
-    //! simulate move and extract info to populate Move
+    if (len == 5)
+    {
+        has_promotion = true;
+
+        if (!parse_promotion_piece(promotion_text, &promotion)) return false;
+    }
+
+    // generate moves and find a match
+    MoveList moves = {0};
+    if (!generate_legal_moves(game, from, &moves)) return false;
+
+    for (int i = 0; i < moves.count; i++)
+    {
+        Move move = moves.moves[i];
+
+        if (!squares_equal(move.to, to)) continue;
+
+        if (has_promotion)
+        {
+            if (!move.is_promotion) continue;
+
+            if (move.promotion != promotion) continue;
+        }
+        else
+        {
+            // skip non-promoting moves if promotion is expected by the UCI
+            if (move.is_promotion) continue;
+        }
+
+        *move_out = move;
+        return true;
+    }
+
+    return false;
 }
-
 
 bool move_to_uci(Move move, char out[6])
 {
