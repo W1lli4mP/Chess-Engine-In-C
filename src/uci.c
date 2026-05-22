@@ -85,7 +85,7 @@ bool parse_uci_move(GameState *game, const char *text, Move *move_out)
     {
         has_promotion = true;
 
-        if (!parse_promotion_piece(promotion_text, &promotion)) return false;
+        if (!parse_uci_promotion(promotion_text, &promotion)) return false;
     }
 
     // generate moves and find a match
