@@ -16,6 +16,7 @@
 #include "engine.h"
 #include "draw_rules.h"
 #include "game_play.h"
+#include "check_rules.h"
 
 #define WHITE_VIEW 1
 #define BLACK_VIEW 0
